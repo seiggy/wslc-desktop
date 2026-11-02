@@ -5,6 +5,19 @@ namespace WslcDesktop.Services;
 
 public sealed record SessionRow(string Id, string CreatorPid, string Name);
 
+public sealed record SessionInfo(
+    string Id, string Name, string Creator, string CreatorPid, string Containers, string Images, bool IsThisApp)
+{
+    public bool CanTerminate => !IsThisApp;
+
+    public string CreatorText => $"{Creator} ({CreatorPid})";
+
+    public Microsoft.UI.Xaml.Visibility ThisAppVisibility =>
+        IsThisApp ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
+}
+
+public sealed record EnvironmentInfo(string Wsl, string Kernel, string SessionManager, IReadOnlyList<SessionInfo> Sessions);
+
 /// <summary>
 /// The Microsoft.WSL.Containers API cannot enumerate containers or sessions, but wslc.exe can.
 /// Discovery goes through the CLI; every mutation still uses the API.
@@ -35,6 +48,49 @@ public static class WslcCli
 
         return rows;
     }
+
+    public static async Task<EnvironmentInfo> GetEnvironmentAsync(string appSession)
+    {
+        var info = await RunAsync("info");
+        string Version(string key) => info.Split('\n')
+            .Select(l => l.Trim())
+            .Where(l => l.StartsWith(key, StringComparison.OrdinalIgnoreCase))
+            .Select(l => l[(l.IndexOf(':') + 1)..].Trim())
+            .FirstOrDefault() ?? string.Empty;
+
+        var sessions = await ListSessionsAsync();
+        var items = await Task.WhenAll(sessions.Select(async s =>
+        {
+            string creator;
+            try
+            {
+                creator = System.Diagnostics.Process.GetProcessById(int.Parse(s.CreatorPid, System.Globalization.CultureInfo.InvariantCulture)).ProcessName;
+            }
+            catch
+            {
+                creator = "Exited";
+            }
+
+            string containers = "–", images = "–";
+            try
+            {
+                var c = await ListContainersAsync(s.Name);
+                containers = $"{c.Count(x => x.State.Equals("running", StringComparison.OrdinalIgnoreCase))} / {c.Count}";
+                images = (await ListImagesAsync(s.Name)).Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
+            catch
+            {
+            }
+
+            return new SessionInfo(s.Id, s.Name, creator, s.CreatorPid, containers, images,
+                s.Name.Equals(appSession, StringComparison.OrdinalIgnoreCase));
+        }));
+
+        return new EnvironmentInfo(Version("WSL version"), Version("Kernel version"), Version("Session manager version"), items);
+    }
+
+    public static Task TerminateSessionAsync(string session) =>
+        RunAsync("--session", session, "system", "session", "terminate");
 
     public static async Task<IReadOnlyList<SessionRow>> ListSessionsAsync()
     {

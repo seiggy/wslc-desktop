@@ -113,6 +113,10 @@ public sealed class WslcHost
 
     public Task<IReadOnlyList<SessionRow>> GetSessionsAsync() => WslcCli.ListSessionsAsync();
 
+    public Task<EnvironmentInfo> GetEnvironmentAsync() => WslcCli.GetEnvironmentAsync(SessionName);
+
+    public Task TerminateSessionAsync(string session) => WslcCli.TerminateSessionAsync(session);
+
     public Task CreateContainerAsync(string name, string image, string[] commandLine)
     {
         return Run(s =>
