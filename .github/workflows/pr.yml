@@ -28,16 +28,18 @@ jobs:
       matrix:
         include:
           - platform: x64
+            rid: win-x64
             test: true
           - platform: ARM64
+            rid: win-arm64
             test: false
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
-          dotnet-quality: ga
+          dotnet-version: 11.0.x
+          dotnet-quality: preview
 
       - uses: actions/cache@v4
         with:
@@ -47,12 +49,16 @@ jobs:
 
       - name: Restore
         shell: pwsh
-        run: dotnet restore WslcDesktop.slnx --configfile $env:NUGET_CONFIG -p:Platform=${{ matrix.platform }}
+        run: |
+          dotnet restore src/WslcDesktop -r ${{ matrix.rid }} -p:Platform=${{ matrix.platform }} --configfile $env:NUGET_CONFIG
+          dotnet restore tests/WslcDesktop.Compose.Tests --configfile $env:NUGET_CONFIG
 
       - name: Build solution
         shell: pwsh
         run: |
-          dotnet build WslcDesktop.slnx -c Release --no-restore -p:Platform=${{ matrix.platform }} "-bl:build-${{ matrix.platform }}.binlog" "-flp:logfile=build-${{ matrix.platform }}.log;verbosity=normal"
+          dotnet build src/WslcDesktop -c Release -r ${{ matrix.rid }} --no-restore -p:Platform=${{ matrix.platform }} "-bl:build-${{ matrix.platform }}.binlog" "-flp:logfile=build-${{ matrix.platform }}.log;verbosity=normal"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build tests/WslcDesktop.Compose.Tests -c Release --no-restore
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Report warnings
@@ -112,8 +118,8 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
-          dotnet-quality: ga
+          dotnet-version: 11.0.x
+          dotnet-quality: preview
 
       - uses: actions/cache@v4
         with:
@@ -149,7 +155,7 @@ jobs:
         shell: pwsh
         continue-on-error: true
         run: |
-          dotnet format WslcDesktop.slnx --verify-no-changes --no-restore --verbosity diagnostic
+          dotnet format src/WslcDesktop/WslcDesktop.csproj --verify-no-changes --no-restore --verbosity diagnostic
           if ($LASTEXITCODE -ne 0) {
             "### dotnet format: changes needed (report only)" >> $env:GITHUB_STEP_SUMMARY
             Write-Host "::warning::dotnet format reports formatting differences"
