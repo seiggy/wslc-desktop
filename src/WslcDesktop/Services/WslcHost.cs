@@ -19,7 +19,12 @@ public sealed class WslcHost
 
     private Session? _session;
 
-    public bool IsReady => _session is not null;
+    private bool _attached;
+
+    /// <summary>True when an earlier app run left the session alive and this run drives it through wslc.exe.</summary>
+    public bool IsAttached => _attached;
+
+    public bool IsReady => _session is not null || _attached;
 
     public string SessionDisplayName => SessionName;
 
@@ -47,30 +52,67 @@ public sealed class WslcHost
 
     public async Task StartSessionAsync()
     {
-        if (_session is not null)
+        if (IsReady)
         {
             return;
         }
 
         var cpuCount = Settings.CpuCount;
         var memoryMb = Settings.MemoryMb;
-        await Task.Run(() =>
+        // Closing the app leaves the session (and its containers) running, and the API cannot reopen it.
+        _attached = await SessionExistsAsync();
+        if (!_attached)
         {
-            Directory.CreateDirectory(Path.Combine(_root, "Data"));
-            var settings = new SessionSettings(SessionName, Path.Combine(_root, "Data"))
-            {
-                CpuCount = cpuCount,
-                MemorySizeInMB = memoryMb,
-                EnableGpu = Settings.EnableGpu,
-            };
-            var session = new Session(settings);
-            session.Start();
-            _session = session;
-        });
+            await CreateSessionAsync(cpuCount, memoryMb);
+        }
+
         StartedCpuCount = cpuCount;
         StartedMemoryMb = memoryMb;
         Telemetry.Start(SessionName);
         Monitor.Start(ct => GetContainersAsync(ct));
+    }
+
+    private async Task<bool> SessionExistsAsync()
+    {
+        try
+        {
+            var sessions = await WslcCli.ListSessionsAsync();
+            return sessions.Any(s => string.Equals(s.Name, SessionName, StringComparison.OrdinalIgnoreCase));
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    private async Task CreateSessionAsync(uint cpuCount, uint memoryMb)
+    {
+        try
+        {
+            await Task.Run(() =>
+            {
+                Directory.CreateDirectory(Path.Combine(_root, "Data"));
+                var settings = new SessionSettings(SessionName, Path.Combine(_root, "Data"))
+                {
+                    CpuCount = cpuCount,
+                    MemorySizeInMB = memoryMb,
+                    EnableGpu = Settings.EnableGpu,
+                };
+                var session = new Session(settings);
+                session.Start();
+                _session = session;
+            });
+        }
+        catch (Exception)
+        {
+            // Another instance or a race may have created it first; otherwise surface the original failure.
+            if (!await SessionExistsAsync())
+            {
+                throw;
+            }
+
+            _attached = true;
+        }
     }
 
     public ContainerMonitor Monitor { get; } = new();
@@ -86,14 +128,12 @@ public sealed class WslcHost
     public ShellProcess StartShell(string container, string shell, Action<string> onOutput, Action<int> onExit) =>
         WslcCli.StartShell(SessionName, container, shell, onOutput, onExit);
 
-    public static readonly TimeSpan ContainerStopGrace = TimeSpan.FromSeconds(2);
-    public static readonly TimeSpan ContainerStopBudget = TimeSpan.FromSeconds(4);
     public static readonly TimeSpan SessionDisposeBudget = TimeSpan.FromSeconds(1);
 
     /// <summary>
-    /// Stops the app's own session within a bounded time. Polling and child wslc processes are cancelled first,
-    /// running containers get a short SIGTERM grace (in parallel) instead of the engine's sequential long timeout,
-    /// and a terminate that blocks in native code is abandoned so the process can still exit.
+    /// Releases this app's handles without touching the session or its containers: closing the GUI must leave
+    /// containers running. Polling and app-started wslc children are cancelled, and releasing the native handle
+    /// is bounded so the process can always exit.
     /// </summary>
     public void Shutdown()
     {
@@ -108,24 +148,6 @@ public sealed class WslcHost
             return;
         }
 
-        var running = Monitor.Containers
-            .Where(c => string.Equals(c.State, "running", StringComparison.OrdinalIgnoreCase))
-            .Select(c => c.Name)
-            .ToList();
-        if (running.Count > 0)
-        {
-            // One CLI call stops them all concurrently; the API's Stop ignores the grace period here.
-            var args = new List<string> { "--session", SessionName, "stop", "-t", ((int)ContainerStopGrace.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture) };
-            args.AddRange(running);
-            if (!BoundedWait.Run(() => WslcCli.RunAsync([.. args]), ContainerStopBudget))
-            {
-                ChildProcessTracker.KillAll();
-            }
-        }
-
-        // Terminate blocks while this process still holds client connections to the session, but finishes
-        // immediately once we exit. A detached CLI call lets the process exit now and still end the session.
-        TerminateAfterExit();
         BoundedWait.Run(() => Task.Run(() =>
         {
             try
@@ -134,35 +156,31 @@ public sealed class WslcHost
             }
             catch
             {
-                // Closing the window must not fail on a session that already ended.
+                // Closing the window must not fail.
             }
         }), SessionDisposeBudget);
     }
-
-    private static void TerminateAfterExit()
+    public async Task<IReadOnlyList<ImageRow>> GetImagesAsync()
     {
-        try
+        if (_attached)
         {
-            var info = new System.Diagnostics.ProcessStartInfo("wslc") { UseShellExecute = false, CreateNoWindow = true };
-            foreach (var a in new[] { "--session", SessionName, "system", "session", "terminate" })
-            {
-                info.ArgumentList.Add(a);
-            }
+            var images = await WslcCli.ListImagesAsync(SessionName);
+            return images.Select(i => new ImageRow($"{i.Repository}:{i.Tag}", i.Size, DateTimeOffset.MinValue)).ToList();
+        }
 
-            System.Diagnostics.Process.Start(info)?.Dispose();
-        }
-        catch (Exception)
-        {
-            // Without the CLI the session simply ends with its creator.
-        }
-    }
-    public Task<IReadOnlyList<ImageRow>> GetImagesAsync() => Run(s =>
-        (IReadOnlyList<ImageRow>)s.GetImages()
+        return await Run(s => (IReadOnlyList<ImageRow>)s.GetImages()
             .Select(i => new ImageRow(i.Name, FormatSize(i.Size), i.CreatedTimestamp))
             .ToList());
+    }
 
     public async Task PullImageAsync(string uri, IProgress<ImageProgress> progress)
     {
+        if (_attached)
+        {
+            await WslcCli.RunAsync("--session", SessionName, "pull", uri);
+            return;
+        }
+
         var session = Require();
         var op = session.PullImageAsync(new PullImageOptions(uri));
         op.Progress = (_, p) => progress.Report(p);
@@ -173,7 +191,9 @@ public sealed class WslcHost
 
     public Task<ImageDetail> InspectImageAsync(string target) => WslcCli.InspectImageAsync(SessionName, target);
 
-    public Task DeleteImageAsync(string nameOrId) => Run(s => s.DeleteImage(nameOrId));
+    public Task DeleteImageAsync(string nameOrId) => _attached
+        ? WslcCli.RunAsync("--session", SessionName, "rmi", nameOrId)
+        : Run(s => s.DeleteImage(nameOrId));
 
     // The API cannot enumerate containers; wslc.exe can.
     public Task<IReadOnlyList<ContainerRow>> GetContainersAsync(CancellationToken ct = default) => WslcCli.ListContainersAsync(SessionName, ct);
@@ -217,6 +237,11 @@ public sealed class WslcHost
 
     public Task CreateContainerAsync(string name, string image, string[] commandLine)
     {
+        if (_attached)
+        {
+            return WslcCli.RunAsync(["--session", SessionName, "create", "--name", name, image, .. commandLine]);
+        }
+
         return Run(s =>
         {
             var init = new ProcessSettings { OutputMode = ProcessOutputMode.Discard };
@@ -229,7 +254,9 @@ public sealed class WslcHost
         });
     }
 
-    public Task StartContainerAsync(string name) => Run(s =>
+    public Task StartContainerAsync(string name) => _attached
+        ? WslcCli.RunAsync("--session", SessionName, "start", name)
+        : Run(s =>
     {
         using var c = s.OpenContainer(name, ProcessOutputMode.Discard);
         try
@@ -255,16 +282,24 @@ public sealed class WslcHost
         }
     }
 
-    public Task StopContainerAsync(string name) =>
-        WithContainer(name, c => c.Stop(Signal.SIGTERM, TimeSpan.FromSeconds(10)));
+    public Task StopContainerAsync(string name) => _attached
+        ? WslcCli.RunAsync("--session", SessionName, "stop", name)
+        : WithContainer(name, c => c.Stop(Signal.SIGTERM, TimeSpan.FromSeconds(10)));
 
-    public Task DeleteContainerAsync(string name) => WithContainer(name, c =>
+    public Task DeleteContainerAsync(string name) => _attached
+        ? WslcCli.RunAsync("--session", SessionName, "rm", "--force", name)
+        : WithContainer(name, c =>
     {
         c.Delete(c.State == ContainerState.Running ? DeleteContainerOption.Force : DeleteContainerOption.None);
     });
 
     public Task<string> InspectContainerAsync(string name)
     {
+        if (_attached)
+        {
+            return WslcCli.RunAsync("--session", SessionName, "inspect", name);
+        }
+
         var s = Require();
         return Task.Run(() =>
         {
