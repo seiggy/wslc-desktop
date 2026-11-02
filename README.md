@@ -4,6 +4,8 @@
 
 Desktop App for managing WSLc for users familiar with that other product
 
+**Documentation:** <https://seiggy.github.io/wslc-desktop/> — getting started, feature walkthroughs with screenshots, a compose guide, and troubleshooting.
+
 ## Build
 
 Requires the .NET 10 SDK and WSL with container support.

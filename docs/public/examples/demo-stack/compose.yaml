@@ -1,0 +1,28 @@
+name: demo-stack
+
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8081:80"
+    volumes:
+      - site-data:/usr/share/nginx/html
+    networks:
+      - front
+    depends_on:
+      - cache
+    environment:
+      APP_ENV: demo
+    # Not supported by WSLc: the app shows a warning and starts the container anyway.
+    restart: unless-stopped
+
+  cache:
+    image: redis:alpine
+    networks:
+      - front
+
+networks:
+  front:
+
+volumes:
+  site-data:
