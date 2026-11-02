@@ -37,13 +37,14 @@ public sealed partial class ContainersPage : Page
             _items.Remove(gone);
         }
 
-        foreach (var row in rows)
+        for (var n = 0; n < rows.Count; n++)
         {
+            var row = rows[n];
             var item = _items.FirstOrDefault(i => i.Name == row.Name);
             if (item is null)
             {
                 item = new ContainerItem(row.Name);
-                _items.Add(item);
+                _items.Insert(Math.Min(n, _items.Count), item);
             }
 
             var history = App.Host.Telemetry.GetHistory(row.Name);
@@ -107,7 +108,7 @@ public sealed partial class ContainersPage : Page
         {
             XamlRoot = XamlRoot,
             Title = "New container",
-            Content = new ScrollViewer { Content = panel, MaxHeight = 520, Padding = new Thickness(0, 0, 16, 0) },
+            Content = new ScrollViewer { Content = panel, MaxHeight = 640, Padding = new Thickness(0, 0, 16, 0) },
             PrimaryButtonText = "Create",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
@@ -220,8 +221,25 @@ public sealed partial class ContainersPage : Page
     private async void Stop_Click(object sender, RoutedEventArgs e) =>
         await ActAsync("Couldn't stop the container", () => App.Host.StopContainerAsync(NameOf(sender)));
 
-    private async void Delete_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't delete the container", () => App.Host.DeleteContainerAsync(NameOf(sender)));
+    private async void Delete_Click(object sender, RoutedEventArgs e)
+    {
+        var name = NameOf(sender);
+        var confirm = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = $"Delete \"{name}\"?",
+            Content = "The container is removed, including its writable layer. This can't be undone.",
+            PrimaryButtonText = "Delete",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await confirm.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        await ActAsync("Couldn't delete the container", () => App.Host.DeleteContainerAsync(name));
+    }
 
     private static string NameOf(object sender) => (string)((FrameworkElement)sender).Tag;
 

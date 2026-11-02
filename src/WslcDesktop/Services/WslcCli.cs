@@ -333,7 +333,13 @@ public static class WslcCli
             {
                 var err = (await stderr).Trim();
                 var outText = (await stdout).Trim();
-                var message = err.Length > 0 ? err : outText;
+                var message = string.Join(
+                    '\n',
+                    (err.Length > 0 ? err : outText).Split('\n')
+                        .Select(l => l.TrimEnd())
+                        .Where(l => l.Length > 0
+                            && !l.StartsWith("If this error was unexpected", StringComparison.Ordinal)
+                            && !l.StartsWith("https://github.com/microsoft/WSL/issues", StringComparison.Ordinal)));
                 throw new InvalidOperationException(message.Length > 0 ? message : $"wslc exited with {process.ExitCode}.");
             }
 

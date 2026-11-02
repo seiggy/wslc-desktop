@@ -157,7 +157,31 @@ public sealed class WslcHost
         });
     }
 
-    public Task StartContainerAsync(string name) => WithContainer(name, c => c.Start());
+    public Task StartContainerAsync(string name) => Run(s =>
+    {
+        using var c = s.OpenContainer(name, ProcessOutputMode.Discard);
+        try
+        {
+            c.Start();
+        }
+        catch (Exception) when (IsRunning(s, name))
+        {
+            // Containers made with `create` can start but fail to attach the init process handle.
+        }
+    });
+
+    private static bool IsRunning(Session s, string name)
+    {
+        try
+        {
+            using var c = s.OpenContainer(name, ProcessOutputMode.Discard);
+            return c.State == ContainerState.Running;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 
     public Task StopContainerAsync(string name) =>
         WithContainer(name, c => c.Stop(Signal.SIGTERM, TimeSpan.FromSeconds(10)));

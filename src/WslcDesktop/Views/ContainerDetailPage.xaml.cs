@@ -172,8 +172,12 @@ public sealed partial class ContainerDetailPage : Page
             Controls.InspectUi.AddRow(rows, "Health", d.Health);
             Controls.InspectUi.AddRow(rows, "Created", Controls.InspectUi.FormatDate(d.Created));
             Controls.InspectUi.AddRow(rows, "Started", Controls.InspectUi.FormatDate(d.Started));
-            Controls.InspectUi.AddRow(rows, "Finished", Controls.InspectUi.FormatDate(d.Finished));
-            Controls.InspectUi.AddRow(rows, "Exit code", d.ExitCode);
+            var running = string.Equals(d.Status, "running", StringComparison.OrdinalIgnoreCase);
+            if (!running)
+            {
+                Controls.InspectUi.AddRow(rows, "Finished", Controls.InspectUi.FormatDate(d.Finished));
+                Controls.InspectUi.AddRow(rows, "Exit code", d.ExitCode);
+            }
             Controls.InspectUi.AddRow(rows, "Memory limit", d.MemoryLimit.Length > 0 ? d.MemoryLimit : "Unlimited");
             Controls.InspectUi.AddRow(rows, "CPU limit", d.CpuLimit.Length > 0 ? d.CpuLimit : "Unlimited");
             InspectPanel.Children.Add(card);

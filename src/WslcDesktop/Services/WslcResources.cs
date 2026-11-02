@@ -127,7 +127,7 @@ public static class WslcResources
         foreach (var o in Lines(await listing))
         {
             var name = Str(o, "Name");
-            rows.Add(new ResourceRow(name, Str(o, "Driver"), Str(o, "Scope"), Str(o, "Mountpoint"), true,
+            rows.Add(new ResourceRow(name, Str(o, "Driver"), Str(o, "Mountpoint"), Str(o, "Scope"), true,
                 usage.Volumes.GetValueOrDefault(name) ?? []));
         }
 
