@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.4" />
     <PackageReference Include="Microsoft.WSL.Containers" Version="3.0.3" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.*" />
+    <ProjectReference Include="..\WslcDesktop.Compose\WslcDesktop.Compose.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -109,6 +109,7 @@ public sealed partial class MainWindow : Window
             ContentFrame.Navigate(tag switch
             {
                 "images" => typeof(ImagesPage),
+                "stacks" => typeof(StacksPage),
                 "volumes" or "networks" => typeof(ResourcesPage),
                 "sessions" => typeof(SessionsPage),
                 _ => typeof(ContainersPage),

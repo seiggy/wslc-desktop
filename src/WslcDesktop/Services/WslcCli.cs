@@ -43,7 +43,8 @@ public static class WslcCli
                 Str(root, "ID"),
                 Str(root, "State"),
                 Str(root, "Command").Trim('"'),
-                Str(root, "Ports")));
+                Str(root, "Ports"),
+                Str(root, "Labels")));
         }
 
         return rows;

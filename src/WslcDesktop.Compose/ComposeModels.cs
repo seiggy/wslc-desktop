@@ -1,0 +1,82 @@
+namespace WslcDesktop.Compose;
+
+public static class ComposeLabels
+{
+    public const string Project = "com.wslc.compose.project";
+
+    public const string Service = "com.wslc.compose.service";
+
+    /// <summary>Extracts the compose project and service from the comma-joined label string that `wslc list` prints.</summary>
+    public static bool TryParse(string? labels, out string project, out string service)
+    {
+        project = service = string.Empty;
+        if (string.IsNullOrEmpty(labels))
+        {
+            return false;
+        }
+
+        foreach (var part in labels.Split(','))
+        {
+            var eq = part.IndexOf('=');
+            if (eq < 0)
+            {
+                continue;
+            }
+
+            var key = part[..eq].Trim();
+            if (key == Project)
+            {
+                project = part[(eq + 1)..].Trim();
+            }
+            else if (key == Service)
+            {
+                service = part[(eq + 1)..].Trim();
+            }
+        }
+
+        return project.Length > 0;
+    }
+}
+
+public enum ActionKind
+{
+    CreateNetwork,
+    CreateVolume,
+    Build,
+    RunService,
+}
+
+public sealed record ServiceWait(string Service, string Condition);
+
+/// <summary>One planned wslc invocation. <see cref="Args"/> excludes the --session option.</summary>
+public sealed record ComposeAction(
+    ActionKind Kind,
+    string Target,
+    string Description,
+    IReadOnlyList<string> Args,
+    string? Service = null,
+    IReadOnlyList<ServiceWait>? Waits = null,
+    IReadOnlyList<IReadOnlyList<string>>? After = null);
+
+public sealed record ComposePlan(
+    string Project,
+    IReadOnlyList<ComposeAction> Actions,
+    IReadOnlyList<string> Warnings,
+    IReadOnlyList<string> Errors)
+{
+    public bool CanRun => Errors.Count == 0 && Actions.Count > 0;
+}
+
+public sealed class ComposeOptions
+{
+    /// <summary>Overrides the project name; defaults to the top-level "name" or the directory name.</summary>
+    public string? ProjectName { get; init; }
+
+    /// <summary>Directory containing the compose file; relative paths resolve against it.</summary>
+    public string Directory { get; init; } = Environment.CurrentDirectory;
+
+    /// <summary>Variables available to ${VAR} interpolation (shell environment merged over .env).</summary>
+    public IReadOnlyDictionary<string, string> Env { get; init; } = new Dictionary<string, string>();
+
+    public Func<string, bool> FileExists { get; init; } = File.Exists;
+}

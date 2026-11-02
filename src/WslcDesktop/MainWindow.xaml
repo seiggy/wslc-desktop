@@ -21,6 +21,11 @@
             SelectionChanged="Nav_SelectionChanged">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Containers" Icon="Library" Tag="containers" />
+                <NavigationViewItem Content="Stacks" Tag="stacks">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xF168;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem Content="Images" Tag="images">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE7B8;" />
