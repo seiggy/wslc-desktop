@@ -81,6 +81,79 @@ public sealed partial class ContainerDetailPage : Page
 
     private async void Inspect_Click(object sender, RoutedEventArgs e) => await LoadInspectAsync();
 
+    private async void Disconnect_Click(object sender, RoutedEventArgs e)
+    {
+        var network = (string)((FrameworkElement)sender).Tag;
+        var confirm = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = $"Disconnect from \"{network}\"?",
+            Content = $"{_name} will lose access to this network.",
+            PrimaryButtonText = "Disconnect",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await confirm.ShowAsync() == ContentDialogResult.Primary)
+        {
+            await NetworkActionAsync("Couldn't disconnect", () => App.Host.DisconnectNetworkAsync(network, _name));
+        }
+    }
+
+    private async void Connect_Click(object sender, RoutedEventArgs e)
+    {
+        IReadOnlyList<string> all;
+        try
+        {
+            all = await App.Host.GetNetworkNamesAsync();
+        }
+        catch (Exception ex)
+        {
+            InspectError.Message = ex.Message;
+            InspectError.IsOpen = true;
+            return;
+        }
+
+        var connected = (await App.Host.InspectContainerAsync(_name)) is { } json
+            ? ContainerDetail.Parse(json).Networks.Select(n => n.Name).ToHashSet()
+            : [];
+        var choices = all.Where(n => !connected.Contains(n)).ToList();
+        if (choices.Count == 0)
+        {
+            await new ContentDialog { XamlRoot = XamlRoot, Title = "No networks available", Content = "This container is already connected to every network.", CloseButtonText = "Close" }.ShowAsync();
+            return;
+        }
+
+        var network = new ComboBox { Header = "Network", ItemsSource = choices, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var alias = new TextBox { Header = "Alias (optional)" };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = $"Connect {_name} to a network",
+            Content = new StackPanel { Spacing = 12, MinWidth = 360, Children = { network, alias } },
+            PrimaryButtonText = "Connect",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary && network.SelectedItem is string chosen)
+        {
+            await NetworkActionAsync("Couldn't connect", () => App.Host.ConnectNetworkAsync(chosen, _name, alias.Text.Trim()));
+        }
+    }
+
+    private async Task NetworkActionAsync(string failureTitle, Func<Task> action)
+    {
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            await new ContentDialog { XamlRoot = XamlRoot, Title = failureTitle, Content = ex.Message, CloseButtonText = "Close" }.ShowAsync();
+        }
+
+        await LoadInspectAsync();
+    }
+
     private async Task LoadInspectAsync()
     {
         InspectError.IsOpen = false;
@@ -110,10 +183,24 @@ public sealed partial class ContainerDetailPage : Page
             Controls.InspectUi.AddRow(rows, "Ports", d.Ports.Count > 0 ? string.Join('\n', d.Ports) : "None");
             foreach (var n in d.Networks)
             {
-                Controls.InspectUi.AddRow(rows, $"Network {n.Name}",
-                    string.Join('\n', new[] { n.IpAddress, n.Gateway.Length > 0 ? $"Gateway {n.Gateway}" : "", n.Mac }.Where(s => s.Length > 0)), true);
+                var row = new Grid { ColumnSpacing = 16 };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                row.Children.Add(Controls.InspectUi.Secondary($"Network {n.Name}"));
+                var info = Controls.InspectUi.Mono(string.Join('\n', new[] { n.IpAddress, n.Gateway.Length > 0 ? $"Gateway {n.Gateway}" : "", n.Mac }.Where(s => s.Length > 0)));
+                Grid.SetColumn(info, 1);
+                row.Children.Add(info);
+                var disconnect = new Button { Content = "Disconnect", Tag = n.Name, VerticalAlignment = VerticalAlignment.Top };
+                disconnect.Click += Disconnect_Click;
+                Grid.SetColumn(disconnect, 2);
+                row.Children.Add(disconnect);
+                rows.Children.Add(row);
             }
 
+            var connect = new Button { Content = "Connect to network…" };
+            connect.Click += Connect_Click;
+            rows.Children.Add(connect);
             InspectPanel.Children.Add(card);
 
             card = Controls.InspectUi.Card("Mounts", out rows);

@@ -309,7 +309,7 @@ public static class WslcCli
     private static string Str(JsonElement e, string name) =>
         e.ValueKind == JsonValueKind.Object && e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? string.Empty : string.Empty;
 
-    private static async Task<string> RunAsync(params string[] args)
+    internal static async Task<string> RunAsync(params string[] args)
     {
         var info = new ProcessStartInfo("wslc")
         {
@@ -331,7 +331,10 @@ public static class WslcCli
             await process.WaitForExitAsync();
             if (process.ExitCode != 0)
             {
-                throw new InvalidOperationException((await stderr).Trim() is { Length: > 0 } m ? m : $"wslc exited with {process.ExitCode}.");
+                var err = (await stderr).Trim();
+                var outText = (await stdout).Trim();
+                var message = err.Length > 0 ? err : outText;
+                throw new InvalidOperationException(message.Length > 0 ? message : $"wslc exited with {process.ExitCode}.");
             }
 
             return await stdout;

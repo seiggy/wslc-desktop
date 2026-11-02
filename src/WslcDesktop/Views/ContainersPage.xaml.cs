@@ -81,16 +81,33 @@ public sealed partial class ContainersPage : Page
         };
         var name = new TextBox { Header = "Name", PlaceholderText = "my-container" };
         var command = new TextBox { Header = "Command (optional)", PlaceholderText = "/bin/sleep 3600" };
+        var ports = new TextBox { Header = "Ports (one per line)", PlaceholderText = "8080:80", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var mounts = new TextBox { Header = "Volumes and bind mounts (one per line)", PlaceholderText = "my-data:/data", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var env = new TextBox { Header = "Environment variables (one per line)", PlaceholderText = "KEY=value", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var network = new ComboBox { Header = "Network", HorizontalAlignment = HorizontalAlignment.Stretch };
+        var networkNames = new List<string> { "Default (bridge)" };
+        try
+        {
+            networkNames.AddRange((await App.Host.GetNetworkNamesAsync()).Where(n => n != "bridge"));
+        }
+        catch
+        {
+            // The default network is always available.
+        }
+
+        network.ItemsSource = networkNames;
+        network.SelectedIndex = 0;
+        var startAfter = new CheckBox { Content = "Start after creating", IsChecked = true };
         var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
         var bar = new ProgressBar { IsIndeterminate = true, Visibility = Visibility.Collapsed };
         var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
-        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, status, bar, error } };
+        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, ports, mounts, env, network, startAfter, status, bar, error } };
 
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
             Title = "New container",
-            Content = panel,
+            Content = new ScrollViewer { Content = panel, MaxHeight = 520, Padding = new Thickness(0, 0, 16, 0) },
             PrimaryButtonText = "Create",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
@@ -115,7 +132,7 @@ public sealed partial class ContainersPage : Page
             var commandLine = command.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             error.IsOpen = false;
-            image.IsEnabled = name.IsEnabled = command.IsEnabled = false;
+            image.IsEnabled = name.IsEnabled = command.IsEnabled = ports.IsEnabled = mounts.IsEnabled = env.IsEnabled = network.IsEnabled = startAfter.IsEnabled = false;
             dialog.IsPrimaryButtonEnabled = false;
             bar.Visibility = status.Visibility = Visibility.Visible;
             try
@@ -138,14 +155,21 @@ public sealed partial class ContainersPage : Page
                 }
 
                 status.Text = "Creating container…";
-                await App.Host.CreateContainerAsync(containerName, imageName, commandLine);
+                await App.Host.CreateContainerAsync(new NewContainerSpec(
+                    containerName, imageName, commandLine, Lines(ports.Text), Lines(mounts.Text), Lines(env.Text),
+                    network.SelectedIndex > 0 ? (string)network.SelectedItem : string.Empty));
+                if (startAfter.IsChecked == true)
+                {
+                    status.Text = "Starting container…";
+                    await App.Host.StartContainerAsync(containerName);
+                }
             }
             catch (Exception ex)
             {
                 args.Cancel = true;
                 error.Message = ex.Message;
                 error.IsOpen = true;
-                image.IsEnabled = name.IsEnabled = command.IsEnabled = true;
+                image.IsEnabled = name.IsEnabled = command.IsEnabled = ports.IsEnabled = mounts.IsEnabled = env.IsEnabled = network.IsEnabled = startAfter.IsEnabled = true;
                 bar.Visibility = status.Visibility = Visibility.Collapsed;
                 Validate();
             }
@@ -160,6 +184,9 @@ public sealed partial class ContainersPage : Page
             await RefreshAsync();
         }
     }
+
+    private static string[] Lines(string text) =>
+        text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
     // A local image may be listed as "alpine:latest" or with a registry prefix and an implicit tag.
     private static bool HasImage(IEnumerable<string> localNames, string typed)

@@ -22,6 +22,8 @@
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Containers" Icon="Library" Tag="containers" />
                 <NavigationViewItem Content="Images" Icon="Pictures" Tag="images" />
+                <NavigationViewItem Content="Volumes" Icon="Folder" Tag="volumes" />
+                <NavigationViewItem Content="Networks" Icon="World" Tag="networks" />
                 <NavigationViewItem Content="Environment" Icon="AllApps" Tag="sessions" />
             </NavigationView.MenuItems>
 

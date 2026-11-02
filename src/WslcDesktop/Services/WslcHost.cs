@@ -117,6 +117,32 @@ public sealed class WslcHost
 
     public Task TerminateSessionAsync(string session) => WslcCli.TerminateSessionAsync(session);
 
+    public string SessionId => SessionName;
+
+    public Task<IReadOnlyList<ResourceRow>> GetResourcesAsync(ResourceKind kind) =>
+        kind == ResourceKind.Volume ? WslcResources.ListVolumesAsync(SessionName) : WslcResources.ListNetworksAsync(SessionName);
+
+    public Task<string> InspectResourceAsync(ResourceKind kind, string name) => WslcResources.InspectAsync(SessionName, kind, name);
+
+    public Task CreateVolumeAsync(string name, string driver) => WslcResources.CreateVolumeAsync(SessionName, name, driver);
+
+    public Task CreateNetworkAsync(string name, string driver, string subnet, string gateway, bool isInternal) =>
+        WslcResources.CreateNetworkAsync(SessionName, name, driver, subnet, gateway, isInternal);
+
+    public Task RemoveResourceAsync(ResourceKind kind, string name) => WslcResources.RemoveAsync(SessionName, kind, name);
+
+    public Task PruneResourcesAsync(ResourceKind kind) => WslcResources.PruneAsync(SessionName, kind);
+
+    public Task<IReadOnlyList<string>> GetNetworkNamesAsync() => WslcResources.ListNetworkNamesAsync(SessionName);
+
+    public Task ConnectNetworkAsync(string network, string container, string alias) =>
+        WslcResources.ConnectAsync(SessionName, network, container, alias);
+
+    public Task DisconnectNetworkAsync(string network, string container) =>
+        WslcResources.DisconnectAsync(SessionName, network, container);
+
+    public Task CreateContainerAsync(NewContainerSpec spec) => WslcResources.CreateContainerAsync(SessionName, spec);
+
     public Task CreateContainerAsync(string name, string image, string[] commandLine)
     {
         return Run(s =>

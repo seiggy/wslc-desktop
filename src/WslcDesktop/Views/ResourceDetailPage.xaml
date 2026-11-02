@@ -1,0 +1,31 @@
+<Page
+    x:Class="WslcDesktop.Views.ResourceDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:WslcDesktop.Controls">
+
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <Button
+                x:Name="BackButton"
+                AutomationProperties.Name="Back"
+                Click="Back_Click"
+                Content="&#xE72B;"
+                FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            <TextBlock x:Name="TitleText" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="16" Padding="0,0,16,16">
+                <InfoBar x:Name="ErrorBar" IsClosable="False" IsOpen="False" Severity="Error" />
+                <StackPanel x:Name="Cards" Spacing="16" />
+                <controls:RawJsonExpander x:Name="RawView" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>
