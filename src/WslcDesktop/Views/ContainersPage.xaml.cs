@@ -6,27 +6,57 @@ namespace WslcDesktop.Views;
 
 public sealed partial class ContainersPage : Page
 {
+    private readonly System.Collections.ObjectModel.ObservableCollection<ContainerItem> _items = [];
+
     public ContainersPage()
     {
         InitializeComponent();
-        Loaded += async (_, _) => await RefreshAsync();
+        List.ItemsSource = _items;
+        Loaded += (_, _) =>
+        {
+            App.Host.Monitor.Updated += OnChanged;
+            App.Host.Telemetry.Updated += OnChanged;
+            Sync();
+        };
+        Unloaded += (_, _) =>
+        {
+            App.Host.Monitor.Updated -= OnChanged;
+            App.Host.Telemetry.Updated -= OnChanged;
+        };
     }
 
-    private async Task RefreshAsync()
+    private void OnChanged() => DispatcherQueue.TryEnqueue(Sync);
+
+    // Update items in place so rows don't flicker or lose focus on every poll.
+    private void Sync()
     {
-        try
+        var monitor = App.Host.Monitor;
+        var rows = monitor.Containers;
+        foreach (var gone in _items.Where(i => rows.All(r => r.Name != i.Name)).ToList())
         {
-            var rows = await App.Host.GetContainersAsync();
-            List.ItemsSource = rows;
-            EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            _items.Remove(gone);
         }
-        catch (Exception e)
+
+        foreach (var row in rows)
         {
-            await ShowAsync("Couldn't list containers", e.Message);
+            var item = _items.FirstOrDefault(i => i.Name == row.Name);
+            if (item is null)
+            {
+                item = new ContainerItem(row.Name);
+                _items.Add(item);
+            }
+
+            var history = App.Host.Telemetry.GetHistory(row.Name);
+            item.Update(row, history.Count > 0 ? history[^1] : null);
         }
+
+        EmptyText.Visibility = monitor.HasLoaded && rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        ErrorBar.Title = "Couldn't list containers";
+        ErrorBar.Message = monitor.LastError ?? string.Empty;
+        ErrorBar.IsOpen = monitor.LastError is not null;
     }
 
-    private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshAsync();
+    private Task RefreshAsync() => App.Host.Monitor.RefreshAsync();
 
     private async void New_Click(object sender, RoutedEventArgs e)
     {
@@ -165,29 +195,6 @@ public sealed partial class ContainersPage : Page
 
     private async void Delete_Click(object sender, RoutedEventArgs e) =>
         await ActAsync("Couldn't delete the container", () => App.Host.DeleteContainerAsync(NameOf(sender)));
-
-    private async void Inspect_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var json = await App.Host.InspectContainerAsync(NameOf(sender));
-            await new ContentDialog
-            {
-                XamlRoot = XamlRoot,
-                Title = "Inspect",
-                Content = new ScrollViewer
-                {
-                    MaxHeight = 480,
-                    Content = new TextBlock { Text = json, IsTextSelectionEnabled = true, FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Mono") },
-                },
-                CloseButtonText = "Close",
-            }.ShowAsync();
-        }
-        catch (Exception ex)
-        {
-            await ShowAsync("Couldn't inspect the container", ex.Message);
-        }
-    }
 
     private static string NameOf(object sender) => (string)((FrameworkElement)sender).Tag;
 

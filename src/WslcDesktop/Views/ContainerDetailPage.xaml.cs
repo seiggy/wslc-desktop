@@ -22,15 +22,80 @@ public sealed partial class ContainerDetailPage : Page
         {
             _ready = true;
             App.Host.Telemetry.Updated += OnTelemetryUpdated;
+            App.Host.Monitor.Updated += OnTelemetryUpdated;
+            _wasRunning = IsRunning;
             StartLogs();
+            ApplyState();
             RenderTelemetry();
+            _ = LoadInspectAsync();
         };
         Unloaded += (_, _) =>
         {
             App.Host.Telemetry.Updated -= OnTelemetryUpdated;
+            App.Host.Monitor.Updated -= OnTelemetryUpdated;
             _logCts?.Cancel();
             StopShell();
         };
+    }
+
+    private bool _wasRunning;
+
+    private bool IsRunning => App.Host.Monitor.Find(_name) is { } row && ContainerItem.IsRunningState(row.State);
+
+    private void ApplyState()
+    {
+        var row = App.Host.Monitor.Find(_name);
+        var running = IsRunning;
+        TitleText.Text = row is null ? _name : $"{_name} · {row.State}";
+
+        ShellPanel.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
+        ShellStoppedNotice.IsOpen = !running && App.Host.Monitor.HasLoaded;
+        if (!running && _shell is not null)
+        {
+            ShellView.Append("[container stopped]");
+            StopShell();
+        }
+
+        // Pick up new output when a stopped container starts again.
+        if (running && !_wasRunning)
+        {
+            StartLogs();
+        }
+
+        _wasRunning = running;
+    }
+
+    private async void StartContainer_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await App.Host.StartContainerAsync(_name);
+        }
+        catch (Exception ex)
+        {
+            ShellStoppedNotice.Message = ex.Message;
+        }
+
+        await App.Host.Monitor.RefreshAsync();
+    }
+
+    private async void Inspect_Click(object sender, RoutedEventArgs e) => await LoadInspectAsync();
+
+    private async Task LoadInspectAsync()
+    {
+        InspectView.Clear();
+        InspectView.AutoScroll = false;
+        try
+        {
+            foreach (var line in (await App.Host.InspectContainerAsync(_name)).Split('\n'))
+            {
+                InspectView.Append(line.TrimEnd('\r'));
+            }
+        }
+        catch (Exception ex)
+        {
+            InspectView.Append(ex.Message);
+        }
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -160,18 +225,23 @@ public sealed partial class ContainerDetailPage : Page
 
     // Telemetry
 
-    private void OnTelemetryUpdated() => DispatcherQueue.TryEnqueue(RenderTelemetry);
+    private void OnTelemetryUpdated() => DispatcherQueue.TryEnqueue(() =>
+    {
+        ApplyState();
+        RenderTelemetry();
+    });
 
     private void Chart_SizeChanged(object sender, SizeChangedEventArgs e) => RenderTelemetry();
 
     private void RenderTelemetry()
     {
         var history = App.Host.Telemetry.GetHistory(_name);
-        if (history.Count == 0)
+        if (history.Count == 0 || !IsRunning)
         {
             TelemetryNotice.IsOpen = true;
-            TelemetryNotice.Message = App.Host.Telemetry.LastError
-                ?? "Waiting for the first sample. Telemetry is only available while the container is running.";
+            TelemetryNotice.Message = App.Host.Telemetry.LastError ?? (IsRunning
+                ? "Waiting for the first sample."
+                : "This container is stopped. Telemetry is captured while it runs.");
             return;
         }
 

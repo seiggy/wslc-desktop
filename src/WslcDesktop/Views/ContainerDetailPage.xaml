@@ -57,7 +57,20 @@
             </PivotItem>
 
             <PivotItem Header="Shell">
-                <Grid RowSpacing="12">
+                <Grid>
+                    <InfoBar
+                        x:Name="ShellStoppedNotice"
+                        IsClosable="False"
+                        IsOpen="False"
+                        Message="Start the container to open a shell."
+                        Severity="Informational"
+                        Title="This container is stopped"
+                        VerticalAlignment="Top">
+                        <InfoBar.ActionButton>
+                            <Button Click="StartContainer_Click" Content="Start container" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                <Grid x:Name="ShellPanel" RowSpacing="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
@@ -81,6 +94,7 @@
                         IsEnabled="False"
                         KeyDown="ShellInput_KeyDown"
                         PlaceholderText="Type a command and press Enter" />
+                </Grid>
                 </Grid>
             </PivotItem>
 
@@ -150,6 +164,17 @@
                         </Border>
                     </Grid>
                 </ScrollViewer>
+            </PivotItem>
+
+            <PivotItem Header="Inspect">
+                <Grid RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Button Click="Inspect_Click" Content="Reload" />
+                    <controls:OutputView x:Name="InspectView" Grid.Row="1" />
+                </Grid>
             </PivotItem>
         </Pivot>
     </Grid>

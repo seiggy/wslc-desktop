@@ -59,7 +59,10 @@ public sealed class WslcHost
             _session = session;
         });
         Telemetry.Start(SessionName);
+        Monitor.Start(GetContainersAsync);
     }
+
+    public ContainerMonitor Monitor { get; } = new();
 
     public TelemetryService Telemetry { get; } = new();
 
@@ -72,6 +75,7 @@ public sealed class WslcHost
     public void Shutdown()
     {
         Telemetry.Stop();
+        Monitor.Stop();
         try
         {
             _session?.Terminate();
