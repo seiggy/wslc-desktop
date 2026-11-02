@@ -14,8 +14,19 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
+        ApplyAppIcon();
         Nav.IsPaneVisible = false;
         _ = BootAsync();
+    }
+
+    private void ApplyAppIcon()
+    {
+        // Taskbar / Alt-Tab / window icon, and the 16 DIP title bar icon (scale-qualified PNGs resolved by MRT).
+        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
+        AppTitleBar.IconSource = new ImageIconSource
+        {
+            ImageSource = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri("ms-appx:///Assets/TitleBarIcon.png")),
+        };
     }
 
     private async Task BootAsync()
