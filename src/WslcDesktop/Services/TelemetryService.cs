@@ -68,7 +68,7 @@ public sealed class TelemetryService
 
             try
             {
-                var snapshot = await WslcCli.GetStatsAsync(session);
+                var snapshot = await WslcCli.GetStatsAsync(session, ct);
                 lock (_gate)
                 {
                     foreach (var name in _history.Keys.Where(k => !snapshot.ContainsKey(k)).ToList())
@@ -99,7 +99,10 @@ public sealed class TelemetryService
                 LastError = e.Message;
             }
 
-            Updated?.Invoke();
+            if (!ct.IsCancellationRequested)
+            {
+                Updated?.Invoke();
+            }
         }
         while (await WaitAsync(timer, ct));
     }

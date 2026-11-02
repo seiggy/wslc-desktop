@@ -8,8 +8,9 @@ public sealed class ContainerMonitor
     public static readonly TimeSpan Interval = TimeSpan.FromSeconds(2);
 
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private Func<Task<IReadOnlyList<ContainerRow>>>? _source;
+    private Func<CancellationToken, Task<IReadOnlyList<ContainerRow>>>? _source;
     private CancellationTokenSource? _cts;
+    private volatile bool _stopped;
 
     private PeriodicTimer? _timer;
 
@@ -41,13 +42,14 @@ public sealed class ContainerMonitor
     public ContainerRow? Find(string name) =>
         Containers.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.Ordinal));
 
-    public void Start(Func<Task<IReadOnlyList<ContainerRow>>> source)
+    public void Start(Func<CancellationToken, Task<IReadOnlyList<ContainerRow>>> source)
     {
         if (_cts is not null)
         {
             return;
         }
 
+        _stopped = false;
         _source = source;
         _cts = new CancellationTokenSource();
         _ = LoopAsync(_cts.Token);
@@ -55,23 +57,40 @@ public sealed class ContainerMonitor
 
     public void Stop()
     {
+        _stopped = true;
         _cts?.Cancel();
         _cts = null;
     }
 
-    public async Task RefreshAsync()
+    public async Task RefreshAsync(CancellationToken ct = default)
     {
-        if (_source is null)
+        var source = _source;
+        var lifetime = _cts?.Token ?? CancellationToken.None;
+        if (source is null)
         {
             return;
         }
 
-        await _gate.WaitAsync();
+        // Stop() cancels both the wait for the gate and any wslc call already in flight.
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, lifetime);
         try
         {
-            Containers = await _source();
+            await _gate.WaitAsync(linked.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        try
+        {
+            Containers = await source(linked.Token);
             HasLoaded = true;
             LastError = null;
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
         catch (Exception e)
         {
@@ -82,7 +101,10 @@ public sealed class ContainerMonitor
             _gate.Release();
         }
 
-        Updated?.Invoke();
+        if (!_stopped)
+        {
+            Updated?.Invoke();
+        }
     }
 
     private async Task LoopAsync(CancellationToken ct)
@@ -91,11 +113,10 @@ public sealed class ContainerMonitor
         _timer = timer;
         do
         {
-            await RefreshAsync();
+            await RefreshAsync(ct);
         }
         while (await WaitAsync(timer, ct));
     }
-
     private static async Task<bool> WaitAsync(PeriodicTimer timer, CancellationToken ct)
     {
         try
