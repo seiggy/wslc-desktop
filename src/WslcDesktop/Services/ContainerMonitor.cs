@@ -11,8 +11,27 @@ public sealed class ContainerMonitor
     private Func<Task<IReadOnlyList<ContainerRow>>>? _source;
     private CancellationTokenSource? _cts;
 
+    private PeriodicTimer? _timer;
+
     public event Action? Updated;
 
+    public TimeSpan Period { get; private set; } = Interval;
+
+    public void SetPeriod(TimeSpan period)
+    {
+        Period = period;
+        try
+        {
+            if (_timer is { } t)
+            {
+                t.Period = period;
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // The loop just ended.
+        }
+    }
     public IReadOnlyList<ContainerRow> Containers { get; private set; } = Array.Empty<ContainerRow>();
 
     public bool HasLoaded { get; private set; }
@@ -68,7 +87,8 @@ public sealed class ContainerMonitor
 
     private async Task LoopAsync(CancellationToken ct)
     {
-        using var timer = new PeriodicTimer(Interval);
+        using var timer = new PeriodicTimer(Period);
+        _timer = timer;
         do
         {
             await RefreshAsync();

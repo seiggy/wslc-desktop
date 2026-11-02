@@ -5,5 +5,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/WslcDesktop.Compose.Tests/WslcDesktop.Compose.Tests.csproj" />
+    <Project Path="tests/WslcDesktop.Tests/WslcDesktop.Tests.csproj" />
   </Folder>
 </Solution>

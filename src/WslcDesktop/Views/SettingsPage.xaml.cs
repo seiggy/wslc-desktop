@@ -34,8 +34,64 @@ public sealed partial class SettingsPage : Page
         _inputs.Clear();
         _errors.Clear();
         BuildYamlCard();
+        BuildAppPreferencesCard();
         BuildAppSessionCard();
         BuildRegistryCard();
+    }
+
+    private void BuildAppPreferencesCard()
+    {
+        var host = App.Host;
+        var card = InspectUi.Card("App preferences", out var rows);
+        rows.Spacing = 12;
+        rows.Children.Add(new TextBlock
+        {
+            Text = "How WSLc Desktop behaves on your desktop. Changes apply immediately.",
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = InspectUi.Secondary(string.Empty).Foreground,
+        });
+
+        AddPreference(
+            rows,
+            "Minimize to tray",
+            "Minimizing hides the window to the notification area and removes it from the taskbar. Containers keep running; "
+                + "click the tray icon to bring the window back.",
+            host.Settings.MinimizeToTray,
+            on => host.Settings.MinimizeToTray = on);
+        AddPreference(
+            rows,
+            "Close button minimizes to tray",
+            "The close button (X) hides the window to the tray instead of quitting. Use Exit in the tray menu to quit the app.",
+            host.Settings.CloseMinimizesToTray,
+            on => host.Settings.CloseMinimizesToTray = on);
+        Cards.Children.Add(card);
+    }
+
+    private void AddPreference(StackPanel rows, string header, string help, bool value, Action<bool> set)
+    {
+        var toggle = new ToggleSwitch { Header = header, IsOn = value };
+        toggle.Toggled += (_, _) =>
+        {
+            set(toggle.IsOn);
+            try
+            {
+                App.Host.Settings.Save();
+                App.Tray?.Apply();
+            }
+            catch (Exception ex)
+            {
+                Status("Couldn't save app settings", ex.Message, InfoBarSeverity.Error);
+            }
+        };
+        rows.Children.Add(new StackPanel
+        {
+            Spacing = 4,
+            Children =
+            {
+                toggle,
+                new TextBlock { Text = help, TextWrapping = TextWrapping.Wrap, FontSize = 12, Foreground = InspectUi.Secondary(string.Empty).Foreground },
+            },
+        });
     }
 
     private void Status(string title, string message, InfoBarSeverity severity)

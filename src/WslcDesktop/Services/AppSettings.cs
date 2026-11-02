@@ -20,16 +20,22 @@ public sealed class AppSettings
 
     public bool EnableGpu { get; set; }
 
+    public bool MinimizeToTray { get; set; }
+
+    public bool CloseMinimizesToTray { get; set; }
+
     // Server names only; credentials live in wslc's credential store and are never read or written here.
     public List<string> Registries { get; set; } = [];
 
-    public static AppSettings Load()
+    public static AppSettings Load() => Load(FilePath);
+
+    public static AppSettings Load(string path)
     {
         try
         {
-            if (File.Exists(FilePath))
+            if (File.Exists(path))
             {
-                var s = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath));
+                var s = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path));
                 if (s is not null)
                 {
                     s.CpuCount = Math.Clamp(s.CpuCount, 1, (uint)Environment.ProcessorCount);
@@ -47,9 +53,13 @@ public sealed class AppSettings
         return new AppSettings();
     }
 
-    public void Save()
+    public void Save() => Save(FilePath);
+
+    public void Save(string path)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var temp = path + ".tmp";
+        File.WriteAllText(temp, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+        File.Move(temp, path, overwrite: true);
     }
 }
