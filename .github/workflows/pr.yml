@@ -1,0 +1,176 @@
+name: PR build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: pr-build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # The repo nuget.config targets an internal feed; CI restores from nuget.org instead.
+  NUGET_CONFIG: ${{ github.workspace }}/.github/nuget.ci.config
+
+jobs:
+  build-test:
+    name: Build and test (${{ matrix.platform }})
+    runs-on: windows-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: x64
+            rid: win-x64
+            test: true
+          - platform: ARM64
+            rid: win-arm64
+            test: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 11.0.x
+          dotnet-quality: preview
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.*.props', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        shell: pwsh
+        run: |
+          dotnet restore src/WslcDesktop -r ${{ matrix.rid }} -p:Platform=${{ matrix.platform }} --configfile $env:NUGET_CONFIG
+          dotnet restore tests/WslcDesktop.Compose.Tests --configfile $env:NUGET_CONFIG
+
+      - name: Build solution
+        shell: pwsh
+        run: |
+          dotnet build src/WslcDesktop -c Release -r ${{ matrix.rid }} --no-restore -p:Platform=${{ matrix.platform }} "-bl:build-${{ matrix.platform }}.binlog" "-flp:logfile=build-${{ matrix.platform }}.log;verbosity=normal"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build tests/WslcDesktop.Compose.Tests -c Release --no-restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Report warnings
+        if: always()
+        shell: pwsh
+        run: |
+          $log = "build-${{ matrix.platform }}.log"
+          if (-not (Test-Path $log)) { exit 0 }
+          $w = Select-String -Path $log -Pattern ': warning ' | ForEach-Object { $_.Line.Trim() } | Sort-Object -Unique
+          "### Build warnings (${{ matrix.platform }}): $($w.Count)" >> $env:GITHUB_STEP_SUMMARY
+          $w | Select-Object -First 50 | ForEach-Object {
+            Write-Host "::warning::$_"
+            "- ``$_``" >> $env:GITHUB_STEP_SUMMARY
+          }
+
+      - name: Test
+        if: matrix.test
+        shell: pwsh
+        run: >
+          dotnet test tests/WslcDesktop.Compose.Tests -c Release --no-restore
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+
+      - name: Test summary
+        if: always() && matrix.test
+        shell: pwsh
+        run: |
+          $trx = Get-ChildItem TestResults -Filter *.trx -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $trx) { "No test results produced." >> $env:GITHUB_STEP_SUMMARY; exit 0 }
+          $c = ([xml](Get-Content $trx.FullName)).TestRun.ResultSummary.Counters
+          "### Tests: total $($c.total), passed $($c.passed), failed $($c.failed), not executed $($c.notExecuted)" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload test results
+        if: always() && matrix.test
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: warn
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.platform }}
+          path: |
+            build-${{ matrix.platform }}.binlog
+            build-${{ matrix.platform }}.log
+          if-no-files-found: warn
+
+  validate:
+    name: Validation
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 11.0.x
+          dotnet-quality: preview
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.*.props', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Verify icon and asset files referenced by the app project
+        shell: pwsh
+        run: |
+          $proj = 'src/WslcDesktop/WslcDesktop.csproj'
+          $dir = Split-Path $proj
+          $xml = [xml](Get-Content $proj)
+          $missing = @()
+          $icon = $xml.Project.PropertyGroup.ApplicationIcon | Where-Object { $_ } | Select-Object -First 1
+          if (-not $icon) { $missing += 'ApplicationIcon property not set' }
+          elseif (-not (Test-Path (Join-Path $dir $icon))) { $missing += $icon }
+          $pngs = Get-ChildItem (Join-Path $dir 'Assets') -Filter *.png -Recurse
+          if ($pngs.Count -eq 0) { $missing += 'Assets\*.png (none found)' }
+          foreach ($f in (Get-ChildItem (Join-Path $dir 'Assets') -File -Recurse | Where-Object Length -eq 0)) { $missing += "empty: $($f.FullName)" }
+          if ($missing) { $missing | ForEach-Object { Write-Host "::error::Missing or invalid asset: $_" }; exit 1 }
+          Write-Host "Icon '$icon' and $($pngs.Count) PNG assets present."
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore src/WslcDesktop -r win-x64 -p:Platform=x64 --configfile $env:NUGET_CONFIG
+
+      - name: Build app with documented command
+        shell: pwsh
+        run: dotnet build src\WslcDesktop -p:Platform=x64 -r win-x64 --no-restore
+
+      - name: Format check (report only)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          dotnet format src/WslcDesktop/WslcDesktop.csproj --verify-no-changes --no-restore --verbosity diagnostic
+          if ($LASTEXITCODE -ne 0) {
+            "### dotnet format: changes needed (report only)" >> $env:GITHUB_STEP_SUMMARY
+            Write-Host "::warning::dotnet format reports formatting differences"
+            exit $LASTEXITCODE
+          }
+
+      - name: README link sanity
+        shell: pwsh
+        run: |
+          $bad = @()
+          $text = Get-Content README.md -Raw
+          foreach ($m in [regex]::Matches($text, '\]\(([^)\s#]+)(?:#[^)]*)?\)')) {
+            $t = $m.Groups[1].Value
+            if ($t -match '^(https?:|mailto:)') { continue }
+            if (-not (Test-Path $t)) { $bad += $t }
+          }
+          if ($bad) { $bad | ForEach-Object { Write-Host "::error::Broken relative link in README.md: $_" }; exit 1 }
+          Write-Host 'README relative links OK.'
