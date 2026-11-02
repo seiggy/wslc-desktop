@@ -12,7 +12,7 @@ public sealed class ShellProcess : IDisposable
     {
         try
         {
-            _process = Process.Start(info) ?? throw new InvalidOperationException("Couldn't start wslc.exe.");
+            _process = ChildProcessTracker.Start(info);
         }
         catch (System.ComponentModel.Win32Exception)
         {

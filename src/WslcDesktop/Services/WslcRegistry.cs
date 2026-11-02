@@ -47,7 +47,7 @@ public static class WslcRegistry
 
         try
         {
-            using var process = Process.Start(info) ?? throw new InvalidOperationException("Couldn't start wslc.exe.");
+            using var process = ChildProcessTracker.Start(info);
             if (stdin is not null)
             {
                 await process.StandardInput.WriteAsync(stdin);

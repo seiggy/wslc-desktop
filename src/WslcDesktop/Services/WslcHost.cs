@@ -70,7 +70,7 @@ public sealed class WslcHost
         StartedCpuCount = cpuCount;
         StartedMemoryMb = memoryMb;
         Telemetry.Start(SessionName);
-        Monitor.Start(GetContainersAsync);
+        Monitor.Start(ct => GetContainersAsync(ct));
     }
 
     public ContainerMonitor Monitor { get; } = new();
@@ -86,23 +86,76 @@ public sealed class WslcHost
     public ShellProcess StartShell(string container, string shell, Action<string> onOutput, Action<int> onExit) =>
         WslcCli.StartShell(SessionName, container, shell, onOutput, onExit);
 
+    public static readonly TimeSpan ContainerStopGrace = TimeSpan.FromSeconds(2);
+    public static readonly TimeSpan ContainerStopBudget = TimeSpan.FromSeconds(4);
+    public static readonly TimeSpan SessionDisposeBudget = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// Stops the app's own session within a bounded time. Polling and child wslc processes are cancelled first,
+    /// running containers get a short SIGTERM grace (in parallel) instead of the engine's sequential long timeout,
+    /// and a terminate that blocks in native code is abandoned so the process can still exit.
+    /// </summary>
     public void Shutdown()
     {
         Telemetry.Stop();
         Monitor.Stop();
-        try
+        ChildProcessTracker.KillAll();
+
+        var session = _session;
+        _session = null;
+        if (session is null)
         {
-            _session?.Terminate();
-            _session?.Dispose();
-        }
-        catch
-        {
-            // Closing the window must not fail on a session that already ended.
+            return;
         }
 
-        _session = null;
+        var running = Monitor.Containers
+            .Where(c => string.Equals(c.State, "running", StringComparison.OrdinalIgnoreCase))
+            .Select(c => c.Name)
+            .ToList();
+        if (running.Count > 0)
+        {
+            // One CLI call stops them all concurrently; the API's Stop ignores the grace period here.
+            var args = new List<string> { "--session", SessionName, "stop", "-t", ((int)ContainerStopGrace.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture) };
+            args.AddRange(running);
+            if (!BoundedWait.Run(() => WslcCli.RunAsync([.. args]), ContainerStopBudget))
+            {
+                ChildProcessTracker.KillAll();
+            }
+        }
+
+        // Terminate blocks while this process still holds client connections to the session, but finishes
+        // immediately once we exit. A detached CLI call lets the process exit now and still end the session.
+        TerminateAfterExit();
+        BoundedWait.Run(() => Task.Run(() =>
+        {
+            try
+            {
+                session.Dispose();
+            }
+            catch
+            {
+                // Closing the window must not fail on a session that already ended.
+            }
+        }), SessionDisposeBudget);
     }
 
+    private static void TerminateAfterExit()
+    {
+        try
+        {
+            var info = new System.Diagnostics.ProcessStartInfo("wslc") { UseShellExecute = false, CreateNoWindow = true };
+            foreach (var a in new[] { "--session", SessionName, "system", "session", "terminate" })
+            {
+                info.ArgumentList.Add(a);
+            }
+
+            System.Diagnostics.Process.Start(info)?.Dispose();
+        }
+        catch (Exception)
+        {
+            // Without the CLI the session simply ends with its creator.
+        }
+    }
     public Task<IReadOnlyList<ImageRow>> GetImagesAsync() => Run(s =>
         (IReadOnlyList<ImageRow>)s.GetImages()
             .Select(i => new ImageRow(i.Name, FormatSize(i.Size), i.CreatedTimestamp))
@@ -123,7 +176,7 @@ public sealed class WslcHost
     public Task DeleteImageAsync(string nameOrId) => Run(s => s.DeleteImage(nameOrId));
 
     // The API cannot enumerate containers; wslc.exe can.
-    public Task<IReadOnlyList<ContainerRow>> GetContainersAsync() => WslcCli.ListContainersAsync(SessionName);
+    public Task<IReadOnlyList<ContainerRow>> GetContainersAsync(CancellationToken ct = default) => WslcCli.ListContainersAsync(SessionName, ct);
 
     public Task<IReadOnlyList<SessionRow>> GetSessionsAsync() => WslcCli.ListSessionsAsync();
 

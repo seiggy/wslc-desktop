@@ -24,9 +24,9 @@ public sealed record EnvironmentInfo(string Wsl, string Kernel, string SessionMa
 /// </summary>
 public static class WslcCli
 {
-    public static async Task<IReadOnlyList<ContainerRow>> ListContainersAsync(string session)
+    public static async Task<IReadOnlyList<ContainerRow>> ListContainersAsync(string session, CancellationToken ct = default)
     {
-        var output = await RunAsync("--session", session, "list", "--all", "--no-trunc", "--format", "json");
+        var output = await RunAsync(ct, "--session", session, "list", "--all", "--no-trunc", "--format", "json");
         var rows = new List<ContainerRow>();
         foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
@@ -110,9 +110,9 @@ public static class WslcCli
     }
 
     /// <summary>Snapshot of resource usage for every running container in the session.</summary>
-    public static async Task<IReadOnlyDictionary<string, StatsSample>> GetStatsAsync(string session)
+    public static async Task<IReadOnlyDictionary<string, StatsSample>> GetStatsAsync(string session, CancellationToken ct = default)
     {
-        var output = await RunAsync("--session", session, "stats", "--format", "json", "--no-trunc");
+        var output = await RunAsync(ct, "--session", session, "stats", "--format", "json", "--no-trunc");
         var result = new Dictionary<string, StatsSample>();
         var now = DateTimeOffset.Now;
         foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -188,7 +188,7 @@ public static class WslcCli
         Process process;
         try
         {
-            process = Process.Start(info) ?? throw new InvalidOperationException("Couldn't start wslc.exe.");
+            process = ChildProcessTracker.Start(info);
         }
         catch (System.ComponentModel.Win32Exception)
         {
@@ -310,7 +310,9 @@ public static class WslcCli
     private static string Str(JsonElement e, string name) =>
         e.ValueKind == JsonValueKind.Object && e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? string.Empty : string.Empty;
 
-    internal static async Task<string> RunAsync(params string[] args)
+    internal static Task<string> RunAsync(params string[] args) => RunAsync(CancellationToken.None, args);
+
+    internal static async Task<string> RunAsync(CancellationToken ct, params string[] args)
     {
         var info = new ProcessStartInfo("wslc")
         {
@@ -326,10 +328,11 @@ public static class WslcCli
 
         try
         {
-            using var process = Process.Start(info) ?? throw new InvalidOperationException("Couldn't start wslc.exe.");
-            var stdout = process.StandardOutput.ReadToEndAsync();
-            var stderr = process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            using var process = ChildProcessTracker.Start(info);
+            var stdout = process.StandardOutput.ReadToEndAsync(ct);
+            var stderr = process.StandardError.ReadToEndAsync(ct);
+            using var registration = ct.Register(() => ChildProcessTracker.Kill(process));
+            await process.WaitForExitAsync(ct);
             if (process.ExitCode != 0)
             {
                 var err = (await stderr).Trim();
