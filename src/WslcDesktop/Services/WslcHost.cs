@@ -102,6 +102,10 @@ public sealed class WslcHost
         await op;
     }
 
+    public Task<IReadOnlyList<ImageSummary>> GetImageSummariesAsync() => WslcCli.ListImagesAsync(SessionName);
+
+    public Task<ImageDetail> InspectImageAsync(string target) => WslcCli.InspectImageAsync(SessionName, target);
+
     public Task DeleteImageAsync(string nameOrId) => Run(s => s.DeleteImage(nameOrId));
 
     // The API cannot enumerate containers; wslc.exe can.

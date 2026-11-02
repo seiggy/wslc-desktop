@@ -194,8 +194,64 @@ public static class WslcCli
         return (ulong)(value * factor);
     }
 
+    public static async Task<IReadOnlyList<ImageSummary>> ListImagesAsync(string session)
+    {
+        var output = await RunAsync("--session", session, "images", "--no-trunc", "--format", "json");
+        var rows = new List<ImageSummary>();
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!line.StartsWith('{'))
+            {
+                continue;
+            }
+
+            using var doc = JsonDocument.Parse(line);
+            var root = doc.RootElement;
+            rows.Add(new ImageSummary(
+                Str(root, "Repository"), Str(root, "Tag"), Str(root, "ID"), Str(root, "Digest"),
+                Str(root, "Size"), Str(root, "CreatedSince"),
+                int.TryParse(Str(root, "Containers"), out var n) ? n : 0));
+        }
+
+        return rows;
+    }
+
+    public static async Task<ImageDetail> InspectImageAsync(string session, string target)
+    {
+        var output = await RunAsync("--session", session, "image", "inspect", target);
+        using var doc = JsonDocument.Parse(output);
+        var root = doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0
+            ? doc.RootElement[0]
+            : throw new InvalidOperationException($"Image '{target}' was not found.");
+
+        var config = root.TryGetProperty("Config", out var c) ? c : default;
+        var layers = root.TryGetProperty("RootFS", out var fs) ? Strings(fs, "Layers") : [];
+        var ports = config.ValueKind == JsonValueKind.Object && config.TryGetProperty("ExposedPorts", out var p)
+            && p.ValueKind == JsonValueKind.Object
+            ? p.EnumerateObject().Select(x => x.Name).ToList()
+            : [];
+        var labels = config.ValueKind == JsonValueKind.Object && config.TryGetProperty("Labels", out var l)
+            && l.ValueKind == JsonValueKind.Object
+            ? l.EnumerateObject().Select(x => $"{x.Name}={x.Value}").ToList()
+            : [];
+        var size = root.TryGetProperty("Size", out var s) && s.TryGetUInt64(out var bytes) ? WslcHost.FormatSize(bytes) : string.Empty;
+
+        return new ImageDetail(
+            Str(root, "Id"), Strings(root, "RepoTags"), Strings(root, "RepoDigests"),
+            Str(root, "Created"), size, Str(root, "Os"), Str(root, "Architecture"),
+            Str(root, "Author"), Str(root, "Comment"),
+            Str(config, "User"), Str(config, "WorkingDir"),
+            Strings(config, "Entrypoint"), Strings(config, "Cmd"), Strings(config, "Env"),
+            ports, labels, layers, output);
+    }
+
+    private static List<string> Strings(JsonElement e, string name) =>
+        e.ValueKind == JsonValueKind.Object && e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Array
+            ? v.EnumerateArray().Select(x => x.GetString() ?? string.Empty).ToList()
+            : [];
+
     private static string Str(JsonElement e, string name) =>
-        e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? string.Empty : string.Empty;
+        e.ValueKind == JsonValueKind.Object && e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? string.Empty : string.Empty;
 
     private static async Task<string> RunAsync(params string[] args)
     {
