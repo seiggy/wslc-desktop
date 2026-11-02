@@ -6,27 +6,58 @@ namespace WslcDesktop.Views;
 
 public sealed partial class ContainersPage : Page
 {
+    private readonly System.Collections.ObjectModel.ObservableCollection<ContainerItem> _items = [];
+
     public ContainersPage()
     {
         InitializeComponent();
-        Loaded += async (_, _) => await RefreshAsync();
+        List.ItemsSource = _items;
+        Loaded += (_, _) =>
+        {
+            App.Host.Monitor.Updated += OnChanged;
+            App.Host.Telemetry.Updated += OnChanged;
+            Sync();
+        };
+        Unloaded += (_, _) =>
+        {
+            App.Host.Monitor.Updated -= OnChanged;
+            App.Host.Telemetry.Updated -= OnChanged;
+        };
     }
 
-    private async Task RefreshAsync()
+    private void OnChanged() => DispatcherQueue.TryEnqueue(Sync);
+
+    // Update items in place so rows don't flicker or lose focus on every poll.
+    private void Sync()
     {
-        try
+        var monitor = App.Host.Monitor;
+        var rows = monitor.Containers;
+        foreach (var gone in _items.Where(i => rows.All(r => r.Name != i.Name)).ToList())
         {
-            var rows = await App.Host.GetContainersAsync();
-            List.ItemsSource = rows;
-            EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            _items.Remove(gone);
         }
-        catch (Exception e)
+
+        for (var n = 0; n < rows.Count; n++)
         {
-            await ShowAsync("Couldn't list containers", e.Message);
+            var row = rows[n];
+            var item = _items.FirstOrDefault(i => i.Name == row.Name);
+            if (item is null)
+            {
+                item = new ContainerItem(row.Name);
+                _items.Insert(Math.Min(n, _items.Count), item);
+            }
+
+            var history = App.Host.Telemetry.GetHistory(row.Name);
+            item.Update(row, history.Count > 0 ? history[^1] : null);
         }
+
+        EmptyText.Visibility = monitor.HasLoaded && rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        ErrorBar.Title = "Couldn't list containers";
+        ErrorBar.Message = monitor.LastError ?? string.Empty;
+        ErrorBar.IsOpen = monitor.LastError is not null;
     }
 
-    private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshAsync();
+    private Task RefreshAsync() => App.Host.Monitor.RefreshAsync();
 
     private async void New_Click(object sender, RoutedEventArgs e)
     {
@@ -51,16 +82,33 @@ public sealed partial class ContainersPage : Page
         };
         var name = new TextBox { Header = "Name", PlaceholderText = "my-container" };
         var command = new TextBox { Header = "Command (optional)", PlaceholderText = "/bin/sleep 3600" };
+        var ports = new TextBox { Header = "Ports (one per line)", PlaceholderText = "8080:80", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var mounts = new TextBox { Header = "Volumes and bind mounts (one per line)", PlaceholderText = "my-data:/data", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var env = new TextBox { Header = "Environment variables (one per line)", PlaceholderText = "KEY=value", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var network = new ComboBox { Header = "Network", HorizontalAlignment = HorizontalAlignment.Stretch };
+        var networkNames = new List<string> { "Default (bridge)" };
+        try
+        {
+            networkNames.AddRange((await App.Host.GetNetworkNamesAsync()).Where(n => n != "bridge"));
+        }
+        catch
+        {
+            // The default network is always available.
+        }
+
+        network.ItemsSource = networkNames;
+        network.SelectedIndex = 0;
+        var startAfter = new CheckBox { Content = "Start after creating", IsChecked = true };
         var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
         var bar = new ProgressBar { IsIndeterminate = true, Visibility = Visibility.Collapsed };
         var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
-        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, status, bar, error } };
+        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, ports, mounts, env, network, startAfter, status, bar, error } };
 
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
             Title = "New container",
-            Content = panel,
+            Content = new ScrollViewer { Content = panel, MaxHeight = 640, Padding = new Thickness(0, 0, 16, 0) },
             PrimaryButtonText = "Create",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
@@ -85,7 +133,7 @@ public sealed partial class ContainersPage : Page
             var commandLine = command.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             error.IsOpen = false;
-            image.IsEnabled = name.IsEnabled = command.IsEnabled = false;
+            image.IsEnabled = name.IsEnabled = command.IsEnabled = ports.IsEnabled = mounts.IsEnabled = env.IsEnabled = network.IsEnabled = startAfter.IsEnabled = false;
             dialog.IsPrimaryButtonEnabled = false;
             bar.Visibility = status.Visibility = Visibility.Visible;
             try
@@ -108,14 +156,21 @@ public sealed partial class ContainersPage : Page
                 }
 
                 status.Text = "Creating container…";
-                await App.Host.CreateContainerAsync(containerName, imageName, commandLine);
+                await App.Host.CreateContainerAsync(new NewContainerSpec(
+                    containerName, imageName, commandLine, Lines(ports.Text), Lines(mounts.Text), Lines(env.Text),
+                    network.SelectedIndex > 0 ? (string)network.SelectedItem : string.Empty));
+                if (startAfter.IsChecked == true)
+                {
+                    status.Text = "Starting container…";
+                    await App.Host.StartContainerAsync(containerName);
+                }
             }
             catch (Exception ex)
             {
                 args.Cancel = true;
                 error.Message = ex.Message;
                 error.IsOpen = true;
-                image.IsEnabled = name.IsEnabled = command.IsEnabled = true;
+                image.IsEnabled = name.IsEnabled = command.IsEnabled = ports.IsEnabled = mounts.IsEnabled = env.IsEnabled = network.IsEnabled = startAfter.IsEnabled = true;
                 bar.Visibility = status.Visibility = Visibility.Collapsed;
                 Validate();
             }
@@ -130,6 +185,9 @@ public sealed partial class ContainersPage : Page
             await RefreshAsync();
         }
     }
+
+    private static string[] Lines(string text) =>
+        text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
     // A local image may be listed as "alpine:latest" or with a registry prefix and an implicit tag.
     private static bool HasImage(IEnumerable<string> localNames, string typed)
@@ -154,36 +212,33 @@ public sealed partial class ContainersPage : Page
         return localNames.Any(n => string.Equals(Normalize(n), wanted, StringComparison.OrdinalIgnoreCase));
     }
 
+    private void List_ItemClick(object sender, ItemClickEventArgs e) =>
+        Frame.Navigate(typeof(ContainerDetailPage), ((ContainerItem)e.ClickedItem).Name);
+
     private async void Start_Click(object sender, RoutedEventArgs e) =>
         await ActAsync("Couldn't start the container", () => App.Host.StartContainerAsync(NameOf(sender)));
 
     private async void Stop_Click(object sender, RoutedEventArgs e) =>
         await ActAsync("Couldn't stop the container", () => App.Host.StopContainerAsync(NameOf(sender)));
 
-    private async void Delete_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't delete the container", () => App.Host.DeleteContainerAsync(NameOf(sender)));
-
-    private async void Inspect_Click(object sender, RoutedEventArgs e)
+    private async void Delete_Click(object sender, RoutedEventArgs e)
     {
-        try
+        var name = NameOf(sender);
+        var confirm = new ContentDialog
         {
-            var json = await App.Host.InspectContainerAsync(NameOf(sender));
-            await new ContentDialog
-            {
-                XamlRoot = XamlRoot,
-                Title = "Inspect",
-                Content = new ScrollViewer
-                {
-                    MaxHeight = 480,
-                    Content = new TextBlock { Text = json, IsTextSelectionEnabled = true, FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Mono") },
-                },
-                CloseButtonText = "Close",
-            }.ShowAsync();
-        }
-        catch (Exception ex)
+            XamlRoot = XamlRoot,
+            Title = $"Delete \"{name}\"?",
+            Content = "The container is removed, including its writable layer. This can't be undone.",
+            PrimaryButtonText = "Delete",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await confirm.ShowAsync() != ContentDialogResult.Primary)
         {
-            await ShowAsync("Couldn't inspect the container", ex.Message);
+            return;
         }
+
+        await ActAsync("Couldn't delete the container", () => App.Host.DeleteContainerAsync(name));
     }
 
     private static string NameOf(object sender) => (string)((FrameworkElement)sender).Tag;

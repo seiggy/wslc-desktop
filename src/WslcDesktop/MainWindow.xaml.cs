@@ -89,13 +89,23 @@ public sealed partial class MainWindow : Window
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (args.SelectedItem is NavigationViewItem { Tag: string tag })
+        if (args.IsSettingsSelected)
+        {
+            ContentFrame.Navigate(typeof(SettingsPage));
+        }
+        else if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
             ContentFrame.Navigate(tag switch
             {
                 "images" => typeof(ImagesPage),
+                "volumes" or "networks" => typeof(ResourcesPage),
                 "sessions" => typeof(SessionsPage),
                 _ => typeof(ContainersPage),
+            }, tag switch
+            {
+                "volumes" => Services.ResourceKind.Volume,
+                "networks" => Services.ResourceKind.Network,
+                _ => null,
             });
         }
     }

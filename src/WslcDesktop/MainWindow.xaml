@@ -16,13 +16,19 @@
             x:Name="Nav"
             Grid.Row="1"
             IsBackButtonVisible="Collapsed"
-            IsSettingsVisible="False"
+            IsSettingsVisible="True"
             PaneDisplayMode="Left"
             SelectionChanged="Nav_SelectionChanged">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Containers" Icon="Library" Tag="containers" />
-                <NavigationViewItem Content="Images" Icon="Pictures" Tag="images" />
-                <NavigationViewItem Content="Sessions" Icon="AllApps" Tag="sessions" />
+                <NavigationViewItem Content="Images" Tag="images">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7B8;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Volumes" Icon="Folder" Tag="volumes" />
+                <NavigationViewItem Content="Networks" Icon="World" Tag="networks" />
+                <NavigationViewItem Content="Environment" Icon="AllApps" Tag="sessions" />
             </NavigationView.MenuItems>
 
             <Grid>

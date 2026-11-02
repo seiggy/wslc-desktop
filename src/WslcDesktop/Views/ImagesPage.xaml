@@ -4,8 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:svc="using:WslcDesktop.Services">
 
-    <Grid Padding="24" RowSpacing="16">
+    <Grid Padding="24" RowSpacing="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -18,14 +19,12 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox
                 x:Name="PullBox"
                 KeyDown="PullBox_KeyDown"
-                PlaceholderText="docker.io/library/alpine:latest" />
+                PlaceholderText="Pull an image, e.g. docker.io/library/alpine:latest" />
             <Button x:Name="PullButton" Grid.Column="1" Click="Pull_Click" Content="Pull" Style="{StaticResource AccentButtonStyle}" />
-            <Button Grid.Column="2" Click="Refresh_Click" Content="Refresh" />
         </Grid>
 
         <StackPanel x:Name="PullStatus" Grid.Row="2" Spacing="4" Visibility="Collapsed">
@@ -33,22 +32,62 @@
             <ProgressBar x:Name="PullBar" />
         </StackPanel>
 
+        <Grid Grid.Row="3" Padding="16,0" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="160" />
+                <ColumnDefinition Width="90" />
+                <ColumnDefinition Width="110" />
+                <ColumnDefinition Width="90" />
+                <ColumnDefinition Width="110" />
+                <ColumnDefinition Width="40" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource ColumnHeaderStyle}" Text="Name" />
+            <TextBlock Grid.Column="1" Style="{StaticResource ColumnHeaderStyle}" Text="Status" />
+            <TextBlock Grid.Column="2" Style="{StaticResource ColumnHeaderStyle}" Text="In use" />
+            <TextBlock Grid.Column="3" Style="{StaticResource ColumnHeaderStyle}" Text="Size" />
+            <TextBlock Grid.Column="4" Style="{StaticResource ColumnHeaderStyle}" Text="Created" />
+        </Grid>
+
         <ListView
             x:Name="List"
-            Grid.Row="3"
-            x:DefaultBindMode="OneTime"
+            Grid.Row="4"
+            x:DefaultBindMode="OneWay"
+            IsItemClickEnabled="True"
+            ItemClick="List_ItemClick"
+            ItemContainerStyle="{StaticResource RowItemStyle}"
             SelectionMode="None">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="svc:ImageRow">
-                    <Grid Padding="0,8" ColumnSpacing="12">
+                <DataTemplate x:DataType="svc:ImageItem">
+                    <Grid Padding="16,8" ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="100" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" MinWidth="160" />
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition Width="40" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind Size}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <Button Grid.Column="2" Click="Delete_Click" Content="Delete" Tag="{x:Bind Name}" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ShortId}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Ellipse Width="8" Height="8" Fill="{ThemeResource SystemFillColorSuccessBrush}" Visibility="{x:Bind TaggedVisibility}" />
+                            <Ellipse Width="8" Height="8" Fill="{ThemeResource SystemFillColorCautionBrush}" Visibility="{x:Bind UntaggedVisibility}" />
+                            <TextBlock Text="{x:Bind TagStatus}" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="{x:Bind UsedBy}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="3" Text="{x:Bind Size}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="4" Text="{x:Bind CreatedSince}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <Button
+                            Grid.Column="5"
+                            AutomationProperties.Name="Delete"
+                            Click="Delete_Click"
+                            Content="&#xE74D;"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Style="{StaticResource SubtleButtonStyle}"
+                            Tag="{x:Bind Target}"
+                            ToolTipService.ToolTip="Delete" />
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -56,7 +95,7 @@
 
         <TextBlock
             x:Name="EmptyText"
-            Grid.Row="3"
+            Grid.Row="4"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Foreground="{ThemeResource TextFillColorSecondaryBrush}"

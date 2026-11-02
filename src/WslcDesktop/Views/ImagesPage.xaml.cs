@@ -2,32 +2,64 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.WSL.Containers;
+using WslcDesktop.Services;
 
 namespace WslcDesktop.Views;
 
 public sealed partial class ImagesPage : Page
 {
+    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(3) };
+    private readonly System.Collections.ObjectModel.ObservableCollection<ImageItem> _items = [];
+
     public ImagesPage()
     {
         InitializeComponent();
-        Loaded += async (_, _) => await RefreshAsync();
+        List.ItemsSource = _items;
+        Loaded += async (_, _) =>
+        {
+            _timer.Start();
+            await RefreshAsync();
+        };
+        Unloaded += (_, _) => _timer.Stop();
+        _timer.Tick += async (_, _) => await RefreshAsync();
     }
 
     private async Task RefreshAsync()
     {
         try
         {
-            var images = await App.Host.GetImagesAsync();
-            List.ItemsSource = images;
+            var images = await App.Host.GetImageSummariesAsync();
+            // Update rows in place so the list never flickers or loses scroll/focus on a poll.
+            foreach (var gone in _items.Where(i => images.All(n => n.Id != i.Id)).ToList())
+            {
+                _items.Remove(gone);
+            }
+
+            for (var n = 0; n < images.Count; n++)
+            {
+                var item = _items.FirstOrDefault(i => i.Id == images[n].Id);
+                if (item is null)
+                {
+                    _items.Insert(Math.Min(n, _items.Count), new ImageItem(images[n]));
+                }
+                else
+                {
+                    item.Update(images[n]);
+                }
+            }
+
             EmptyText.Visibility = images.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
         catch (Exception e)
         {
+            _timer.Stop();
             await ShowErrorAsync("Couldn't list images", e);
+            _timer.Start();
         }
     }
 
-    private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshAsync();
+    private void List_ItemClick(object sender, ItemClickEventArgs e) =>
+        Frame.Navigate(typeof(ImageDetailPage), ((ImageItem)e.ClickedItem).Target);
 
     private async void PullBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {

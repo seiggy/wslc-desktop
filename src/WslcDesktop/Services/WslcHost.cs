@@ -39,13 +39,21 @@ public sealed class WslcHost
         await op;
     }
 
-    public async Task StartSessionAsync(uint cpuCount = 4, uint memoryMb = 4096)
+    public AppSettings Settings { get; } = AppSettings.Load();
+
+    public uint StartedCpuCount { get; private set; }
+
+    public uint StartedMemoryMb { get; private set; }
+
+    public async Task StartSessionAsync()
     {
         if (_session is not null)
         {
             return;
         }
 
+        var cpuCount = Settings.CpuCount;
+        var memoryMb = Settings.MemoryMb;
         await Task.Run(() =>
         {
             Directory.CreateDirectory(Path.Combine(_root, "Data"));
@@ -53,15 +61,32 @@ public sealed class WslcHost
             {
                 CpuCount = cpuCount,
                 MemorySizeInMB = memoryMb,
+                EnableGpu = Settings.EnableGpu,
             };
             var session = new Session(settings);
             session.Start();
             _session = session;
         });
+        StartedCpuCount = cpuCount;
+        StartedMemoryMb = memoryMb;
+        Telemetry.Start(SessionName);
+        Monitor.Start(GetContainersAsync);
     }
+
+    public ContainerMonitor Monitor { get; } = new();
+
+    public TelemetryService Telemetry { get; } = new();
+
+    public Task StreamLogsAsync(string container, int tail, bool follow, bool timestamps, Action<string> onLine, CancellationToken ct) =>
+        WslcCli.StreamLogsAsync(SessionName, container, tail, follow, timestamps, onLine, ct);
+
+    public ShellProcess StartShell(string container, string shell, Action<string> onOutput, Action<int> onExit) =>
+        WslcCli.StartShell(SessionName, container, shell, onOutput, onExit);
 
     public void Shutdown()
     {
+        Telemetry.Stop();
+        Monitor.Stop();
         try
         {
             _session?.Terminate();
@@ -88,12 +113,51 @@ public sealed class WslcHost
         await op;
     }
 
+    public Task<IReadOnlyList<ImageSummary>> GetImageSummariesAsync() => WslcCli.ListImagesAsync(SessionName);
+
+    public Task<ImageDetail> InspectImageAsync(string target) => WslcCli.InspectImageAsync(SessionName, target);
+
     public Task DeleteImageAsync(string nameOrId) => Run(s => s.DeleteImage(nameOrId));
 
     // The API cannot enumerate containers; wslc.exe can.
     public Task<IReadOnlyList<ContainerRow>> GetContainersAsync() => WslcCli.ListContainersAsync(SessionName);
 
     public Task<IReadOnlyList<SessionRow>> GetSessionsAsync() => WslcCli.ListSessionsAsync();
+
+    public Task<EnvironmentInfo> GetEnvironmentAsync() => WslcCli.GetEnvironmentAsync(SessionName);
+
+    public Task TerminateSessionAsync(string session) => WslcCli.TerminateSessionAsync(session);
+
+    public string SessionId => SessionName;
+
+    public Task<IReadOnlyList<ResourceRow>> GetResourcesAsync(ResourceKind kind) =>
+        kind == ResourceKind.Volume ? WslcResources.ListVolumesAsync(SessionName) : WslcResources.ListNetworksAsync(SessionName);
+
+    public Task<string> InspectResourceAsync(ResourceKind kind, string name) => WslcResources.InspectAsync(SessionName, kind, name);
+
+    public Task CreateVolumeAsync(string name, string driver) => WslcResources.CreateVolumeAsync(SessionName, name, driver);
+
+    public Task CreateNetworkAsync(string name, string driver, string subnet, string gateway, bool isInternal) =>
+        WslcResources.CreateNetworkAsync(SessionName, name, driver, subnet, gateway, isInternal);
+
+    public Task RemoveResourceAsync(ResourceKind kind, string name) => WslcResources.RemoveAsync(SessionName, kind, name);
+
+    public Task RegistryLoginAsync(string server, string username, string password) =>
+        WslcRegistry.LoginAsync(SessionName, server, username, password);
+
+    public Task RegistryLogoutAsync(string server) => WslcRegistry.LogoutAsync(SessionName, server);
+
+    public Task PruneResourcesAsync(ResourceKind kind) => WslcResources.PruneAsync(SessionName, kind);
+
+    public Task<IReadOnlyList<string>> GetNetworkNamesAsync() => WslcResources.ListNetworkNamesAsync(SessionName);
+
+    public Task ConnectNetworkAsync(string network, string container, string alias) =>
+        WslcResources.ConnectAsync(SessionName, network, container, alias);
+
+    public Task DisconnectNetworkAsync(string network, string container) =>
+        WslcResources.DisconnectAsync(SessionName, network, container);
+
+    public Task CreateContainerAsync(NewContainerSpec spec) => WslcResources.CreateContainerAsync(SessionName, spec);
 
     public Task CreateContainerAsync(string name, string image, string[] commandLine)
     {
@@ -109,7 +173,31 @@ public sealed class WslcHost
         });
     }
 
-    public Task StartContainerAsync(string name) => WithContainer(name, c => c.Start());
+    public Task StartContainerAsync(string name) => Run(s =>
+    {
+        using var c = s.OpenContainer(name, ProcessOutputMode.Discard);
+        try
+        {
+            c.Start();
+        }
+        catch (Exception) when (IsRunning(s, name))
+        {
+            // Containers made with `create` can start but fail to attach the init process handle.
+        }
+    });
+
+    private static bool IsRunning(Session s, string name)
+    {
+        try
+        {
+            using var c = s.OpenContainer(name, ProcessOutputMode.Discard);
+            return c.State == ContainerState.Running;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 
     public Task StopContainerAsync(string name) =>
         WithContainer(name, c => c.Stop(Signal.SIGTERM, TimeSpan.FromSeconds(10)));
