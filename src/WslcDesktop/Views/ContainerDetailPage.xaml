@@ -167,14 +167,14 @@
             </PivotItem>
 
             <PivotItem Header="Inspect">
-                <Grid RowSpacing="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <Button Click="Inspect_Click" Content="Reload" />
-                    <controls:OutputView x:Name="InspectView" Grid.Row="1" />
-                </Grid>
+                <ScrollViewer>
+                    <StackPanel Spacing="16" Padding="0,0,16,16">
+                        <Button Click="Inspect_Click" Content="Reload" />
+                        <InfoBar x:Name="InspectError" IsClosable="False" IsOpen="False" Severity="Error" Title="Couldn't inspect the container" />
+                        <StackPanel x:Name="InspectPanel" Spacing="16" />
+                        <controls:RawJsonExpander x:Name="InspectRaw" />
+                    </StackPanel>
+                </ScrollViewer>
             </PivotItem>
         </Pivot>
     </Grid>

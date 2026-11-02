@@ -83,18 +83,58 @@ public sealed partial class ContainerDetailPage : Page
 
     private async Task LoadInspectAsync()
     {
-        InspectView.Clear();
-        InspectView.AutoScroll = false;
+        InspectError.IsOpen = false;
         try
         {
-            foreach (var line in (await App.Host.InspectContainerAsync(_name)).Split('\n'))
+            var json = await App.Host.InspectContainerAsync(_name);
+            var d = ContainerDetail.Parse(json);
+            InspectPanel.Children.Clear();
+
+            var card = Controls.InspectUi.Card("Overview", out var rows);
+            Controls.InspectUi.AddRow(rows, "Name", d.Name);
+            Controls.InspectUi.AddRow(rows, "ID", d.Id, true);
+            Controls.InspectUi.AddRow(rows, "Image", d.Image);
+            Controls.InspectUi.AddRow(rows, "Image ID", d.ImageId, true);
+            Controls.InspectUi.AddRow(rows, "Status", d.Status);
+            Controls.InspectUi.AddRow(rows, "Health", d.Health);
+            Controls.InspectUi.AddRow(rows, "Created", Controls.InspectUi.FormatDate(d.Created));
+            Controls.InspectUi.AddRow(rows, "Started", Controls.InspectUi.FormatDate(d.Started));
+            Controls.InspectUi.AddRow(rows, "Finished", Controls.InspectUi.FormatDate(d.Finished));
+            Controls.InspectUi.AddRow(rows, "Exit code", d.ExitCode);
+            Controls.InspectUi.AddRow(rows, "Memory limit", d.MemoryLimit.Length > 0 ? d.MemoryLimit : "Unlimited");
+            Controls.InspectUi.AddRow(rows, "CPU limit", d.CpuLimit.Length > 0 ? d.CpuLimit : "Unlimited");
+            InspectPanel.Children.Add(card);
+
+            card = Controls.InspectUi.Card("Ports and networking", out rows);
+            Controls.InspectUi.AddRow(rows, "Network mode", d.NetworkMode);
+            Controls.InspectUi.AddRow(rows, "Ports", d.Ports.Count > 0 ? string.Join('\n', d.Ports) : "None");
+            foreach (var n in d.Networks)
             {
-                InspectView.Append(line.TrimEnd('\r'));
+                Controls.InspectUi.AddRow(rows, $"Network {n.Name}",
+                    string.Join('\n', new[] { n.IpAddress, n.Gateway.Length > 0 ? $"Gateway {n.Gateway}" : "", n.Mac }.Where(s => s.Length > 0)), true);
             }
+
+            InspectPanel.Children.Add(card);
+
+            card = Controls.InspectUi.Card("Mounts", out rows);
+            Controls.InspectUi.AddRow(rows, "Mounts", d.Mounts.Count > 0 ? string.Join('\n', d.Mounts) : "None");
+            InspectPanel.Children.Add(card);
+
+            card = Controls.InspectUi.Card("Configuration", out rows);
+            Controls.InspectUi.AddRow(rows, "Entrypoint", string.Join(' ', d.Entrypoint));
+            Controls.InspectUi.AddRow(rows, "Command", string.Join(' ', d.Cmd));
+            Controls.InspectUi.AddRow(rows, "Working dir", d.WorkingDir);
+            Controls.InspectUi.AddRow(rows, "User", d.User);
+            Controls.InspectUi.AddRow(rows, "Environment", d.Env.Count > 0 ? string.Join('\n', d.Env) : "None", true);
+            Controls.InspectUi.AddRow(rows, "Labels", d.Labels.Count > 0 ? string.Join('\n', d.Labels) : "None", true);
+            InspectPanel.Children.Add(card);
+
+            InspectRaw.SetJson(json);
         }
         catch (Exception ex)
         {
-            InspectView.Append(ex.Message);
+            InspectError.Message = ex.Message;
+            InspectError.IsOpen = true;
         }
     }
 

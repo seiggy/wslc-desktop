@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using WslcDesktop.Services;
+using static WslcDesktop.Controls.InspectUi;
 
 namespace WslcDesktop.Views;
 
@@ -82,48 +83,11 @@ public sealed partial class ImageDetailPage : Page
         AddRow(ConfigRows, "Environment", string.Join('\n', detail.Env));
         AddRow(ConfigRows, "Labels", string.Join('\n', detail.Labels));
 
-        RawView.AutoScroll = false;
-        foreach (var line in detail.RawJson.Split('\n'))
-        {
-            RawView.Append(line.TrimEnd('\r'));
-        }
+        RawView.SetJson(detail.RawJson);
     }
 
     private static string Join(IReadOnlyList<string> parts) => string.Join(' ', parts);
 
     private static string FormatCreated(string created) =>
         DateTimeOffset.TryParse(created, out var d) ? d.ToLocalTime().ToString("f") : created;
-
-    // Empty values are skipped so the card only lists what the image actually defines.
-    private static void AddRow(StackPanel target, string label, string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return;
-        }
-
-        var row = new Grid { ColumnSpacing = 16 };
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        row.Children.Add(Secondary(label));
-        var text = new TextBlock { Text = value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
-        Grid.SetColumn(text, 1);
-        row.Children.Add(text);
-        target.Children.Add(row);
-    }
-
-    private static TextBlock Secondary(string text) => new()
-    {
-        Text = text,
-        Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
-    };
-
-    private static TextBlock Mono(string text) => new()
-    {
-        Text = text,
-        IsTextSelectionEnabled = true,
-        TextWrapping = TextWrapping.Wrap,
-        FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Mono, Consolas"),
-        FontSize = 12,
-    };
 }

@@ -59,9 +59,7 @@
                     </StackPanel>
                 </Border>
 
-                <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Header="Raw inspect output">
-                    <controls:OutputView x:Name="RawView" Height="360" />
-                </Expander>
+                <controls:RawJsonExpander x:Name="RawView" />
             </StackPanel>
         </ScrollViewer>
     </Grid>
