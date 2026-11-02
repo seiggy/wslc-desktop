@@ -9,11 +9,12 @@ namespace WslcDesktop.Views;
 public sealed partial class ImagesPage : Page
 {
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(3) };
-    private IReadOnlyList<ImageSummary> _shown = [];
+    private readonly System.Collections.ObjectModel.ObservableCollection<ImageItem> _items = [];
 
     public ImagesPage()
     {
         InitializeComponent();
+        List.ItemsSource = _items;
         Loaded += async (_, _) =>
         {
             _timer.Start();
@@ -28,11 +29,23 @@ public sealed partial class ImagesPage : Page
         try
         {
             var images = await App.Host.GetImageSummariesAsync();
-            // Only rebind when something changed so the list doesn't flicker on every poll.
-            if (!images.SequenceEqual(_shown))
+            // Update rows in place so the list never flickers or loses scroll/focus on a poll.
+            foreach (var gone in _items.Where(i => images.All(n => n.Id != i.Id)).ToList())
             {
-                _shown = images;
-                List.ItemsSource = images;
+                _items.Remove(gone);
+            }
+
+            for (var n = 0; n < images.Count; n++)
+            {
+                var item = _items.FirstOrDefault(i => i.Id == images[n].Id);
+                if (item is null)
+                {
+                    _items.Insert(Math.Min(n, _items.Count), new ImageItem(images[n]));
+                }
+                else
+                {
+                    item.Update(images[n]);
+                }
             }
 
             EmptyText.Visibility = images.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -46,7 +59,7 @@ public sealed partial class ImagesPage : Page
     }
 
     private void List_ItemClick(object sender, ItemClickEventArgs e) =>
-        Frame.Navigate(typeof(ImageDetailPage), ((ImageSummary)e.ClickedItem).Target);
+        Frame.Navigate(typeof(ImageDetailPage), ((ImageItem)e.ClickedItem).Target);
 
     private async void PullBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {

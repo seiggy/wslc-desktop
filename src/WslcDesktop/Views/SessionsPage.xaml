@@ -61,11 +61,11 @@
         <ListView
             x:Name="List"
             Grid.Row="3"
-            x:DefaultBindMode="OneTime"
+            x:DefaultBindMode="OneWay"
             ItemContainerStyle="{StaticResource RowItemStyle}"
             SelectionMode="None">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="svc:SessionInfo">
+                <DataTemplate x:DataType="svc:SessionItem">
                     <Grid Padding="16,8" ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="60" />
@@ -98,7 +98,7 @@
                             Padding="6"
                             Click="Terminate_Click"
                             IsEnabled="{x:Bind CanTerminate}"
-                            Tag="{x:Bind}"
+                            Tag="{x:Bind Name}"
                             ToolTipService.ToolTip="Terminate session">
                             <FontIcon FontSize="14" Glyph="&#xE71A;" />
                         </Button>
