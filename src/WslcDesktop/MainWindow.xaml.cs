@@ -89,7 +89,11 @@ public sealed partial class MainWindow : Window
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (args.SelectedItem is NavigationViewItem { Tag: string tag })
+        if (args.IsSettingsSelected)
+        {
+            ContentFrame.Navigate(typeof(SettingsPage));
+        }
+        else if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
             ContentFrame.Navigate(tag switch
             {

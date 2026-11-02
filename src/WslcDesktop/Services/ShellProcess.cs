@@ -40,7 +40,8 @@ public sealed class ShellProcess : IDisposable
 
         try
         {
-            await _process.StandardInput.WriteLineAsync(line);
+            await _process.StandardInput.WriteAsync(line + "\n");
+            await _process.StandardInput.FlushAsync();
         }
         catch (IOException)
         {

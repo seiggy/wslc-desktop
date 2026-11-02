@@ -39,13 +39,21 @@ public sealed class WslcHost
         await op;
     }
 
-    public async Task StartSessionAsync(uint cpuCount = 4, uint memoryMb = 4096)
+    public AppSettings Settings { get; } = AppSettings.Load();
+
+    public uint StartedCpuCount { get; private set; }
+
+    public uint StartedMemoryMb { get; private set; }
+
+    public async Task StartSessionAsync()
     {
         if (_session is not null)
         {
             return;
         }
 
+        var cpuCount = Settings.CpuCount;
+        var memoryMb = Settings.MemoryMb;
         await Task.Run(() =>
         {
             Directory.CreateDirectory(Path.Combine(_root, "Data"));
@@ -53,11 +61,14 @@ public sealed class WslcHost
             {
                 CpuCount = cpuCount,
                 MemorySizeInMB = memoryMb,
+                EnableGpu = Settings.EnableGpu,
             };
             var session = new Session(settings);
             session.Start();
             _session = session;
         });
+        StartedCpuCount = cpuCount;
+        StartedMemoryMb = memoryMb;
         Telemetry.Start(SessionName);
         Monitor.Start(GetContainersAsync);
     }
@@ -130,6 +141,11 @@ public sealed class WslcHost
         WslcResources.CreateNetworkAsync(SessionName, name, driver, subnet, gateway, isInternal);
 
     public Task RemoveResourceAsync(ResourceKind kind, string name) => WslcResources.RemoveAsync(SessionName, kind, name);
+
+    public Task RegistryLoginAsync(string server, string username, string password) =>
+        WslcRegistry.LoginAsync(SessionName, server, username, password);
+
+    public Task RegistryLogoutAsync(string server) => WslcRegistry.LogoutAsync(SessionName, server);
 
     public Task PruneResourcesAsync(ResourceKind kind) => WslcResources.PruneAsync(SessionName, kind);
 
