@@ -1,0 +1,174 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, e.g. 1.2.3 or 1.2.3-beta.1 (tag v<version> is created on release)'
+        required: true
+        type: string
+      create_release:
+        description: 'Publish a GitHub Release (otherwise only build workflow artifacts)'
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: release-${{ inputs.version || github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+      prerelease: ${{ steps.v.outputs.prerelease }}
+    steps:
+      - id: v
+        env:
+          RAW: ${{ inputs.version || github.ref_name }}
+        run: |
+          v="${RAW#v}"
+          if [[ ! "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$RAW' is not a valid version (expected 1.2.3 or 1.2.3-beta.1)"
+            exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+          if [[ "$v" == *-* ]]; then echo "prerelease=true" >> "$GITHUB_OUTPUT"; else echo "prerelease=false" >> "$GITHUB_OUTPUT"; fi
+
+  build:
+    needs: version
+    runs-on: windows-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        arch: [x64, arm64]
+    env:
+      MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER || 'CN=WSLc Desktop Test' }}
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('src/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # The repo nuget.config may point at an internal feed; CI restores from the public feed instead.
+      - name: Write public NuGet config
+        shell: pwsh
+        run: |
+          @'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+          </configuration>
+          '@ | Set-Content "$env:RUNNER_TEMP\nuget.ci.config"
+
+      - name: Build portable zip and MSIX (${{ matrix.arch }})
+        shell: pwsh
+        run: >
+          ./tools/packaging/Build-Release.ps1
+          -Arch ${{ matrix.arch }}
+          -Version $env:VERSION
+          -Publisher "$env:MSIX_PUBLISHER"
+          -OutDir artifacts
+          -NuGetConfig "$env:RUNNER_TEMP\nuget.ci.config"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.arch }}
+          path: artifacts/*
+          if-no-files-found: error
+
+  package:
+    needs: [version, build]
+    runs-on: windows-latest
+    env:
+      MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER || 'CN=WSLc Desktop Test' }}
+      VERSION: ${{ needs.version.outputs.version }}
+      PFX_BASE64: ${{ secrets.MSIX_CERT_PFX_BASE64 }}
+      PFX_PASSWORD: ${{ secrets.MSIX_CERT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: build-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Decode signing certificate
+        if: env.PFX_BASE64 != ''
+        shell: pwsh
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'release-signing.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:PFX_BASE64))
+          "PFX_PATH=$pfx" >> $env:GITHUB_ENV
+
+      - name: Sign, bundle and checksum
+        shell: pwsh
+        run: >
+          ./tools/packaging/Sign-And-Bundle.ps1
+          -Version $env:VERSION
+          -Publisher "$env:MSIX_PUBLISHER"
+          -Directory artifacts
+          -PfxPath "$env:PFX_PATH"
+
+      - name: Remove signing certificate
+        if: always()
+        shell: pwsh
+        run: Remove-Item "$env:RUNNER_TEMP\release-signing.pfx" -Force -ErrorAction SilentlyContinue
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-files
+          path: artifacts/*
+          if-no-files-found: error
+
+  release:
+    needs: [version, package]
+    if: github.event_name == 'push' || inputs.create_release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.version.outputs.tag }}
+      PRERELEASE: ${{ needs.version.outputs.prerelease }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-files
+          path: artifacts
+
+      - name: Create or update GitHub Release
+        run: |
+          flags=()
+          [[ "$PRERELEASE" == "true" ]] && flags+=(--prerelease)
+          mapfile -t files < <(find artifacts -maxdepth 1 -type f ! -name signing-notes.md)
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "WSLc Desktop $TAG" --generate-notes --notes-file artifacts/signing-notes.md "${flags[@]}"
+          fi

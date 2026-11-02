@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSIX manifest. Only used when building with -p:WindowsPackageType=MSIX (see RELEASING.md);
+  the default build stays unpackaged. Identity Name/Publisher/Version are placeholders that
+  the release workflow stamps (tools/packaging/Build-Release.ps1).
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap10 desktop6 rescap">
+
+  <Identity
+    Name="seiggy.WslcDesktop"
+    Publisher="CN=seiggy"
+    Version="1.0.0.0" />
+
+  <Properties>
+    <DisplayName>WSLc Desktop</DisplayName>
+    <PublisherDisplayName>seiggy</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <!-- Keep %LOCALAPPDATA% writes real so wslc's settings.yaml and the WSLc session data are shared with the CLI. -->
+    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
+    <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-US" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="WSLc Desktop"
+        Description="A desktop app for managing WSLc containers, images, stacks and sessions."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"
+                         Square71x71Logo="Assets\Square71x71Logo.png"
+                         Square310x310Logo="Assets\Square310x310Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
+  </Capabilities>
+</Package>
