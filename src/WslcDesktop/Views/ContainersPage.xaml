@@ -39,6 +39,7 @@
                         <TextBlock Grid.Column="1" Text="{x:Bind Image}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
                         <TextBlock Grid.Column="2" Text="{x:Bind State}" VerticalAlignment="Center" />
                         <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4">
+                            <Button Click="Details_Click" Content="Details" Tag="{x:Bind Name}" />
                             <Button Click="Start_Click" Content="Start" Tag="{x:Bind Name}" />
                             <Button Click="Stop_Click" Content="Stop" Tag="{x:Bind Name}" />
                             <Button Click="Inspect_Click" Content="Inspect" Tag="{x:Bind Name}" />

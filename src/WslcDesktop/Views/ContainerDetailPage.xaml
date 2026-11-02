@@ -1,0 +1,156 @@
+<Page
+    x:Class="WslcDesktop.Views.ContainerDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:WslcDesktop.Controls">
+
+    <Page.Resources>
+        <Style x:Key="ChartCard" TargetType="Border">
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        </Style>
+    </Page.Resources>
+
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <Button
+                x:Name="BackButton"
+                AutomationProperties.Name="Back to containers"
+                Click="Back_Click"
+                Content="&#xE72B;"
+                FontFamily="{StaticResource SymbolThemeFontFamily}" />
+            <TextBlock x:Name="TitleText" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <Pivot Grid.Row="1">
+            <PivotItem Header="Logs">
+                <Grid RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <ToggleSwitch x:Name="FollowToggle" Header="Follow" IsOn="True" Toggled="LogOptions_Changed" />
+                        <ToggleSwitch x:Name="TimestampToggle" Header="Timestamps" Toggled="LogOptions_Changed" />
+                        <NumberBox
+                            x:Name="TailBox"
+                            Header="Last lines"
+                            Maximum="100000"
+                            Minimum="0"
+                            SpinButtonPlacementMode="Compact"
+                            Value="200"
+                            ValueChanged="TailBox_ValueChanged"
+                            VerticalAlignment="Bottom" />
+                        <Button Click="ClearLogs_Click" Content="Clear" VerticalAlignment="Bottom" />
+                        <TextBlock x:Name="LogStatus" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Bottom" />
+                    </StackPanel>
+                    <controls:OutputView x:Name="LogView" Grid.Row="1" />
+                </Grid>
+            </PivotItem>
+
+            <PivotItem Header="Shell">
+                <Grid RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ComboBox x:Name="ShellPicker" Header="Shell" SelectedIndex="0" Width="140">
+                            <x:String>sh</x:String>
+                            <x:String>bash</x:String>
+                            <x:String>ash</x:String>
+                        </ComboBox>
+                        <Button x:Name="ShellToggle" Click="ShellToggle_Click" Content="Start shell" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Bottom" />
+                        <TextBlock x:Name="ShellStatus" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Bottom" />
+                    </StackPanel>
+                    <controls:OutputView x:Name="ShellView" Grid.Row="1" />
+                    <TextBox
+                        x:Name="ShellInput"
+                        Grid.Row="2"
+                        AutomationProperties.Name="Shell command"
+                        FontFamily="Cascadia Mono, Consolas"
+                        IsEnabled="False"
+                        KeyDown="ShellInput_KeyDown"
+                        PlaceholderText="Type a command and press Enter" />
+                </Grid>
+            </PivotItem>
+
+            <PivotItem Header="Telemetry">
+                <ScrollViewer>
+                    <Grid ColumnSpacing="16" RowSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <InfoBar
+                            x:Name="TelemetryNotice"
+                            Grid.ColumnSpan="2"
+                            IsClosable="False"
+                            IsOpen="True"
+                            Message="Waiting for the first sample. Telemetry is only available while the container is running."
+                            Severity="Informational" />
+
+                        <Border Grid.Row="1" Style="{StaticResource ChartCard}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="CPU" />
+                                <TextBlock x:Name="CpuValue" Style="{StaticResource TitleTextBlockStyle}" Text="–" />
+                                <Grid x:Name="CpuHost" Height="80" SizeChanged="Chart_SizeChanged">
+                                    <Polyline x:Name="CpuLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource ChartCard}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Memory" />
+                                <TextBlock x:Name="MemValue" Style="{StaticResource TitleTextBlockStyle}" Text="–" />
+                                <Grid x:Name="MemHost" Height="80" SizeChanged="Chart_SizeChanged">
+                                    <Polyline x:Name="MemLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Row="2" Style="{StaticResource ChartCard}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Network" />
+                                <TextBlock x:Name="NetValue" Style="{StaticResource BodyTextBlockStyle}" Text="–" />
+                                <Grid x:Name="NetHost" Height="80" SizeChanged="Chart_SizeChanged">
+                                    <Polyline x:Name="NetRxLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
+                                    <Polyline x:Name="NetTxLine" Stroke="{ThemeResource SystemFillColorCautionBrush}" StrokeThickness="2" />
+                                </Grid>
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Receive (blue), transmit (amber), per second" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource ChartCard}">
+                            <StackPanel Spacing="8">
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Disk I/O" />
+                                <TextBlock x:Name="BlockValue" Style="{StaticResource BodyTextBlockStyle}" Text="–" />
+                                <Grid x:Name="BlockHost" Height="80" SizeChanged="Chart_SizeChanged">
+                                    <Polyline x:Name="BlockReadLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
+                                    <Polyline x:Name="BlockWriteLine" Stroke="{ThemeResource SystemFillColorCautionBrush}" StrokeThickness="2" />
+                                </Grid>
+                                <TextBlock x:Name="PidsValue" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Read (blue), write (amber), per second" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</Page>

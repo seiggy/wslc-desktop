@@ -58,10 +58,20 @@ public sealed class WslcHost
             session.Start();
             _session = session;
         });
+        Telemetry.Start(SessionName);
     }
+
+    public TelemetryService Telemetry { get; } = new();
+
+    public Task StreamLogsAsync(string container, int tail, bool follow, bool timestamps, Action<string> onLine, CancellationToken ct) =>
+        WslcCli.StreamLogsAsync(SessionName, container, tail, follow, timestamps, onLine, ct);
+
+    public ShellProcess StartShell(string container, string shell, Action<string> onOutput, Action<int> onExit) =>
+        WslcCli.StartShell(SessionName, container, shell, onOutput, onExit);
 
     public void Shutdown()
     {
+        Telemetry.Stop();
         try
         {
             _session?.Terminate();

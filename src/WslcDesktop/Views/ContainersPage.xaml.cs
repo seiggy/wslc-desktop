@@ -154,6 +154,9 @@ public sealed partial class ContainersPage : Page
         return localNames.Any(n => string.Equals(Normalize(n), wanted, StringComparison.OrdinalIgnoreCase));
     }
 
+    private void Details_Click(object sender, RoutedEventArgs e) =>
+        Frame.Navigate(typeof(ContainerDetailPage), NameOf(sender));
+
     private async void Start_Click(object sender, RoutedEventArgs e) =>
         await ActAsync("Couldn't start the container", () => App.Host.StartContainerAsync(NameOf(sender)));
 
