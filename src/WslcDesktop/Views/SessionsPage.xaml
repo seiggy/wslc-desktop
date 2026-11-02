@@ -23,10 +23,11 @@
             x:Name="List"
             Grid.Row="1"
             x:DefaultBindMode="OneTime"
+            ItemContainerStyle="{StaticResource RowItemStyle}"
             SelectionMode="None">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="svc:SessionRow">
-                    <Grid Padding="0,8" ColumnSpacing="12">
+                    <Grid Padding="16,8" ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="60" />
                             <ColumnDefinition Width="*" />

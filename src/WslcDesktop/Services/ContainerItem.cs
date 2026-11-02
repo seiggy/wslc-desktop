@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Microsoft.UI.Xaml;
 
 namespace WslcDesktop.Services;
 
@@ -26,6 +27,10 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
     public bool IsRunning => IsRunningState(_state);
 
     public bool IsStopped => !IsRunning;
+
+    public Visibility RunningVisibility => IsRunning ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility StoppedVisibility => IsRunning ? Visibility.Collapsed : Visibility.Visible;
 
     public static bool IsRunningState(string state) =>
         state.Equals("running", StringComparison.OrdinalIgnoreCase);
@@ -58,6 +63,8 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsRunning)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsStopped)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RunningVisibility)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StoppedVisibility)));
         }
     }
 }
