@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/WslcDesktop/WslcDesktop.csproj" />
+    <Project Path="src/WslcDesktop.Compose/WslcDesktop.Compose.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WslcDesktop.Compose.Tests/WslcDesktop.Compose.Tests.csproj" />
   </Folder>
 </Solution>

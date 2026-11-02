@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Microsoft.UI.Xaml;
+using WslcDesktop.Compose;
 
 namespace WslcDesktop.Services;
 
@@ -11,10 +12,27 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
     private string _state = string.Empty;
     private string _cpu = "–";
     private string _memory = "–";
+    private string _stack = string.Empty;
+    private string _service = string.Empty;
+    private string _header = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string Name { get; } = name;
+
+    /// <summary>The compose project this container belongs to, or empty for a standalone container.</summary>
+    public string Stack { get => _stack; private set => Set(ref _stack, value); }
+
+    public string Service { get => _service; private set { Set(ref _service, value); } }
+
+    /// <summary>Group heading shown above the first container of a stack; empty elsewhere.</summary>
+    public string Header { get => _header; private set => Set(ref _header, value); }
+
+    public Visibility HeaderVisibility => _header.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    public string ImageText => _service.Length > 0 ? $"{_service} · {_image}" : _image;
+
+    public void SetHeader(string header) => Header = header;
 
     public string Image { get => _image; private set => Set(ref _image, value); }
 
@@ -39,6 +57,9 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
     {
         Image = row.Image;
         State = row.State;
+        ComposeLabels.TryParse(row.Labels, out var project, out var service);
+        Stack = project;
+        Service = service;
         if (IsRunning && sample is not null)
         {
             Cpu = $"{sample.CpuPercent:0.#}%";
@@ -59,6 +80,16 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
 
         field = value;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+        if (property == nameof(Header))
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HeaderVisibility)));
+        }
+
+        if (property is nameof(Image) or nameof(Service))
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImageText)));
+        }
+
         if (property == nameof(State))
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsRunning)));

@@ -2,7 +2,7 @@ using Microsoft.WSL.Containers;
 
 namespace WslcDesktop.Services;
 
-public sealed record ContainerRow(string Name, string Image, string Id, string State, string Command, string Ports);
+public sealed record ContainerRow(string Name, string Image, string Id, string State, string Command, string Ports, string Labels = "");
 
 public sealed record ImageRow(string Name, string Size, DateTimeOffset Created);
 
@@ -74,6 +74,9 @@ public sealed class WslcHost
     }
 
     public ContainerMonitor Monitor { get; } = new();
+
+    public Compose.ComposeRunner CreateComposeRunner(Action<string> log) =>
+        new(args => WslcCli.RunAsync(["--session", SessionName, .. args]), log);
 
     public TelemetryService Telemetry { get; } = new();
 

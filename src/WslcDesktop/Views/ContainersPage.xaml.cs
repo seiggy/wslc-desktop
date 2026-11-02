@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using WslcDesktop.Compose;
 using WslcDesktop.Services;
 
 namespace WslcDesktop.Views;
@@ -31,24 +32,41 @@ public sealed partial class ContainersPage : Page
     private void Sync()
     {
         var monitor = App.Host.Monitor;
-        var rows = monitor.Containers;
-        foreach (var gone in _items.Where(i => rows.All(r => r.Name != i.Name)).ToList())
+        var rows = monitor.Containers
+            .Select(r => (Row: r, Stack: ComposeLabels.TryParse(r.Labels, out var p, out _) ? p : string.Empty))
+            .OrderBy(x => x.Stack.Length > 0)
+            .ThenBy(x => x.Stack, StringComparer.Ordinal)
+            .ToList();
+        foreach (var gone in _items.Where(i => rows.All(r => r.Row.Name != i.Name)).ToList())
         {
             _items.Remove(gone);
         }
 
+        var previousStack = string.Empty;
         for (var n = 0; n < rows.Count; n++)
         {
-            var row = rows[n];
+            var (row, stack) = rows[n];
             var item = _items.FirstOrDefault(i => i.Name == row.Name);
             if (item is null)
             {
                 item = new ContainerItem(row.Name);
                 _items.Insert(Math.Min(n, _items.Count), item);
             }
+            else
+            {
+                var current = _items.IndexOf(item);
+                if (current != n)
+                {
+                    _items.Move(current, n);
+                }
+            }
 
             var history = App.Host.Telemetry.GetHistory(row.Name);
             item.Update(row, history.Count > 0 ? history[^1] : null);
+            item.SetHeader(stack.Length > 0 && stack != previousStack
+                ? $"Stack: {stack} ({rows.Count(x => x.Stack == stack)})"
+                : string.Empty);
+            previousStack = stack;
         }
 
         EmptyText.Visibility = monitor.HasLoaded && rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
