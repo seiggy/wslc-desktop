@@ -27,6 +27,8 @@ public sealed class TelemetryService
 
     public event Action? Updated;
 
+    // Charts aren't visible while the window is hidden, so sampling pauses.
+    public volatile bool Paused;
     public string? LastError { get; private set; }
 
     public void Start(string session)
@@ -59,6 +61,11 @@ public sealed class TelemetryService
         using var timer = new PeriodicTimer(Interval);
         do
         {
+            if (Paused)
+            {
+                continue;
+            }
+
             try
             {
                 var snapshot = await WslcCli.GetStatsAsync(session);

@@ -1,0 +1,27 @@
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+using WslcDesktop.Platform;
+
+namespace WslcDesktop;
+
+// Custom entry point (DISABLE_XAML_GENERATED_MAIN) so a second launch can redirect before any window exists.
+public static class Program
+{
+    [STAThread]
+    public static int Main()
+    {
+        WinRT.ComWrappersSupport.InitializeComWrappers();
+        if (SingleInstance.RedirectIfSecondary())
+        {
+            return 0;
+        }
+
+        Application.Start(p =>
+        {
+            SynchronizationContext.SetSynchronizationContext(
+                new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));
+            new App();
+        });
+        return 0;
+    }
+}
