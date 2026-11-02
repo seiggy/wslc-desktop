@@ -1,4 +1,7 @@
 # wslc-desktop
+
+<p align="center"><img src="assets/branding/wslc-desktop-logo.svg" alt="WSLc Desktop logo: a stack of image layers with a small penguin" width="160"></p>
+
 Desktop App for managing WSLc for users familiar with that other product
 
 ## Build
