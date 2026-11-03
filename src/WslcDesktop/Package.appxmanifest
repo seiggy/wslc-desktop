@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  MSIX manifest. Only used when building with -p:WindowsPackageType=MSIX (see RELEASING.md);
-  the default build stays unpackaged. Identity Name/Publisher/Version are placeholders that
-  the release workflow stamps (tools/packaging/Build-Release.ps1).
+  Microsoft Store identity from Partner Center. Only used when building with
+  -p:WindowsPackageType=MSIX (see RELEASING.md); the default build stays unpackaged.
+  The release workflow stamps only the version (tools/packaging/Build-Release.ps1).
 -->
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -13,8 +13,8 @@
   IgnorableNamespaces="uap uap10 desktop6 rescap">
 
   <Identity
-    Name="seiggy.WslcDesktop"
-    Publisher="CN=seiggy"
+    Name="seiggy.DesktopManagerforWSLc"
+    Publisher="CN=CE168BCD-6F3C-4900-89EA-A9A764FE595F"
     Version="1.0.0.0" />
 
   <Properties>

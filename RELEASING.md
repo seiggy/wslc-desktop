@@ -10,26 +10,36 @@ Releases are built by `.github/workflows/release.yml`.
 | File | Description |
 | --- | --- |
 | `WslcDesktop-<v>-win-x64-portable.exe`, `…-win-arm64-portable.exe` | Single-file, self-contained unpackaged build. Run the EXE directly; no companion files or runtime installation required. |
-| `WslcDesktop-<v>-x64.msix`, `…-arm64.msix` | Per-architecture MSIX. |
-| `WslcDesktop-<v>.appxbundle` | Bundle of both MSIX packages. `.appxbundle` and `.msixbundle` are the same format (identical `AppxBundleManifest.xml`); only the extension differs. |
+| `WslcDesktop-<v>-x64.msix`, `…-arm64.msix` | Unsigned Microsoft Store MSIX packages; not sideload installers. |
+| `WslcDesktop-<v>.appxbundle` | Unsigned Store submission bundle containing both architectures. Upload this file to Partner Center; the individual MSIX files need not be uploaded as well. |
 | `SHA256SUMS.txt` | Checksums of every file. |
-| `WslcDesktop-<v>-test-signing.cer` | Only present for test-signed builds (see below). |
 
 Package version is `<major>.<minor>.<patch>.0` (the tag), stamped into the manifest and assembly.
 
-## Signing (user action required)
+## Microsoft Store submission
 
-Add these in *Settings → Secrets and variables → Actions*:
+The release workflow builds unsigned packages using the Partner Center identity in `src/WslcDesktop/Package.appxmanifest`:
 
-- Secret `MSIX_CERT_PFX_BASE64`: base64 of a code-signing `.pfx` (`[Convert]::ToBase64String([IO.File]::ReadAllBytes('cert.pfx'))`).
-- Secret `MSIX_CERT_PASSWORD`: the PFX password.
-- Variable `MSIX_PUBLISHER`: the certificate subject exactly, e.g. `CN=Zack Way, O=..., C=US`. The build fails if it doesn't match the cert.
+| Partner Center field | Value |
+| --- | --- |
+| Package/Identity/Name | `seiggy.DesktopManagerforWSLc` |
+| Package/Identity/Publisher | `CN=CE168BCD-6F3C-4900-89EA-A9A764FE595F` |
+| Package/Properties/PublisherDisplayName | `seiggy` |
+| Store ID | `9N9HFWX6046M` |
 
-Without the secrets, packages are signed with a throwaway self-signed certificate (subject `CN=WSLc Desktop Test` unless `MSIX_PUBLISHER` is set)
-and the release notes say so. Users must trust the attached `.cer` (Local Machine → Trusted People) to install them; the portable EXE needs no certificate.
-Package identity (`seiggy.WslcDesktop`) and `PublisherDisplayName` live in `src/WslcDesktop/Package.appxmanifest`; for Microsoft Store submission
-replace them with the values from Partner Center (the Store re-signs the package). Store review also needs justification for the restricted
-capabilities below.
+Download `WslcDesktop-<v>.appxbundle` from the GitHub Release or the `release-files` workflow artifact and upload it in
+the app's Partner Center submission. PR builds also provide a `store-bundle` workflow artifact for validation, built with version `1.0.0.0`;
+use a release build with the intended version for submission. Complete the listing, declarations, and certification steps in Partner Center.
+Microsoft signs the packages after certification; no purchased certificate, PFX, or test-certificate trust setup is needed.
+Store review also needs justification for the restricted capabilities below. The package family name and SID are derived from the identity,
+not stamped separately into the manifest.
+
+The GitHub MSIX packages and bundle are submission artifacts, not directly installable unsigned packages. For direct downloads, use the
+portable EXE. The workflow no longer generates sideload packages or self-signed certificates, and no longer reads `MSIX_CERT_PFX_BASE64`,
+`MSIX_CERT_PASSWORD`, or `MSIX_PUBLISHER`; any previously configured values can be removed from repository settings.
+Store signing does not sign the portable EXE. Older GitHub releases retain their original test-signed packages.
+
+See Microsoft's [MSIX Store submission requirements](https://learn.microsoft.com/windows/apps/publish/publish-your-app/msix/app-package-requirements).
 
 ## Packaging notes
 
@@ -49,5 +59,11 @@ capabilities below.
   `%LOCALAPPDATA%\wslc\settings.yaml` and `%LOCALAPPDATA%\WslcDesktop\` are the real paths shared with the CLI and the WSLc service,
   not redirected into the package's `LocalCache`.
 - Packaged builds restore from nuget.org in CI (the repo `nuget.config` points at an internal feed).
-- Local run: `pwsh tools/packaging/Build-Release.ps1 -Arch x64 -Version 0.0.1 -OutDir out`, then `Sign-And-Bundle.ps1`
-  (needs the Windows SDK's `makeappx`/`signtool`).
+- Local release build (requires the Windows SDK's `makeappx`, but no signing certificate):
+  ```powershell
+  .\tools\packaging\Build-Release.ps1 -Arch x64 -Version 1.0.0 -OutDir out -NuGetConfig .github\nuget.ci.config
+  .\tools\packaging\Build-Release.ps1 -Arch arm64 -Version 1.0.0 -OutDir out -NuGetConfig .github\nuget.ci.config
+  .\tools\packaging\Bundle-Release.ps1 -Version 1.0.0 -Directory out
+  ```
+  Build architectures sequentially because the script resets shared build output. The bundler rejects signed packages, mismatched Store
+  identities or versions, and missing or duplicate architectures before creating the unsigned bundle.
