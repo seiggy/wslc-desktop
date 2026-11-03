@@ -31,6 +31,8 @@ public sealed record ImageSummary(
     public string UsedBy => Containers switch { 0 => "Unused", 1 => "1 container", _ => $"{Containers} containers" };
 }
 
+public sealed record ImageRef(string Session, string Target);
+
 public sealed record ImageDetail(
     string Id,
     IReadOnlyList<string> Tags,

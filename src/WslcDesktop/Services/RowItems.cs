@@ -4,11 +4,23 @@ using Microsoft.UI.Xaml;
 namespace WslcDesktop.Services;
 
 /// <summary>An image row whose values are replaced in place when a poll reports a change.</summary>
-public sealed class ImageItem(ImageSummary summary) : INotifyPropertyChanged
+public sealed class ImageItem(SessionImage row) : INotifyPropertyChanged
 {
-    private ImageSummary _s = summary;
+    private SessionImage _row = row;
+
+    private ImageSummary _s => _row.Image;
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public string Key => _row.Key;
+
+    public string Session => _row.Session;
+
+    public bool IsThisApp => _row.IsThisApp;
+
+    public bool CanCopyToApp => _row.CanCopyToApp;
+
+    public Visibility ThisAppVisibility => _row.ThisAppVisibility;
 
     public string Id => _s.Id;
 
@@ -31,14 +43,14 @@ public sealed class ImageItem(ImageSummary summary) : INotifyPropertyChanged
 
     public Visibility UntaggedVisibility => _s.UntaggedVisibility;
 
-    public void Update(ImageSummary next)
+    public void Update(SessionImage next)
     {
-        if (next == _s)
+        if (next == _row)
         {
             return;
         }
 
-        _s = next;
+        _row = next;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
     }
 }

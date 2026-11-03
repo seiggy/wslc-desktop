@@ -6,7 +6,7 @@ using WslcDesktop.Compose;
 namespace WslcDesktop.Services;
 
 /// <summary>A container row that updates in place as state and telemetry change.</summary>
-public sealed class ContainerItem(string name) : INotifyPropertyChanged
+public sealed class ContainerItem(string session, bool isThisApp, string name) : INotifyPropertyChanged
 {
     private string _image = string.Empty;
     private string _state = string.Empty;
@@ -21,6 +21,14 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public string Name { get; } = name;
+
+    public string Session { get; } = session;
+
+    public bool IsThisApp { get; } = isThisApp;
+
+    public string Key => $"{Session}|{Name}";
+
+    public Visibility ThisAppVisibility => IsThisApp ? Visibility.Visible : Visibility.Collapsed;
 
     /// <summary>The compose project this container belongs to, or empty for a standalone container.</summary>
     public string Stack { get => _stack; private set => Set(ref _stack, value); }
@@ -63,7 +71,7 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
 
     public void Update(ContainerRow row, StatsSample? sample, RestartInfo? restart = null)
     {
-        Restart = RestartDisplay.Short(restart ?? RestartInfo.Empty, DateTimeOffset.UtcNow);
+        Restart = IsThisApp ? RestartDisplay.Short(restart ?? RestartInfo.Empty, DateTimeOffset.UtcNow) : string.Empty;
         var alert = restart?.State == RestartState.CrashLoop;
         if (alert != _restartAlert)
         {

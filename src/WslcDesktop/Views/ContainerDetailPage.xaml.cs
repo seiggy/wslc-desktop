@@ -11,6 +11,17 @@ namespace WslcDesktop.Views;
 public sealed partial class ContainerDetailPage : Page
 {
     private string _name = string.Empty;
+    private string _session = string.Empty;
+    private readonly DispatcherTimer _otherSessionTimer = new() { Interval = TimeSpan.FromSeconds(3) };
+
+    private bool IsAppSession => App.Host.IsAppSession(_session);
+
+    private bool HasLoaded => IsAppSession ? App.Host.Monitor.HasLoaded : App.Host.ContainerCatalog.Latest is not null;
+
+    private ContainerRow? FindRow() => IsAppSession
+        ? App.Host.Monitor.Find(_name)
+        : App.Host.ContainerCatalog.Latest?.Items
+            .FirstOrDefault(e => string.Equals(e.Session, _session, StringComparison.OrdinalIgnoreCase) && e.Item.Name == _name)?.Item;
     private bool _ready;
     private CancellationTokenSource? _logCts;
     private ShellProcess? _shell;
@@ -23,6 +34,26 @@ public sealed partial class ContainerDetailPage : Page
             _ready = true;
             App.Host.Telemetry.Updated += OnTelemetryUpdated;
             App.Host.Monitor.Updated += OnTelemetryUpdated;
+            if (!IsAppSession)
+            {
+                // Other sessions aren't polled by the monitor, so this page keeps its container current.
+                _otherSessionTimer.Tick += async (_, _) =>
+                {
+                    try
+                    {
+                        await App.Host.ContainerCatalog.RefreshAsync();
+                    }
+                    catch
+                    {
+                        return;
+                    }
+
+                    OnTelemetryUpdated();
+                };
+                _otherSessionTimer.Start();
+                _ = App.Host.ContainerCatalog.RefreshAsync().ContinueWith(_ => DispatcherQueue.TryEnqueue(ApplyState));
+            }
+
             _wasRunning = IsRunning;
             LoadPolicy();
             RenderRestartStatus();
@@ -35,6 +66,7 @@ public sealed partial class ContainerDetailPage : Page
         {
             App.Host.Telemetry.Updated -= OnTelemetryUpdated;
             App.Host.Monitor.Updated -= OnTelemetryUpdated;
+            _otherSessionTimer.Stop();
             _logCts?.Cancel();
             StopShell();
         };
@@ -45,6 +77,11 @@ public sealed partial class ContainerDetailPage : Page
 
     private void LoadPolicy()
     {
+        if (!IsAppSession)
+        {
+            return;
+        }
+
         var policy = App.Host.Restart.GetPolicy(_name);
         _syncingPolicy = true;
         RestartPicker.ItemsSource = RestartDisplay.ModeLabels;
@@ -64,23 +101,28 @@ public sealed partial class ContainerDetailPage : Page
         var retries = double.IsNaN(RestartRetries.Value) ? 0 : (int)RestartRetries.Value;
         var policy = RestartDisplay.FromSelection(RestartPicker.SelectedIndex, retries);
         RestartRetries.Visibility = policy.Mode == RestartMode.OnFailure ? Visibility.Visible : Visibility.Collapsed;
+        if (!IsAppSession)
+        {
+            return;
+        }
+
         App.Host.SetRestartPolicy(_name, policy, IsRunning);
         RenderRestartStatus();
     }
 
     private void RenderRestartStatus() =>
-        RestartStatus.Text = RestartDisplay.Long(App.Host.Restart.GetInfo(_name), DateTimeOffset.UtcNow);
+        RestartStatus.Text = IsAppSession ? RestartDisplay.Long(App.Host.Restart.GetInfo(_name), DateTimeOffset.UtcNow) : string.Empty;
 
-    private bool IsRunning => App.Host.Monitor.Find(_name) is { } row && ContainerItem.IsRunningState(row.State);
+    private bool IsRunning => FindRow() is { } row && ContainerItem.IsRunningState(row.State);
 
     private void ApplyState()
     {
-        var row = App.Host.Monitor.Find(_name);
+        var row = FindRow();
         var running = IsRunning;
         TitleText.Text = row is null ? _name : $"{_name} · {row.State}";
 
         ShellPanel.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
-        ShellStoppedNotice.IsOpen = !running && App.Host.Monitor.HasLoaded;
+        ShellStoppedNotice.IsOpen = !running && HasLoaded;
         if (!running && _shell is not null)
         {
             ShellView.Append("[container stopped]");
@@ -101,7 +143,7 @@ public sealed partial class ContainerDetailPage : Page
     {
         try
         {
-            await App.Host.StartContainerAsync(_name);
+            await App.Host.StartContainerAsync(_name, _session);
         }
         catch (Exception ex)
         {
@@ -127,7 +169,7 @@ public sealed partial class ContainerDetailPage : Page
         };
         if (await confirm.ShowAsync() == ContentDialogResult.Primary)
         {
-            await NetworkActionAsync("Couldn't disconnect", () => App.Host.DisconnectNetworkAsync(network, _name));
+            await NetworkActionAsync("Couldn't disconnect", () => App.Host.DisconnectNetworkAsync(network, _name, _session));
         }
     }
 
@@ -136,7 +178,7 @@ public sealed partial class ContainerDetailPage : Page
         IReadOnlyList<string> all;
         try
         {
-            all = await App.Host.GetNetworkNamesAsync();
+            all = await App.Host.GetNetworkNamesAsync(_session);
         }
         catch (Exception ex)
         {
@@ -145,7 +187,7 @@ public sealed partial class ContainerDetailPage : Page
             return;
         }
 
-        var connected = (await App.Host.InspectContainerAsync(_name)) is { } json
+        var connected = (await App.Host.InspectContainerAsync(_name, _session)) is { } json
             ? ContainerDetail.Parse(json).Networks.Select(n => n.Name).ToHashSet()
             : [];
         var choices = all.Where(n => !connected.Contains(n)).ToList();
@@ -168,7 +210,7 @@ public sealed partial class ContainerDetailPage : Page
         };
         if (await dialog.ShowAsync() == ContentDialogResult.Primary && network.SelectedItem is string chosen)
         {
-            await NetworkActionAsync("Couldn't connect", () => App.Host.ConnectNetworkAsync(chosen, _name, alias.Text.Trim()));
+            await NetworkActionAsync("Couldn't connect", () => App.Host.ConnectNetworkAsync(chosen, _name, alias.Text.Trim(), _session));
         }
     }
 
@@ -191,7 +233,7 @@ public sealed partial class ContainerDetailPage : Page
         InspectError.IsOpen = false;
         try
         {
-            var json = await App.Host.InspectContainerAsync(_name);
+            var json = await App.Host.InspectContainerAsync(_name, _session);
             var d = ContainerDetail.Parse(json);
             InspectPanel.Children.Clear();
 
@@ -263,8 +305,13 @@ public sealed partial class ContainerDetailPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        _name = (string)e.Parameter;
+        (_session, _name) = e.Parameter is ContainerRef r ? (r.Session, r.Name) : (App.Host.SessionId, (string)e.Parameter);
         TitleText.Text = _name;
+        SessionText.Text = IsAppSession ? string.Empty : $"Session: {_session}";
+        if (!IsAppSession)
+        {
+            RestartPicker.Visibility = RestartRetries.Visibility = RestartStatus.Visibility = Visibility.Collapsed;
+        }
     }
 
     private void Back_Click(object sender, RoutedEventArgs e)
@@ -302,7 +349,7 @@ public sealed partial class ContainerDetailPage : Page
             string? error = null;
             try
             {
-                await App.Host.StreamLogsAsync(_name, tail, follow, timestamps, LogView.Append, cts.Token);
+                await App.Host.StreamLogsAsync(_name, tail, follow, timestamps, LogView.Append, cts.Token, _session);
             }
             catch (OperationCanceledException)
             {
@@ -348,7 +395,7 @@ public sealed partial class ContainerDetailPage : Page
                     ShellView.Append($"[shell exited with code {code}]");
                     StopShell();
                 }
-            }));
+            }), _session);
             _shell = started;
         }
         catch (Exception ex)
@@ -398,6 +445,13 @@ public sealed partial class ContainerDetailPage : Page
 
     private void RenderTelemetry()
     {
+        if (!IsAppSession)
+        {
+            TelemetryNotice.IsOpen = true;
+            TelemetryNotice.Message = $"Telemetry is only collected for containers in this app's session (\"{App.Host.SessionId}\").";
+            return;
+        }
+
         var history = App.Host.Telemetry.GetHistory(_name);
         if (history.Count == 0 || !IsRunning)
         {

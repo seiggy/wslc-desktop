@@ -12,6 +12,7 @@ public sealed partial class ResourceDetailPage : Page
 {
     private ResourceKind _kind;
     private string _name = string.Empty;
+    private string _session = string.Empty;
 
     public ResourceDetailPage() => InitializeComponent();
 
@@ -23,9 +24,12 @@ public sealed partial class ResourceDetailPage : Page
         }
     }
 
+    private static ResourceRef LegacyRef((ResourceKind Kind, string Name) p) => new(p.Kind, App.Host.SessionId, p.Name);
+
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
-        (_kind, _name) = ((ResourceKind, string))e.Parameter;
+        var target = e.Parameter is ResourceRef r ? r : LegacyRef(((ResourceKind, string))e.Parameter);
+        (_kind, _session, _name) = (target.Kind, target.Session, target.Name);
         TitleText.Text = _name;
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(BackButton, _kind == ResourceKind.Volume ? "Back to volumes" : "Back to networks");
         await LoadAsync();
@@ -35,7 +39,7 @@ public sealed partial class ResourceDetailPage : Page
     {
         try
         {
-            var json = await App.Host.InspectResourceAsync(_kind, _name);
+            var json = await App.Host.InspectResourceAsync(_kind, _name, _session);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0
                 ? doc.RootElement[0]
@@ -44,6 +48,7 @@ public sealed partial class ResourceDetailPage : Page
             Cards.Children.Clear();
             var card = InspectUi.Card("Overview", out var rows);
             InspectUi.AddRow(rows, "Name", Str(root, "Name"));
+            InspectUi.AddRow(rows, "Session", App.Host.IsAppSession(_session) ? $"{_session} (this app)" : _session);
             InspectUi.AddRow(rows, "ID", Str(root, "Id"), true);
             InspectUi.AddRow(rows, "Driver", Str(root, "Driver"));
             InspectUi.AddRow(rows, "Scope", Str(root, "Scope"));
@@ -102,7 +107,7 @@ public sealed partial class ResourceDetailPage : Page
 
         try
         {
-            var rows = await App.Host.GetResourcesAsync(ResourceKind.Volume);
+            var rows = await WslcResources.ListVolumesAsync(_session);
             return rows.FirstOrDefault(r => r.Name == _name)?.UsedBy.ToList() ?? [];
         }
         catch

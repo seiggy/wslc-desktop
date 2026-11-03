@@ -15,6 +15,8 @@ public sealed partial class ImagesPage : Page
     {
         InitializeComponent();
         List.ItemsSource = _items;
+        _sessionFilter = new SessionFilterController(SessionFilter);
+        _sessionFilter.Changed += Apply;
         Loaded += async (_, _) =>
         {
             _timer.Start();
@@ -24,31 +26,23 @@ public sealed partial class ImagesPage : Page
         _timer.Tick += async (_, _) => await RefreshAsync();
     }
 
-    private async Task RefreshAsync()
+    private SessionFilterController _sessionFilter = null!;
+    private string? _filter => _sessionFilter.Filter;
+    private bool _refreshing;
+    private ImageSnapshot? _last;
+
+    private async Task RefreshAsync(bool force = false)
     {
+        if (_refreshing)
+        {
+            return;
+        }
+
+        _refreshing = true;
         try
         {
-            var images = await App.Host.GetImageSummariesAsync();
-            // Update rows in place so the list never flickers or loses scroll/focus on a poll.
-            foreach (var gone in _items.Where(i => images.All(n => n.Id != i.Id)).ToList())
-            {
-                _items.Remove(gone);
-            }
-
-            for (var n = 0; n < images.Count; n++)
-            {
-                var item = _items.FirstOrDefault(i => i.Id == images[n].Id);
-                if (item is null)
-                {
-                    _items.Insert(Math.Min(n, _items.Count), new ImageItem(images[n]));
-                }
-                else
-                {
-                    item.Update(images[n]);
-                }
-            }
-
-            EmptyText.Visibility = images.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            _last = await App.Host.ImageCatalog.RefreshAsync(force);
+            Apply();
         }
         catch (Exception e)
         {
@@ -56,11 +50,66 @@ public sealed partial class ImagesPage : Page
             await ShowErrorAsync("Couldn't list images", e);
             _timer.Start();
         }
+        finally
+        {
+            _refreshing = false;
+        }
     }
 
-    private void List_ItemClick(object sender, ItemClickEventArgs e) =>
-        Frame.Navigate(typeof(ImageDetailPage), ((ImageItem)e.ClickedItem).Target);
+    private void Apply()
+    {
+        if (_last is not { } snap)
+        {
+            return;
+        }
 
+        _sessionFilter.Sync(snap.Sessions);
+        var images = snap.Images
+            .Where(i => _filter is null || string.Equals(i.Session, _filter, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        // Update rows in place so the list never flickers or loses scroll/focus on a poll.
+        foreach (var gone in _items.Where(i => images.All(n => n.Key != i.Key)).ToList())
+        {
+            _items.Remove(gone);
+        }
+
+        for (var n = 0; n < images.Count; n++)
+        {
+            var item = _items.FirstOrDefault(i => i.Key == images[n].Key);
+            if (item is null)
+            {
+                _items.Insert(Math.Min(n, _items.Count), new ImageItem(images[n]));
+            }
+            else
+            {
+                item.Update(images[n]);
+                var at = _items.IndexOf(item);
+                if (at != n && n < _items.Count)
+                {
+                    _items.Move(at, n);
+                }
+            }
+        }
+
+        var failed = snap.Failures.Count > 0
+            ? string.Join('\n', snap.Failures.Select(f => $"{f.Session}: {f.Message}"))
+            : string.Empty;
+        if (SessionErrorBar.Message != failed)
+        {
+            SessionErrorBar.Message = failed;
+        }
+
+        SessionErrorBar.IsOpen = failed.Length > 0;
+        EmptyText.Visibility = images.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyText.Text = _filter is null ? "No images yet. Pull one to get started." : $"No images in session \"{_filter}\".";
+    }
+
+    private void List_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        var item = (ImageItem)e.ClickedItem;
+        Frame.Navigate(typeof(ImageDetailPage), new ImageRef(item.Session, item.Target));
+    }
     private async void PullBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key == Windows.System.VirtualKey.Enter)
@@ -96,6 +145,7 @@ public sealed partial class ImagesPage : Page
                 }
             });
             await App.Host.PullImageAsync(uri, progress);
+            App.Host.ImageCatalog.Invalidate(App.Host.SessionId);
             PullBox.Text = string.Empty;
         }
         catch (Exception e)
@@ -113,18 +163,56 @@ public sealed partial class ImagesPage : Page
 
     private async void Run_Click(object sender, RoutedEventArgs e)
     {
-        if (((FrameworkElement)sender).Tag is not string reference)
+        if (((FrameworkElement)sender).Tag is not ImageItem item)
         {
             return;
         }
 
-        var created = await ContainersPage.ShowNewContainerDialogAsync(XamlRoot, reference);
-        if (created is not null)
-        {
-            await OfferOpenContainerAsync(XamlRoot, Frame, created);
-        }
+        await RunFromAsync(XamlRoot, Frame, item.Session, item.RunReference, item.CanCopyToApp);
     }
 
+    /// <summary>
+    /// Opens the New container dialog for an image. Containers are always created in the app's session, so an image
+    /// owned by another session is pulled into the app's session first (after confirmation); untagged images can't be.
+    /// </summary>
+    internal static async Task RunFromAsync(XamlRoot xamlRoot, Frame frame, string session, string reference, bool canCopy)
+    {
+        var inApp = App.Host.IsAppSession(session);
+        if (!inApp)
+        {
+            if (!canCopy)
+            {
+                await new ContentDialog
+                {
+                    XamlRoot = xamlRoot,
+                    Title = "Can't run this image here",
+                    Content = $"This untagged image belongs to session \"{session}\", and containers are created in \"{App.Host.SessionId}\". Untagged images have no reference to pull, so tag it in \"{session}\" first, or run it there with wslc --session {session}.",
+                    CloseButtonText = "Close",
+                }.ShowAsync();
+                return;
+            }
+
+            var confirm = new ContentDialog
+            {
+                XamlRoot = xamlRoot,
+                Title = "Image is in another session",
+                Content = $"\"{reference}\" belongs to session \"{session}\". Containers created here run in \"{App.Host.SessionId}\", so the image will be pulled into that session from its registry (a locally built image can't be). The copy in \"{session}\" is left untouched.",
+                PrimaryButtonText = "Continue",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Primary,
+            };
+            if (await confirm.ShowAsync() != ContentDialogResult.Primary)
+            {
+                return;
+            }
+        }
+
+        var created = await ContainersPage.ShowNewContainerDialogAsync(xamlRoot, reference, inApp);
+        if (created is not null)
+        {
+            await OfferOpenContainerAsync(xamlRoot, frame, created);
+        }
+    }
     /// <summary>After a container is created, offers to open its details.</summary>
     internal static async Task OfferOpenContainerAsync(XamlRoot xamlRoot, Frame frame, string name)
     {
@@ -145,21 +233,21 @@ public sealed partial class ImagesPage : Page
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
     {
-        if (((FrameworkElement)sender).Tag is not string name)
+        if (((FrameworkElement)sender).Tag is not ImageItem item)
         {
             return;
         }
 
         try
         {
-            await App.Host.DeleteImageAsync(name);
+            await App.Host.DeleteImageAsync(item.Session, item.Target);
         }
         catch (Exception ex)
         {
-            await ShowErrorAsync($"Couldn't delete {name}", ex);
+            await ShowErrorAsync($"Couldn't delete {item.Target} from {item.Session}", ex);
         }
 
-        await RefreshAsync();
+        await RefreshAsync(true);
     }
 
     private async Task ShowErrorAsync(string title, Exception e)

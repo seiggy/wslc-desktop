@@ -12,6 +12,8 @@ public sealed partial class ResourcesPage : Page
     private readonly System.Collections.ObjectModel.ObservableCollection<ResourceItem> _items = [];
     private ResourceKind _kind;
     private bool _busy;
+    private readonly SessionFilterController _sessionFilter;
+    private SessionSnapshot<ResourceRow>? _snapshot;
 
     private string Noun => _kind == ResourceKind.Volume ? "volume" : "network";
 
@@ -19,6 +21,8 @@ public sealed partial class ResourcesPage : Page
     {
         InitializeComponent();
         List.ItemsSource = _items;
+        _sessionFilter = new SessionFilterController(SessionFilter);
+        _sessionFilter.Changed += Apply;
         Loaded += async (_, _) =>
         {
             _timer.Start();
@@ -34,12 +38,9 @@ public sealed partial class ResourcesPage : Page
         TitleText.Text = _kind == ResourceKind.Volume ? "Volumes" : "Networks";
         NewButton.Content = $"New {Noun}";
         Col3Header.Text = _kind == ResourceKind.Volume ? "Scope" : "Access";
-        EmptyText.Text = _kind == ResourceKind.Volume
-            ? "No volumes yet. Create one to persist container data."
-            : "No networks.";
     }
 
-    private async Task RefreshAsync()
+    private async Task RefreshAsync(bool force = false)
     {
         if (_busy)
         {
@@ -49,30 +50,13 @@ public sealed partial class ResourcesPage : Page
         _busy = true;
         try
         {
-            var rows = await App.Host.GetResourcesAsync(_kind);
-            foreach (var gone in _items.Where(i => rows.All(r => r.Name != i.Name)).ToList())
-            {
-                _items.Remove(gone);
-            }
-
-            for (var n = 0; n < rows.Count; n++)
-            {
-                var item = _items.FirstOrDefault(i => i.Name == rows[n].Name);
-                if (item is null)
-                {
-                    _items.Insert(Math.Min(n, _items.Count), new ResourceItem(rows[n]));
-                }
-                else
-                {
-                    item.Update(rows[n]);
-                }
-            }
-
-            EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            _snapshot = await App.Host.ResourceCatalog(_kind).RefreshAsync(force);
             if (ErrorBar.IsOpen)
             {
                 ErrorBar.IsOpen = false;
             }
+
+            Apply();
         }
         catch (Exception e)
         {
@@ -86,11 +70,72 @@ public sealed partial class ResourcesPage : Page
         }
     }
 
-    private void List_ItemClick(object sender, ItemClickEventArgs e) =>
-        Frame.Navigate(typeof(ResourceDetailPage), (_kind, ((ResourceItem)e.ClickedItem).Name));
+    // Update rows in place so the list never flickers or loses scroll/focus on a poll.
+    private void Apply()
+    {
+        if (_snapshot is not { } snap)
+        {
+            return;
+        }
+
+        _sessionFilter.Sync(snap.Sessions);
+        var rows = snap.Items
+            .Where(e => _sessionFilter.Filter is null || string.Equals(e.Session, _sessionFilter.Filter, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        static string KeyOf(SessionEntry<ResourceRow> e) => $"{e.Session}|{e.Item.Name}";
+        foreach (var gone in _items.Where(i => rows.All(r => KeyOf(r) != i.Key)).ToList())
+        {
+            _items.Remove(gone);
+        }
+
+        for (var n = 0; n < rows.Count; n++)
+        {
+            var item = _items.FirstOrDefault(i => i.Key == KeyOf(rows[n]));
+            if (item is null)
+            {
+                _items.Insert(Math.Min(n, _items.Count), new ResourceItem(rows[n]));
+            }
+            else
+            {
+                item.Update(rows[n].Item);
+                var at = _items.IndexOf(item);
+                if (at != n && n < _items.Count)
+                {
+                    _items.Move(at, n);
+                }
+            }
+        }
+
+        var failed = string.Join('\n', snap.Failures.Select(f => $"{f.Session}: {f.Message}"));
+        if (SessionErrorBar.Message != failed)
+        {
+            SessionErrorBar.Message = failed;
+        }
+
+        SessionErrorBar.IsOpen = failed.Length > 0;
+        EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyText.Text = _sessionFilter.Filter is not null
+            ? $"No {Noun}s in session \"{_sessionFilter.Filter}\"."
+            : _kind == ResourceKind.Volume ? "No volumes yet. Create one to persist container data." : "No networks.";
+        PruneButton.Content = _sessionFilter.Filter is null || App.Host.IsAppSession(_sessionFilter.Filter) ? "Prune unused" : $"Prune unused in {_sessionFilter.Filter}";
+    }
+
+    private string PruneSession => _sessionFilter.Filter ?? App.Host.SessionId;
+
+    private void List_ItemClick(object sender, ItemClickEventArgs e)
+        { var item = (ResourceItem)e.ClickedItem; Frame.Navigate(typeof(ResourceDetailPage), new ResourceRef(_kind, item.Session, item.Name)); }
 
     private async void New_Click(object sender, RoutedEventArgs e)
     {
+        var sessions = _snapshot?.Sessions ?? [App.Host.SessionId];
+        var sessionPicker = new ComboBox
+        {
+            Header = "Session",
+            ItemsSource = sessions.Select(s => App.Host.IsAppSession(s) ? $"{s} (this app)" : s).ToList(),
+            SelectedIndex = Math.Max(0, sessions.ToList().FindIndex(s => string.Equals(s, _sessionFilter.Filter ?? App.Host.SessionId, StringComparison.OrdinalIgnoreCase))),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            IsEnabled = sessions.Count > 1,
+        };
         var name = new TextBox { Header = "Name", PlaceholderText = _kind == ResourceKind.Volume ? "my-data" : "my-network" };
         var driver = new ComboBox { Header = "Driver", HorizontalAlignment = HorizontalAlignment.Stretch };
         var subnet = new TextBox { Header = "Subnet (optional)", PlaceholderText = "10.10.0.0/24" };
@@ -123,6 +168,7 @@ public sealed partial class ResourcesPage : Page
         var isInternal = new CheckBox { Content = "Internal (no external access)" };
         var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
         var panel = new StackPanel { Spacing = 12, MinWidth = 380 };
+        panel.Children.Add(sessionPicker);
         panel.Children.Add(name);
         panel.Children.Add(driver);
         if (_kind == ResourceKind.Volume)
@@ -164,6 +210,8 @@ public sealed partial class ResourcesPage : Page
             {
                 var n = name.Text.Trim();
                 var d = (string)driver.SelectedItem;
+                var target = sessions[Math.Max(0, sessionPicker.SelectedIndex)];
+                _creationSession = target;
                 if (_kind == ResourceKind.Volume)
                 {
                     long? bytes = null;
@@ -177,11 +225,11 @@ public sealed partial class ResourcesPage : Page
                         bytes = parsed;
                     }
 
-                    await App.Host.CreateVolumeAsync(n, d, bytes);
+                    await App.Host.CreateVolumeAsync(n, d, bytes, target);
                 }
                 else
                 {
-                    await App.Host.CreateNetworkAsync(n, d, subnet.Text.Trim(), gateway.Text.Trim(), isInternal.IsChecked == true);
+                    await App.Host.CreateNetworkAsync(n, d, subnet.Text.Trim(), gateway.Text.Trim(), isInternal.IsChecked == true, target);
                 }
             }
             catch (Exception ex)
@@ -198,9 +246,14 @@ public sealed partial class ResourcesPage : Page
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
-            await RefreshAsync();
+            ResourceCatalogInvalidate();
+            await RefreshAsync(true);
         }
     }
+
+    private void ResourceCatalogInvalidate() => App.Host.ResourceCatalog(_kind).Invalidate(_creationSession);
+
+    private string _creationSession = string.Empty;
 
     private async void Prune_Click(object sender, RoutedEventArgs e)
     {
@@ -208,8 +261,8 @@ public sealed partial class ResourcesPage : Page
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Prune unused {Noun}s?",
-            Content = $"This removes all {what}. This can't be undone.",
+            Title = $"Prune unused {Noun}s in {PruneSession}?",
+            Content = $"This removes all {what} in session \"{PruneSession}\". This can't be undone.",
             PrimaryButtonText = "Prune",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Close,
@@ -219,16 +272,17 @@ public sealed partial class ResourcesPage : Page
             return;
         }
 
-        await ActAsync($"Couldn't prune {Noun}s", () => App.Host.PruneResourcesAsync(_kind));
+        await ActAsync($"Couldn't prune {Noun}s", () => App.Host.PruneResourcesAsync(_kind, PruneSession));
     }
 
     private async void Remove_Click(object sender, RoutedEventArgs e)
     {
-        var name = (string)((FrameworkElement)sender).Tag;
+        var target = (ResourceItem)((FrameworkElement)sender).Tag;
+        var name = target.Name;
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Remove {Noun} \"{name}\"?",
+            Title = target.IsThisApp ? $"Remove {Noun} \"{name}\"?" : $"Remove {Noun} \"{name}\" from {target.Session}?",
             Content = _kind == ResourceKind.Volume
                 ? "The volume and all the data in it will be deleted. This can't be undone."
                 : "The network will be removed. Containers must be disconnected first.",
@@ -241,7 +295,7 @@ public sealed partial class ResourcesPage : Page
             return;
         }
 
-        await ActAsync($"Couldn't remove {name}", () => App.Host.RemoveResourceAsync(_kind, name));
+        await ActAsync($"Couldn't remove {name}", () => App.Host.RemoveResourceAsync(_kind, name, target.Session));
     }
 
     private async Task ActAsync(string failureTitle, Func<Task> action)
@@ -255,6 +309,6 @@ public sealed partial class ResourcesPage : Page
             await new ContentDialog { XamlRoot = XamlRoot, Title = failureTitle, Content = ex.Message, CloseButtonText = "Close" }.ShowAsync();
         }
 
-        await RefreshAsync();
+        await RefreshAsync(true);
     }
 }
