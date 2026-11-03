@@ -55,7 +55,6 @@ jobs:
       matrix:
         arch: [x64, arm64]
     env:
-      MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER || 'CN=WSLc Desktop Test' }}
       VERSION: ${{ needs.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
@@ -85,13 +84,12 @@ jobs:
           </configuration>
           '@ | Set-Content "$env:RUNNER_TEMP\nuget.ci.config"
 
-      - name: Build portable EXE and MSIX (${{ matrix.arch }})
+      - name: Build portable EXE and unsigned Store MSIX (${{ matrix.arch }})
         shell: pwsh
         run: >
           ./tools/packaging/Build-Release.ps1
           -Arch ${{ matrix.arch }}
           -Version $env:VERSION
-          -Publisher "$env:MSIX_PUBLISHER"
           -OutDir artifacts
           -NuGetConfig "$env:RUNNER_TEMP\nuget.ci.config"
 
@@ -105,10 +103,7 @@ jobs:
     needs: [version, build]
     runs-on: windows-latest
     env:
-      MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER || 'CN=WSLc Desktop Test' }}
       VERSION: ${{ needs.version.outputs.version }}
-      PFX_BASE64: ${{ secrets.MSIX_CERT_PFX_BASE64 }}
-      PFX_PASSWORD: ${{ secrets.MSIX_CERT_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -118,27 +113,12 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Decode signing certificate
-        if: env.PFX_BASE64 != ''
-        shell: pwsh
-        run: |
-          $pfx = Join-Path $env:RUNNER_TEMP 'release-signing.pfx'
-          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:PFX_BASE64))
-          "PFX_PATH=$pfx" >> $env:GITHUB_ENV
-
-      - name: Sign, bundle and checksum
+      - name: Bundle unsigned Store packages and checksum release files
         shell: pwsh
         run: >
-          ./tools/packaging/Sign-And-Bundle.ps1
+          ./tools/packaging/Bundle-Release.ps1
           -Version $env:VERSION
-          -Publisher "$env:MSIX_PUBLISHER"
           -Directory artifacts
-          -PfxPath "$env:PFX_PATH"
-
-      - name: Remove signing certificate
-        if: always()
-        shell: pwsh
-        run: Remove-Item "$env:RUNNER_TEMP\release-signing.pfx" -Force -ErrorAction SilentlyContinue
 
       - uses: actions/upload-artifact@v4
         with:
@@ -166,10 +146,10 @@ jobs:
         run: |
           flags=()
           [[ "$PRERELEASE" == "true" ]] && flags+=(--prerelease)
-          mapfile -t files < <(find artifacts -maxdepth 1 -type f ! -name signing-notes.md)
+          mapfile -t files < <(find artifacts -maxdepth 1 -type f ! -name release-notes.md)
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              --title "WSLc Desktop $TAG" --generate-notes --notes-file artifacts/signing-notes.md "${flags[@]}"
+              --title "WSLc Desktop $TAG" --generate-notes --notes-file artifacts/release-notes.md "${flags[@]}"
           fi

@@ -12,7 +12,9 @@ Run `wslc --help` in a terminal. If it prints the command list, the app can find
 
 ## Install
 
-Download the latest build from the [Releases page](https://github.com/seiggy/wslc-desktop/releases). The release offers a single-file portable EXE and MSIX packages for x64 and ARM64; pick whichever suits you. Run the portable EXE directly: .NET, WinUI, and assets are included and extracted to a per-user runtime cache when launched. WSLc is still required, and app settings and data remain under `%LOCALAPPDATA%`. No release yet? [Build from source](/contributing).
+Download the single-file portable EXE for x64 or ARM64 from the [Releases page](https://github.com/seiggy/wslc-desktop/releases). Run it directly: .NET, WinUI, and assets are included and extracted to a per-user runtime cache when launched. WSLc is still required, and app settings and data remain under `%LOCALAPPDATA%`. No release yet? [Build from source](/contributing).
+
+The MSIX packages and app bundle on GitHub are unsigned Microsoft Store submission files, not sideload installers. Microsoft signs the packages after certification; install through the Microsoft Store once the listing is live, or use the portable EXE.
 
 ## First run
 

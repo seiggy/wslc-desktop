@@ -1,14 +1,13 @@
 <#
 .SYNOPSIS
-  Builds the portable (self-contained, single-file) EXE and unsigned per-architecture MSIX for one platform.
+  Builds the portable (self-contained, single-file) EXE and unsigned Microsoft Store MSIX for one platform.
 .EXAMPLE
-  ./tools/packaging/Build-Release.ps1 -Arch x64 -Version 1.2.3 -Publisher "CN=Contoso" -OutDir artifacts
+  ./tools/packaging/Build-Release.ps1 -Arch x64 -Version 1.2.3 -OutDir artifacts
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidateSet('x64', 'arm64')][string]$Arch,
     [Parameter(Mandatory)][string]$Version,
-    [string]$Publisher = 'CN=WSLc Desktop Test',
     [string]$OutDir = 'artifacts',
     [string]$NuGetConfig
 )
@@ -61,7 +60,7 @@ if ($files.Count -ne 1 -or $files[0].Name -ne 'WslcDesktop.exe') {
 Move-Item $files[0].FullName (Join-Path $OutDir "WslcDesktop-$full-win-$Arch-portable.exe") -Force
 Remove-Item $pub -Recurse -Force
 
-# The manifest is stamped for the build and restored afterwards so the working tree stays clean.
+# Preserve the Partner Center identity and stamp only the release version.
 Write-Host "== MSIX ($rid)"
 Reset-BuildOutput
 $original = Get-Content $manifest -Raw
@@ -69,7 +68,6 @@ $pkgDir = Join-Path $OutDir "msix-$Arch"
 try {
     [xml]$xml = $original
     $xml.Package.Identity.Version = $msixVersion
-    $xml.Package.Identity.Publisher = $Publisher
     $xml.Save($manifest)
     dotnet build $project @common -p:WindowsPackageType=MSIX -p:GenerateAppxPackageOnBuild=true `
         -p:AppxBundle=Never -p:AppxPackageSigningEnabled=false -p:AppxSymbolPackageEnabled=false "-p:AppxPackageDir=$pkgDir\"

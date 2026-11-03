@@ -62,15 +62,17 @@ jobs:
           dotnet build tests/WslcDesktop.Compose.Tests -c Release --no-restore
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Verify single-file portable publish
+      - name: Build single-file portable EXE and unsigned Store MSIX
         shell: pwsh
         run: |
-          dotnet publish src/WslcDesktop -c Release -r ${{ matrix.rid }} -p:Platform=${{ matrix.platform }} -p:PublishProfile=Portable -p:DebugType=embedded -p:RestoreConfigFile="$env:NUGET_CONFIG" -o portable
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $files = @(Get-ChildItem portable -File -Recurse)
-          if ($files.Count -ne 1 -or $files[0].Name -ne 'WslcDesktop.exe') {
-            throw "Expected one portable EXE; found: $($files.Name -join ', ')"
-          }
+          ./tools/packaging/Build-Release.ps1 -Arch ('${{ matrix.platform }}'.ToLowerInvariant()) -Version 1.0.0 -OutDir artifacts -NuGetConfig "$env:NUGET_CONFIG"
+
+      - name: Upload unsigned Store MSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-msix-${{ matrix.platform }}
+          path: artifacts/*.msix
+          if-no-files-found: error
 
       - name: Report warnings
         if: always()
@@ -122,6 +124,30 @@ jobs:
             build-${{ matrix.platform }}.binlog
             build-${{ matrix.platform }}.log
           if-no-files-found: warn
+
+  store-bundle:
+    name: Verify Store bundle
+    needs: build-test
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: store-msix-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Validate Store identity and bundle unsigned packages
+        shell: pwsh
+        run: ./tools/packaging/Bundle-Release.ps1 -Version 1.0.0 -Directory artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-bundle
+          path: artifacts/*.appxbundle
+          if-no-files-found: error
 
   validate:
     name: Validation
