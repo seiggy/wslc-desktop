@@ -26,6 +26,20 @@ public sealed class AppSettings
 
     public string Theme { get; set; } = "System";
 
+    public string TerminalFontFamily { get; set; } = TerminalProtocol.DefaultFont;
+
+    public int TerminalFontSize { get; set; } = TerminalProtocol.DefaultFontSize;
+
+    /// <summary>Raised after the terminal font changes so open terminals can restyle.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Action? TerminalChanged { get; set; }
+
+    public void ResetTerminal()
+    {
+        TerminalFontFamily = TerminalProtocol.DefaultFont;
+        TerminalFontSize = TerminalProtocol.DefaultFontSize;
+    }
+
     // Null follows Windows; custom colors are opaque #RRGGBB.
     public string? AccentColor { get; set; }
 
@@ -51,6 +65,8 @@ public sealed class AppSettings
                         s.Theme = "System";
                     }
 
+                    s.TerminalFontFamily = TerminalProtocol.NormalizeFont(s.TerminalFontFamily);
+                    s.TerminalFontSize = TerminalProtocol.ClampFontSize(s.TerminalFontSize);
                     s.AccentColor = AccentPalette.Normalize(s.AccentColor);
                     return s;
                 }

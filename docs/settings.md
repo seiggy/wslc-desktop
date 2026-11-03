@@ -12,6 +12,12 @@ Changes apply immediately across the app and persist for the next launch. Custom
 controls in both themes; Windows high-contrast colors remain in control when a contrast theme is enabled.
 Appearance preferences are saved in `%LOCALAPPDATA%\WslcDesktop\settings.json`, not WSLc's `settings.yaml`.
 
+## Terminal
+
+![Terminal settings](/screenshots/settings-terminal.png)
+
+Choose the **Font** (installed monospace fonts such as Cascadia Mono, Consolas and Courier New) and **Size** (8 to 32) for the Shell tab's terminal. The preview updates as you change them, open terminals restyle immediately, and the choice is saved in `settings.json` for the next launch. **Reset to defaults** restores Cascadia Mono at size 14.
+
 ## App preferences
 
 **Minimize to tray** hides the minimized window from the taskbar. **Close button minimizes to tray** makes the close button

@@ -19,7 +19,16 @@ For a container in another WSLc session, the title shows `Session: NAME` instead
 
 ![Interactive shell](/screenshots/container-shell.png)
 
-Pick a shell (such as `sh`), choose **Start shell**, type a command in the box at the bottom and press Enter. The shell runs through `wslc exec` without a TTY, so line-oriented commands work but full-screen programs like `vim` or `top` don't. Choose **End shell** when you're done.
+Pick a shell (such as `sh`), choose **Start shell** and type straight into the terminal. It's a real TTY: `wslc exec --interactive --tty` runs under a Windows pseudoconsole (ConPTY) and is parsed by a managed VT engine and drawn natively (Win2D) in the app, so colors, arrow, Tab and Ctrl keys, Ctrl+C, scrollback and full-screen programs such as `vi`, `top` and `less` work. The terminal resizes with the window and follows the app's light or dark theme.
+
+![vi in the shell](/screenshots/container-shell-vi.png)
+
+- **Copy and paste:** select text to copy with Ctrl+Shift+C (or Ctrl+C while text is selected); paste with Ctrl+V, Ctrl+Shift+V or right-click.
+- **Font:** set the terminal font and size under **Settings > Terminal** (see [Settings](/settings)). Changes apply to open terminals and are saved.
+- **Fallback:** if the terminal can't start (for example the native terminal library is missing), the tab falls back to the simple line-based shell, which has no TTY.
+- **Secrets:** the raw terminal stream isn't passed through secret redaction, so values you print in the shell are shown as-is.
+
+Choose **End shell** when you're done. See the [terminal decision](/terminal-decision) for why this approach was chosen.
 
 If the container is stopped, the tab offers **Start container** instead.
 

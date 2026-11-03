@@ -32,6 +32,8 @@ public sealed partial class ContainerDetailPage : Page
         Loaded += (_, _) =>
         {
             _ready = true;
+            ApplyTerminalFont();
+            App.Host.Settings.TerminalChanged += ApplyTerminalFont;
             App.Host.Telemetry.Updated += OnTelemetryUpdated;
             App.Host.Monitor.Updated += OnTelemetryUpdated;
             if (!IsAppSession)
@@ -67,6 +69,7 @@ public sealed partial class ContainerDetailPage : Page
             App.Host.Telemetry.Updated -= OnTelemetryUpdated;
             App.Host.Monitor.Updated -= OnTelemetryUpdated;
             _otherSessionTimer.Stop();
+            App.Host.Settings.TerminalChanged -= ApplyTerminalFont;
             _logCts?.Cancel();
             StopShell();
         };
@@ -375,20 +378,96 @@ public sealed partial class ContainerDetailPage : Page
 
     // Shell
 
-    private void ShellToggle_Click(object sender, RoutedEventArgs e)
+    private bool _terminalActive;
+
+    private void ApplyTerminalFont() => Terminal.SetFont(App.Host.Settings.TerminalFontFamily, App.Host.Settings.TerminalFontSize);
+
+    private bool ShellRunning => _terminalActive || _shell is not null;
+
+    private async void ShellToggle_Click(object sender, RoutedEventArgs e)
     {
-        if (_shell is not null)
+        if (ShellRunning)
         {
             StopShell();
             return;
         }
 
-        ShellView.Clear();
         var shell = ShellPicker.SelectedItem as string ?? "sh";
+        ShellToggle.IsEnabled = false;
+        try
+        {
+            if (await TryStartTerminalAsync(shell))
+            {
+                return;
+            }
+
+            StartFallbackShell(shell);
+        }
+        finally
+        {
+            ShellToggle.IsEnabled = true;
+        }
+    }
+
+    /// <summary>Starts the ConPTY terminal; returns false (so the caller falls back) if it can't initialise.</summary>
+    private async Task<bool> TryStartTerminalAsync(string shell)
+    {
+        Terminal.Visibility = Visibility.Visible;
+        ShellView.Visibility = Visibility.Collapsed;
+        ShellInput.Visibility = Visibility.Collapsed;
+        try
+        {
+            await Terminal.StartAsync(App.Host.SessionId, _name, shell, code => DispatcherQueue.TryEnqueue(() =>
+            {
+                if (_terminalActive)
+                {
+                    Terminal.Notice($"[shell exited with code {code}]");
+                    StopShell(keepOutput: true);
+                }
+            }));
+        }
+        catch (Exception ex)
+        {
+            Terminal.Stop();
+            Terminal.Visibility = Visibility.Collapsed;
+            ShellView.Visibility = Visibility.Visible;
+            ShellInput.Visibility = Visibility.Visible;
+            ShellStatus.Text = $"Terminal unavailable ({ex.GetType().Name}: {ex.Message}); using the basic shell.";
+            LogBackend($"fallback: {ex}");
+            return false;
+        }
+
+        _terminalActive = true;
+        ShellToggle.Content = "End shell";
+        ShellStatus.Text = $"Connected to {_name}";
+        LogBackend("native terminal active");
+        return true;
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex s_ansi =
+        new("\u001b\\[[0-9;?]*[ -/]*[@-~]|\\[[0-9;?]*m", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static void LogBackend(string message)
+    {
+        try
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WslcDesktop");
+            Directory.CreateDirectory(dir);
+            File.AppendAllText(Path.Combine(dir, "terminal.log"), $"{DateTime.Now:s} {message}{Environment.NewLine}");
+        }
+        catch (IOException)
+        {
+        }
+    }
+
+    private void StartFallbackShell(string shell)
+    {
+        ShellView.Clear();
+        LogBackend("basic piped shell active");
         try
         {
             ShellProcess? started = null;
-            started = App.Host.StartShell(_name, shell, ShellView.Append, code => DispatcherQueue.TryEnqueue(() =>
+            started = App.Host.StartShell(_name, shell, line => ShellView.Append(s_ansi.Replace(line, string.Empty)), code => DispatcherQueue.TryEnqueue(() =>
             {
                 if (ReferenceEquals(_shell, started))
                 {
@@ -405,20 +484,25 @@ public sealed partial class ContainerDetailPage : Page
         }
 
         ShellToggle.Content = "End shell";
-        ShellStatus.Text = $"Connected to {_name} (no TTY: full-screen programs aren't supported)";
+        ShellStatus.Text = $"Connected to {_name} (basic shell, no TTY: full-screen programs aren't supported)";
         ShellInput.IsEnabled = true;
         ShellInput.Focus(FocusState.Programmatic);
     }
 
-    private void StopShell()
+    private void StopShell(bool keepOutput = false)
     {
         _shell?.Dispose();
         _shell = null;
+        if (_terminalActive)
+        {
+            Terminal.Stop();
+            _terminalActive = false;
+        }
+
         ShellToggle.Content = "Start shell";
         ShellInput.IsEnabled = false;
         ShellStatus.Text = string.Empty;
     }
-
     private async void ShellInput_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key != VirtualKey.Enter || _shell is null)
@@ -519,5 +603,11 @@ public sealed partial class ContainerDetailPage : Page
         }
 
         line.Points = points;
+    }
+
+    private void DetailPivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // The native terminal window ignores XAML tab clipping, so collapse its panel on other tabs.
+        ShellPanel.Visibility = ReferenceEquals(DetailPivot.SelectedItem, ShellTabItem) ? Visibility.Visible : Visibility.Collapsed;
     }
 }
