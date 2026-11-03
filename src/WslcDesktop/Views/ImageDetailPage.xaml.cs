@@ -22,6 +22,17 @@ public sealed partial class ImageDetailPage : Page
         TitleText.Text = _target.StartsWith("sha256:", StringComparison.Ordinal) ? "Untagged image" : _target;
     }
 
+    private string _runReference = string.Empty;
+
+    private async void Run_Click(object sender, RoutedEventArgs e)
+    {
+        var created = await ContainersPage.ShowNewContainerDialogAsync(XamlRoot, _runReference);
+        if (created is not null)
+        {
+            await ImagesPage.OfferOpenContainerAsync(XamlRoot, Frame, created);
+        }
+    }
+
     private void Back_Click(object sender, RoutedEventArgs e)
     {
         if (Frame.CanGoBack)
@@ -51,6 +62,8 @@ public sealed partial class ImageDetailPage : Page
 
         var tagged = detail.Tags.Count > 0;
         TitleText.Text = tagged ? detail.Tags[0] : "Untagged image";
+        _runReference = RunImage.Reference(detail.Tags, detail.Id);
+        RunButton.IsEnabled = true;
 
         AddRow(OverviewRows, "Status", tagged ? "Tagged" : "Untagged");
         AddRow(OverviewRows, "Tags", tagged ? string.Join('\n', detail.Tags) : "None");

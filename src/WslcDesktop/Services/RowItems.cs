@@ -18,6 +18,7 @@ public sealed class ImageItem(ImageSummary summary) : INotifyPropertyChanged
 
     public string Target => _s.Target;
 
+    public string RunReference => _s.Target;
     public string TagStatus => _s.TagStatus;
 
     public string UsedBy => _s.UsedBy;

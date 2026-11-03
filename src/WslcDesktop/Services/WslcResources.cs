@@ -158,8 +158,8 @@ public static class WslcResources
     public static async Task<string> InspectAsync(string session, ResourceKind kind, string name) =>
         SecretService.Default.Redact(await WslcCli.RunAsync("--session", session, Noun(kind), "inspect", "--format", "json", name));
 
-    public static Task CreateVolumeAsync(string session, string name, string driver) =>
-        WslcCli.RunAsync("--session", session, "volume", "create", "--driver", driver, name);
+    public static Task CreateVolumeAsync(string session, string name, string driver, long? sizeBytes = null) =>
+        WslcCli.RunAsync(VolumeSize.CreateArguments(session, name, driver, sizeBytes));
 
     public static Task CreateNetworkAsync(string session, string name, string driver, string subnet, string gateway, bool isInternal)
     {

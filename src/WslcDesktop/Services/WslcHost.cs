@@ -294,7 +294,7 @@ public sealed class WslcHost
 
     public Task<string> InspectResourceAsync(ResourceKind kind, string name) => WslcResources.InspectAsync(SessionName, kind, name);
 
-    public Task CreateVolumeAsync(string name, string driver) => WslcResources.CreateVolumeAsync(SessionName, name, driver);
+    public Task CreateVolumeAsync(string name, string driver, long? sizeBytes = null) => WslcResources.CreateVolumeAsync(SessionName, name, driver, sizeBytes);
 
     public Task CreateNetworkAsync(string name, string driver, string subnet, string gateway, bool isInternal) =>
         WslcResources.CreateNetworkAsync(SessionName, name, driver, subnet, gateway, isInternal);

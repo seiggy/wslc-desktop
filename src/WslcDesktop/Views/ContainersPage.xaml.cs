@@ -79,6 +79,16 @@ public sealed partial class ContainersPage : Page
 
     private async void New_Click(object sender, RoutedEventArgs e)
     {
+        if (await ShowNewContainerDialogAsync(XamlRoot, null) is not null)
+        {
+            await RefreshAsync();
+        }
+    }
+
+    /// <summary>Shows the New container dialog, optionally pre-filled with an image; returns the created container's name, or null if cancelled.</summary>
+    internal static async Task<string?> ShowNewContainerDialogAsync(XamlRoot xamlRoot, string? prefillImage)
+    {
+        string? created = null;
         IReadOnlyList<ImageRow> images = [];
         try
         {
@@ -98,7 +108,26 @@ public sealed partial class ContainersPage : Page
             HorizontalAlignment = HorizontalAlignment.Stretch,
             ItemsSource = imageNames,
         };
+        if (!string.IsNullOrEmpty(prefillImage))
+        {
+            var index = imageNames.FindIndex(n => string.Equals(n, prefillImage, StringComparison.OrdinalIgnoreCase));
+            if (index >= 0)
+            {
+                image.SelectedIndex = index;
+            }
+            else
+            {
+                image.Text = prefillImage;
+            }
+        }
+
         var name = new TextBox { Header = "Name", PlaceholderText = "my-container" };
+        if (!string.IsNullOrEmpty(prefillImage))
+        {
+            name.Text = RunImage.SuggestName(prefillImage, App.Host.Monitor.Containers.Select(c => c.Name));
+            name.SelectAll();
+        }
+
         var command = new TextBox { Header = "Command (optional)", PlaceholderText = "/bin/sleep 3600" };
         var ports = new TextBox { Header = "Ports (one per line)", PlaceholderText = "8080:80", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
         var mounts = new TextBox { Header = "Volumes and bind mounts (one per line)", PlaceholderText = "my-data:/data", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
@@ -173,7 +202,7 @@ public sealed partial class ContainersPage : Page
 
         var dialog = new ContentDialog
         {
-            XamlRoot = XamlRoot,
+            XamlRoot = xamlRoot,
             Title = "New container",
             Content = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, MaxHeight = 640, Padding = new Thickness(0, 0, 16, 0) },
             PrimaryButtonText = "Create",
@@ -207,6 +236,19 @@ public sealed partial class ContainersPage : Page
         env.TextChanged += (_, _) => SyncSecrets();
         secretsPanel.StateChanged += Validate;
 
+        dialog.Opened += (_, _) =>
+        {
+            Validate();
+            if (prefillImage is { Length: > 0 })
+            {
+                name.Focus(FocusState.Programmatic);
+            }
+            else
+            {
+                image.Focus(FocusState.Programmatic);
+            }
+        };
+
         string ImageText() => (image.SelectedItem as string ?? image.Text ?? string.Empty).Trim();
 
         image.SelectionChanged += (_, _) => Validate();
@@ -227,7 +269,7 @@ public sealed partial class ContainersPage : Page
             bar.Visibility = status.Visibility = Visibility.Visible;
             try
             {
-                if (!HasImage(imageNames, imageName))
+                if (imageName != prefillImage && !HasImage(imageNames, imageName))
                 {
                     status.Text = $"Pulling {imageName}…";
                     var progress = new Progress<Microsoft.WSL.Containers.ImageProgress>(p =>
@@ -271,6 +313,8 @@ public sealed partial class ContainersPage : Page
                     status.Text = "Starting container…";
                     await App.Host.StartContainerAsync(containerName);
                 }
+
+                created = containerName;
             }
             catch (Exception ex)
             {
@@ -287,10 +331,7 @@ public sealed partial class ContainersPage : Page
             }
         };
 
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-        {
-            await RefreshAsync();
-        }
+        return await dialog.ShowAsync() == ContentDialogResult.Primary ? created : null;
     }
 
     private static string[] Lines(string text) =>
