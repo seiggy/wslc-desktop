@@ -13,6 +13,9 @@ public partial class App : Application
 
     public static nint WindowHandle { get; private set; }
 
+    /// <summary>Launched at sign-in (or with --background): start without taking over the screen.</summary>
+    public static bool BackgroundLaunch { get; set; }
+
     internal static Platform.TrayController? Tray { get; private set; }
 
     internal static AppearanceService? Appearance { get; private set; }
@@ -35,6 +38,18 @@ public partial class App : Application
             Host.Shutdown();
         };
         Platform.SingleInstance.ActivationRequested += () => _window.DispatcherQueue.TryEnqueue(Tray.Restore);
-        _window.Activate();
+        Platform.StartupRegistration.RepairIfStale();
+        switch (StartupPolicy.Resolve(BackgroundLaunch, Host.Settings))
+        {
+            case BackgroundStart.HiddenInTray:
+                Tray.StartHidden();
+                break;
+            case BackgroundStart.MinimizedToTaskbar:
+                Tray.StartMinimized();
+                break;
+            default:
+                _window.Activate();
+                break;
+        }
     }
 }

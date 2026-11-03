@@ -15,6 +15,8 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
     private string _stack = string.Empty;
     private string _service = string.Empty;
     private string _header = string.Empty;
+    private string _restart = string.Empty;
+    private bool _restartAlert;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -42,6 +44,12 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
 
     public string Memory { get => _memory; private set => Set(ref _memory, value); }
 
+    /// <summary>Restart policy and live status; empty when the container has none.</summary>
+    public string Restart { get => _restart; private set => Set(ref _restart, value); }
+
+    public Microsoft.UI.Xaml.Media.Brush RestartBrush => (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[
+        _restartAlert ? "SystemFillColorCriticalBrush" : "TextFillColorSecondaryBrush"];
+
     public bool IsRunning => IsRunningState(_state);
 
     public bool IsStopped => !IsRunning;
@@ -53,8 +61,16 @@ public sealed class ContainerItem(string name) : INotifyPropertyChanged
     public static bool IsRunningState(string state) =>
         state.Equals("running", StringComparison.OrdinalIgnoreCase);
 
-    public void Update(ContainerRow row, StatsSample? sample)
+    public void Update(ContainerRow row, StatsSample? sample, RestartInfo? restart = null)
     {
+        Restart = RestartDisplay.Short(restart ?? RestartInfo.Empty, DateTimeOffset.UtcNow);
+        var alert = restart?.State == RestartState.CrashLoop;
+        if (alert != _restartAlert)
+        {
+            _restartAlert = alert;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RestartBrush)));
+        }
+
         Image = row.Image;
         State = row.State;
         ComposeLabels.TryParse(row.Labels, out var project, out var service);

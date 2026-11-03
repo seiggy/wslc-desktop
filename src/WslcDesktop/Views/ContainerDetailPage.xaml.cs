@@ -24,6 +24,8 @@ public sealed partial class ContainerDetailPage : Page
             App.Host.Telemetry.Updated += OnTelemetryUpdated;
             App.Host.Monitor.Updated += OnTelemetryUpdated;
             _wasRunning = IsRunning;
+            LoadPolicy();
+            RenderRestartStatus();
             StartLogs();
             ApplyState();
             RenderTelemetry();
@@ -39,6 +41,35 @@ public sealed partial class ContainerDetailPage : Page
     }
 
     private bool _wasRunning;
+    private bool _syncingPolicy;
+
+    private void LoadPolicy()
+    {
+        var policy = App.Host.Restart.GetPolicy(_name);
+        _syncingPolicy = true;
+        RestartPicker.ItemsSource = RestartDisplay.ModeLabels;
+        RestartPicker.SelectedIndex = RestartDisplay.ModeIndex(policy);
+        RestartRetries.Value = policy.MaxRetries;
+        RestartRetries.Visibility = policy.Mode == RestartMode.OnFailure ? Visibility.Visible : Visibility.Collapsed;
+        _syncingPolicy = false;
+    }
+
+    private void RestartPicker_Changed(object sender, object e)
+    {
+        if (_syncingPolicy || !_ready)
+        {
+            return;
+        }
+
+        var retries = double.IsNaN(RestartRetries.Value) ? 0 : (int)RestartRetries.Value;
+        var policy = RestartDisplay.FromSelection(RestartPicker.SelectedIndex, retries);
+        RestartRetries.Visibility = policy.Mode == RestartMode.OnFailure ? Visibility.Visible : Visibility.Collapsed;
+        App.Host.SetRestartPolicy(_name, policy, IsRunning);
+        RenderRestartStatus();
+    }
+
+    private void RenderRestartStatus() =>
+        RestartStatus.Text = RestartDisplay.Long(App.Host.Restart.GetInfo(_name), DateTimeOffset.UtcNow);
 
     private bool IsRunning => App.Host.Monitor.Find(_name) is { } row && ContainerItem.IsRunningState(row.State);
 
@@ -63,6 +94,7 @@ public sealed partial class ContainerDetailPage : Page
         }
 
         _wasRunning = running;
+        RenderRestartStatus();
     }
 
     private async void StartContainer_Click(object sender, RoutedEventArgs e)

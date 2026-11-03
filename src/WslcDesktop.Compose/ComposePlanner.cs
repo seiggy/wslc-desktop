@@ -17,7 +17,6 @@ public static partial class ComposePlanner
 
     private static readonly Dictionary<string, string> UnsupportedServiceKeys = new(StringComparer.Ordinal)
     {
-        ["restart"] = "WSLc has no restart policy, so this container won't restart automatically",
         ["deploy"] = "deploy (replicas, resources, placement, restart_policy) isn't supported; a single container is started with no resource limits from it",
         ["profiles"] = "profiles aren't supported; this service is always started",
         ["configs"] = "configs aren't supported and won't be mounted",
@@ -314,7 +313,8 @@ public static partial class ComposePlanner
                 continue;
             }
 
-            if (key == "restart" && svc[key] as string is "no" or "\"no\"")
+            // Handled below: restart maps to the app-level restart policy.
+            if (key == "restart")
             {
                 continue;
             }
@@ -504,7 +504,26 @@ public static partial class ComposePlanner
 
         var description = $"Run {name} ({image}) as {containerName}" +
             (waits.Count > 0 ? $", after {string.Join(", ", waits.Select(w => $"{w.Service} ({ConditionText(w.Condition)})"))}" : string.Empty);
-        return (new ComposeAction(ActionKind.RunService, containerName, description, args, name, waits, after), build);
+        var restart = RestartValue(svc.GetValueOrDefault("restart"), Warn);
+        return (new ComposeAction(ActionKind.RunService, containerName, description, args, name, waits, after, restart), build);
+    }
+
+    // Compose's restart values map 1:1 to the app's restart policy; YAML may read an unquoted `no` as false.
+    private static string? RestartValue(object? node, Action<string> warn)
+    {
+        var text = (node as string)?.Trim().Trim('"', '\'');
+        if (string.IsNullOrEmpty(text) || text is "no" or "false")
+        {
+            return null;
+        }
+
+        if (System.Text.RegularExpressions.Regex.IsMatch(text, @"^(always|unless-stopped|on-failure(:\d+)?)$"))
+        {
+            return text;
+        }
+
+        warn($"restart: '{text}' isn't a supported restart policy and will be ignored.");
+        return null;
     }
 
     private static string ConditionText(string condition) => condition switch

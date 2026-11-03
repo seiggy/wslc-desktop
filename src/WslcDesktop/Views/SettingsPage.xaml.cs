@@ -190,6 +190,7 @@ public sealed partial class SettingsPage : Page
             Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
         });
 
+        AddStartupPreference(rows);
         AddPreference(
             rows,
             "Minimize to tray",
@@ -204,6 +205,50 @@ public sealed partial class SettingsPage : Page
             host.Settings.CloseMinimizesToTray,
             on => host.Settings.CloseMinimizesToTray = on);
         Cards.Children.Add(card);
+    }
+
+    // Start with Windows reads and writes the OS (Run key or StartupTask), so it always reflects what Windows will do.
+    private void AddStartupPreference(StackPanel rows)
+    {
+        var toggle = new ToggleSwitch { Header = "Start with Windows", IsEnabled = false };
+        var help = new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 12, Style = (Style)Application.Current.Resources["SecondaryTextStyle"] };
+        var settingsLink = new HyperlinkButton
+        {
+            Content = "Open Windows startup settings",
+            NavigateUri = new Uri("ms-settings:startupapps"),
+            Padding = new Thickness(0),
+            Visibility = Visibility.Collapsed,
+        };
+        var loading = true;
+
+        void Show(StartupStatus s)
+        {
+            loading = true;
+            toggle.IsOn = s.IsOn;
+            toggle.IsEnabled = s.CanToggle;
+            loading = false;
+            var baseText = "Starts WSLc Desktop Manager when you sign in to Windows, minimized so it stays out of the way. "
+                + "Restart policies only work while the app is running, so this is the way to keep them in effect.";
+            var tip = s.IsOn && !TrayPolicy.ShowTrayIcon(App.Host.Settings)
+                ? " Turn on \"Minimize to tray\" to keep it out of the taskbar too."
+                : string.Empty;
+            help.Text = s.Detail.Length > 0 ? s.Detail : baseText + tip;
+            settingsLink.Visibility = s.State == StartupState.DisabledByUser ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        toggle.Toggled += async (_, _) =>
+        {
+            if (loading)
+            {
+                return;
+            }
+
+            toggle.IsEnabled = false;
+            Show(await Platform.StartupRegistration.SetEnabledAsync(toggle.IsOn));
+        };
+        rows.Children.Add(new StackPanel { Spacing = 4, Children = { toggle, help, settingsLink } });
+        _ = Platform.StartupRegistration.GetStatusAsync().ContinueWith(
+            t => DispatcherQueue.TryEnqueue(() => Show(t.Result)), TaskScheduler.Default);
     }
 
     private void AddPreference(StackPanel rows, string header, string help, bool value, Action<bool> set)

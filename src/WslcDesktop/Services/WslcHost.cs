@@ -2,7 +2,7 @@ using Microsoft.WSL.Containers;
 
 namespace WslcDesktop.Services;
 
-public sealed record ContainerRow(string Name, string Image, string Id, string State, string Command, string Ports, string Labels = "");
+public sealed record ContainerRow(string Name, string Image, string Id, string State, string Command, string Ports, string Labels = "", string Status = "");
 
 public sealed record ImageRow(string Name, string Size, DateTimeOffset Created);
 
@@ -20,6 +20,7 @@ public sealed class WslcHost
     private Session? _session;
 
     private bool _attached;
+    private readonly CancellationTokenSource _lifetime = new();
 
     /// <summary>True when an earlier app run left the session alive and this run drives it through wslc.exe.</summary>
     public bool IsAttached => _attached;
@@ -45,6 +46,51 @@ public sealed class WslcHost
     }
 
     public AppSettings Settings { get; } = AppSettings.Load();
+
+    public WslcHost()
+    {
+        Restart = new RestartEngine(new RestartPolicyStore(), new HostRestartActions(this), TimeProvider.System);
+        Monitor.Updated += OnMonitorUpdated;
+    }
+
+    /// <summary>App-level restart policies. They only run while this app is running.</summary>
+    public RestartEngine Restart { get; }
+
+    /// <summary>Why the WSLc session ended, when this app owns it and the API reported it (attached mode can't see this).</summary>
+    public string? SessionEndedReason { get; private set; }
+
+    private void OnMonitorUpdated()
+    {
+        if (Monitor.LastError is not null || !Monitor.HasLoaded)
+        {
+            return;
+        }
+
+        var observations = Monitor.Containers
+            .Select(c => new ContainerObservation(c.Name, c.State, ContainerStatusText.ExitCode(c.Status)))
+            .ToList();
+        _ = ProcessRestartsAsync(observations);
+    }
+
+    private async Task ProcessRestartsAsync(IReadOnlyList<ContainerObservation> observations)
+    {
+        try
+        {
+            await Restart.ProcessAsync(observations, _lifetime.Token);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception)
+        {
+            // A failed restart pass is retried on the next snapshot.
+        }
+    }
+
+    private sealed class HostRestartActions(WslcHost host) : IRestartActions
+    {
+        public Task StartAsync(string name, CancellationToken ct) => host.StartContainerCoreAsync(name);
+    }
 
     public uint StartedCpuCount { get; private set; }
 
@@ -100,6 +146,12 @@ public sealed class WslcHost
                 };
                 var session = new Session(settings);
                 session.Start();
+                session.ProcessCrashed += info => { _ = Monitor.RefreshAsync(); };
+                session.Terminated += reason =>
+                {
+                    SessionEndedReason = reason.ToString();
+                    _ = Monitor.RefreshAsync();
+                };
                 _session = session;
             });
         }
@@ -119,12 +171,36 @@ public sealed class WslcHost
 
     public Compose.ComposeRunner CreateComposeRunner(Action<string> log) =>
         new(
-            args => WslcCli.RunAsync(["--session", SessionName, .. args]),
+            args =>
+            {
+                TrackComposeCommand(args);
+                return WslcCli.RunAsync(["--session", SessionName, .. args]);
+            },
             line => log(SecretService.Default.Redact(line)),
-            (args, env) => WslcCli.RunWithEnvAsync(env, ["--session", SessionName, .. args]),
+            (args, env) =>
+            {
+                TrackComposeCommand(args);
+                return WslcCli.RunWithEnvAsync(env, ["--session", SessionName, .. args]);
+            },
             SecretService.Default.Get);
 
     public SecretService Secrets => SecretService.Default;
+
+    private void TrackComposeCommand(IReadOnlyList<string> args)
+    {
+        if (args.Count < 2)
+        {
+            return;
+        }
+
+        var target = args[^1];
+        switch (args[0])
+        {
+            case "stop": Restart.NotifyUserStopped(target); break;
+            case "start": Restart.NotifyUserStarted(target); break;
+            case "rm": Restart.NotifyUserStopped(target); Restart.NotifyRemoved(target); break;
+        }
+    }
 
     public TelemetryService Telemetry { get; } = new();
 
@@ -143,6 +219,7 @@ public sealed class WslcHost
     /// </summary>
     public void Shutdown()
     {
+        _lifetime.Cancel();
         Telemetry.Stop();
         Monitor.Stop();
         ChildProcessTracker.KillAll();
@@ -281,7 +358,14 @@ public sealed class WslcHost
         });
     }
 
-    public Task StartContainerAsync(string name) => _attached
+    public Task StartContainerAsync(string name)
+    {
+        Restart.NotifyUserStarted(name);
+        return StartContainerCoreAsync(name);
+    }
+
+    // Also used by the restart engine, which must not look like a user start.
+    private Task StartContainerCoreAsync(string name) => _attached
         ? WslcCli.RunAsync("--session", SessionName, "start", name)
         : Run(s =>
     {
@@ -309,16 +393,28 @@ public sealed class WslcHost
         }
     }
 
-    public Task StopContainerAsync(string name) => _attached
-        ? WslcCli.RunAsync("--session", SessionName, "stop", name)
-        : WithContainer(name, c => c.Stop(Signal.SIGTERM, TimeSpan.FromSeconds(10)));
-
-    public Task DeleteContainerAsync(string name) => _attached
-        ? WslcCli.RunAsync("--session", SessionName, "rm", "--force", name)
-        : WithContainer(name, c =>
+    public Task StopContainerAsync(string name)
     {
-        c.Delete(c.State == ContainerState.Running ? DeleteContainerOption.Force : DeleteContainerOption.None);
-    });
+        Restart.NotifyUserStopped(name);
+        return _attached
+            ? WslcCli.RunAsync("--session", SessionName, "stop", name)
+            : WithContainer(name, c => c.Stop(Signal.SIGTERM, TimeSpan.FromSeconds(10)));
+    }
+
+    public async Task DeleteContainerAsync(string name)
+    {
+        Restart.NotifyUserStopped(name);
+        await (_attached
+            ? WslcCli.RunAsync("--session", SessionName, "rm", "--force", name)
+            : WithContainer(name, c =>
+            {
+                c.Delete(c.State == ContainerState.Running ? DeleteContainerOption.Force : DeleteContainerOption.None);
+            }));
+        Restart.NotifyRemoved(name);
+    }
+
+    public void SetRestartPolicy(string name, RestartPolicy policy, bool running) =>
+        Restart.SetPolicy(name, policy, running);
 
     public async Task<string> InspectContainerAsync(string name)
     {

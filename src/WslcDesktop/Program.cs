@@ -2,6 +2,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Velopack;
 using WslcDesktop.Platform;
+using WslcDesktop.Services;
 
 namespace WslcDesktop;
 
@@ -15,11 +16,15 @@ public static class Program
         VelopackApp.Build().Run();
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
-        if (SingleInstance.RedirectIfSecondary())
+        var background = StartupPolicy.IsBackgroundLaunch(args) || SingleInstance.IsStartupTaskActivation();
+
+        // A login launch must never raise the window of an instance that is already running.
+        if (SingleInstance.RedirectIfSecondary(quiet: background))
         {
             return 0;
         }
 
+        App.BackgroundLaunch = background;
         Application.Start(p =>
         {
             SynchronizationContext.SetSynchronizationContext(

@@ -261,6 +261,10 @@ public sealed partial class StacksPage : Page
             try
             {
                 await App.Host.CreateComposeRunner(log.Append).UpAsync(plan);
+                foreach (var action in plan.Actions.Where(a => a.Kind == ActionKind.RunService && a.Restart is not null))
+                {
+                    App.Host.SetRestartPolicy(action.Target, RestartPolicy.Parse(action.Restart), running: true);
+                }
             }
             catch (Exception ex)
             {
