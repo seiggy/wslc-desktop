@@ -106,8 +106,11 @@
                             <x:String>ash</x:String>
                         </ComboBox>
                         <Button x:Name="ShellToggle" Click="ShellToggle_Click" Content="Start shell" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Bottom" />
+                        <ComboBox x:Name="FontPicker" AutomationProperties.Name="Terminal font" Header="Font" SelectionChanged="Font_Changed" Width="160" />
+                        <ComboBox x:Name="FontSizePicker" AutomationProperties.Name="Terminal font size" Header="Size" SelectionChanged="Font_Changed" Width="80" />
                         <TextBlock x:Name="ShellStatus" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Bottom" />
                     </StackPanel>
+                    <controls:TerminalView x:Name="Terminal" Grid.Row="1" Visibility="Collapsed" />
                     <controls:OutputView x:Name="ShellView" Grid.Row="1" />
                     <TextBox
                         x:Name="ShellInput"

@@ -32,6 +32,10 @@
 
   <ItemGroup>
     <Content Include="Assets\**\*.png;Assets\**\*.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Terminal\web\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Remove="Terminal\web\**\*" />
+    <Page Remove="Terminal\web\**\*" />
+    <Compile Remove="Terminal\web\**\*" />
   </ItemGroup>
 
 </Project>
