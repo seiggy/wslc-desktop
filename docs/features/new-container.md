@@ -13,5 +13,6 @@ Choose **New container** on the Containers page to open the dialog.
 | **Volumes and bind mounts** | One per line, e.g. `my-data:/data`. |
 | **Environment variables** | One `KEY=value` per line. |
 | **Network** | Defaults to the bridge network; choose another existing network if needed. |
+| **Restart policy** | Never, Always, On failure (with optional max restarts) or Unless stopped. Applied by the app, so it only works while WSLc Desktop Manager is running. See [restart policies](/features/restart-policy). |
 
 **Create** stays disabled until the required fields are filled in.

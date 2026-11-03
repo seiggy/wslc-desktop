@@ -18,6 +18,16 @@ Appearance preferences are saved in `%LOCALAPPDATA%\WslcDesktop\settings.json`, 
 hide the app instead of quitting. Click the tray icon to restore the window; choose **Exit** from its menu to quit.
 Both preferences apply immediately. The tray icon follows the taskbar's theme independently of the app's theme.
 
+**Start with Windows** launches WSLc Desktop Manager when you sign in, minimized so it stays out of the way. If the tray is enabled (either option above) it starts hidden in the tray; otherwise it starts minimized to the taskbar. This is what keeps [restart policies](/features/restart-policy) in effect, because they only run while the app is running. The setting shows the real state in Windows:
+
+| How you installed | Mechanism |
+| --- | --- |
+| Installer (Velopack) | A per-user `Run` entry pointing at the stable launcher in the install folder, so it survives updates. |
+| Portable zip | A per-user `Run` entry pointing at the exe's current location. Turn it off and on again if you move the folder. |
+| Microsoft Store / MSIX | The package's startup task. |
+
+If you turn the app off in **Windows Settings > Apps > Startup** or Task Manager, the toggle shows that Windows disabled it and links to those settings; only you can turn it back on there. Launching a second copy at sign-in never opens a second window.
+
 ## WSLc configuration
 
 ![WSLc configuration](/screenshots/settings.png)

@@ -237,7 +237,7 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
                 return new RestartInfo(policy, RestartState.Idle, 0, Limit(policy), null, null);
             }
 
-            var state = t.GaveUp ? RestartState.CrashLoop : t.Pending is not null ? RestartState.Restarting : RestartState.Idle;
+            var state = t.GaveUp && t.RunningSince is null ? RestartState.CrashLoop : t.Pending is not null ? RestartState.Restarting : RestartState.Idle;
             return new RestartInfo(policy, state, t.Attempts, Limit(policy), t.Pending, t.LastError);
         }
     }

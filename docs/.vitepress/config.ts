@@ -34,6 +34,7 @@ export default defineConfig({
         items: [
           { text: 'Containers', link: '/features/containers' },
           { text: 'Container details', link: '/features/container-details' },
+          { text: 'Restart policies', link: '/features/restart-policy' },
           { text: 'New container', link: '/features/new-container' },
           { text: 'Images', link: '/features/images' },
           { text: 'Volumes', link: '/features/volumes' },
