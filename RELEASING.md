@@ -15,6 +15,8 @@ Releases are built by `.github/workflows/release.yml`.
 | `SHA256SUMS.txt` | Checksums of every file. |
 
 Package version is `<major>.<minor>.<patch>.0` (the tag), stamped into the manifest and assembly.
+The minimum supported OS is Windows 11 22H2 (`10.0.22621.0`), declared in both the project and MSIX manifest.
+MakeAppx carries each MSIX package's minimum into the bundle automatically. SDK targeting and `MaxVersionTested` remain `10.0.26100.0`.
 
 ## Microsoft Store submission
 
@@ -33,6 +35,8 @@ the app's Partner Center submission. PR builds also provide a `store-bundle` wor
 use a release build with the intended version for submission. Complete the listing, declarations, and certification steps in Partner Center.
 Microsoft signs the packages after certification; no purchased certificate, PFX, or test-certificate trust setup is needed.
 Both the package display name and application visual-elements display name must match the reserved app name above.
+After the documentation site has deployed this policy, use `https://seiggy.github.io/wslc-desktop/privacy` for the
+Partner Center privacy policy URL. The canonical policy is `PRIVACY.md`; the docs page includes it so both stay in sync.
 Store review also needs justification for the restricted capabilities below. The package family name and SID are derived from the identity,
 not stamped separately into the manifest.
 
@@ -42,6 +46,32 @@ portable EXE. The workflow no longer generates sideload packages or self-signed 
 Store signing does not sign the portable EXE. Older GitHub releases retain their original test-signed packages.
 
 See Microsoft's [MSIX Store submission requirements](https://learn.microsoft.com/windows/apps/publish/publish-your-app/msix/app-package-requirements).
+
+### Restricted capability justifications
+
+Partner Center requests a separate explanation for each restricted capability. Use the following text for the corresponding fields.
+These declarations support desktop execution and WSLc interoperability; they do not themselves grant administrator privileges or bypass Windows access controls.
+
+#### runFullTrust
+
+WSLc Desktop Manager is a native WinUI 3 desktop application that provides a graphical interface for Microsoft WSLc.
+It uses the Microsoft.WSL.Containers API and launches the locally installed wslc.exe command-line tool to create and manage
+WSLc sessions and containers, manage images, volumes and networks, and run Compose stacks. It also reads container logs
+and resource statistics and provides interactive shells inside containers. The runFullTrust capability is required to run
+the packaged desktop executable and support these native API and command-line integrations outside an AppContainer.
+The application runs in the current Windows user's context; this capability does not itself grant administrator privileges.
+
+#### unvirtualizedResources
+
+WSLc Desktop Manager must share local configuration and container storage with the independently installed WSLc command-line
+tool and service, which operate outside the app's MSIX package. The app reads and writes
+%LOCALAPPDATA%\wslc\settings.yaml for WSLc's default-session configuration and supplies
+%LOCALAPPDATA%\WslcDesktop\Data as storage for its own WslcDesktop session.
+MSIX file-system write virtualization can redirect newly created files into package-private storage that these external
+processes cannot see, causing inconsistent settings or inaccessible session data. The unvirtualizedResources capability,
+together with disabled file-system write virtualization, keeps these files at their real per-user locations so the app
+and WSLc can use the same configuration and storage. Container data is intended to remain available independently of the
+GUI installation. Access remains subject to the current user's Windows permissions.
 
 ## Packaging notes
 
@@ -68,4 +98,4 @@ See Microsoft's [MSIX Store submission requirements](https://learn.microsoft.com
   .\tools\packaging\Bundle-Release.ps1 -Version 1.0.0 -Directory out
   ```
   Build architectures sequentially because the script resets shared build output. The bundler rejects signed packages, mismatched Store
-  identities or versions, and missing or duplicate architectures before creating the unsigned bundle.
+  identities, display names, versions, minimum OS versions or device families, and missing or duplicate architectures before creating the unsigned bundle.

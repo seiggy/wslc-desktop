@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Windows 11 (the app targets Windows 10.0.26100).
+- Windows 11 22H2 (build 22621) or later. The app builds against SDK 10.0.26100 but declares minimum Windows version 10.0.22621.0.
 - WSL with container support (WSLc). The app shows your WSL version in the title bar once it connects.
 - `wslc.exe` on your `PATH`. The WSLc API can't enumerate containers or sessions, so the app lists them through `wslc.exe` and performs everything else through the API.
 

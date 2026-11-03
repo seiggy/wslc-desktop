@@ -27,7 +27,7 @@ The [feature walkthroughs](https://seiggy.github.io/wslc-desktop/features/contai
 
 ### Requirements
 
-- **Windows 11** with WSL and container support.
+- **Windows 11 22H2 (build 22621) or later**, with WSL and container support.
 - **`wslc.exe` on your `PATH`.** Run `wslc --help` in a terminal to check that it's available.
 
 WSLc Desktop Manager needs the WSLc runtime to manage containers. Installing the desktop app alone doesn't replace that requirement.
@@ -126,6 +126,8 @@ The WinUI 3 app uses the [`Microsoft.WSL.Containers`](https://wsl.dev/api-refere
 | `assets\branding` | Logos and branding assets. |
 
 App preferences live in `%LOCALAPPDATA%\WslcDesktop\settings.json`. WSLc's default-session configuration lives in `%LOCALAPPDATA%\wslc\settings.yaml`; it doesn't configure the app's separate session. Registry credentials are passed to WSLc's credential store. The app remembers registry server names, not passwords or tokens.
+
+See the [privacy policy](PRIVACY.md) for details about local storage, registry connections, and data handling.
 
 ## Documentation and contributing
 
