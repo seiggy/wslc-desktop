@@ -21,7 +21,8 @@ public sealed partial class ContainerDetailPage : Page
         Loaded += (_, _) =>
         {
             _ready = true;
-            InitShellPickers();
+            ApplyTerminalFont();
+            App.Host.Settings.TerminalChanged += ApplyTerminalFont;
             App.Host.Telemetry.Updated += OnTelemetryUpdated;
             App.Host.Monitor.Updated += OnTelemetryUpdated;
             _wasRunning = IsRunning;
@@ -36,6 +37,7 @@ public sealed partial class ContainerDetailPage : Page
         {
             App.Host.Telemetry.Updated -= OnTelemetryUpdated;
             App.Host.Monitor.Updated -= OnTelemetryUpdated;
+            App.Host.Settings.TerminalChanged -= ApplyTerminalFont;
             _logCts?.Cancel();
             StopShell();
         };
@@ -329,32 +331,9 @@ public sealed partial class ContainerDetailPage : Page
 
     // Shell
 
-    private static string s_terminalFont = TerminalProtocol.Fonts[0];
-    private static int s_terminalFontSize = 14;
     private bool _terminalActive;
-    private bool _syncingFont;
 
-    private void InitShellPickers()
-    {
-        _syncingFont = true;
-        FontPicker.ItemsSource = TerminalProtocol.Fonts.ToList();
-        FontPicker.SelectedIndex = Math.Max(0, Array.IndexOf(TerminalProtocol.Fonts, s_terminalFont));
-        FontSizePicker.ItemsSource = TerminalProtocol.FontSizes.Select(s => s.ToString()).ToList();
-        FontSizePicker.SelectedIndex = Math.Max(0, Array.IndexOf(TerminalProtocol.FontSizes, s_terminalFontSize));
-        _syncingFont = false;
-        Terminal.SetFont(s_terminalFont, s_terminalFontSize);
-    }
-
-    private void Font_Changed(object sender, SelectionChangedEventArgs e)
-    {
-        if (_syncingFont || FontPicker.SelectedItem is not string font || !int.TryParse(FontSizePicker.SelectedItem as string, out var size))
-        {
-            return;
-        }
-
-        (s_terminalFont, s_terminalFontSize) = (font, size);
-        Terminal.SetFont(font, size);
-    }
+    private void ApplyTerminalFont() => Terminal.SetFont(App.Host.Settings.TerminalFontFamily, App.Host.Settings.TerminalFontSize);
 
     private bool ShellRunning => _terminalActive || _shell is not null;
 

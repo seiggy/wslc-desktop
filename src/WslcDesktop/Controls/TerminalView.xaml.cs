@@ -33,8 +33,8 @@ public sealed partial class TerminalView : UserControl
     private int _pixelWidth, _pixelHeight;
     private short _columns = TerminalProtocol.DefaultColumns;
     private short _rows = TerminalProtocol.DefaultRows;
-    private string _fontFamily = TerminalProtocol.Fonts[0];
-    private int _fontSize = 14;
+    private string _fontFamily = App.Host.Settings.TerminalFontFamily;
+    private int _fontSize = App.Host.Settings.TerminalFontSize;
 
     // Native callbacks must stay rooted for the lifetime of the terminal.
     private NativeTerminal.WriteCallback? _write;

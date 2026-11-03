@@ -34,6 +34,7 @@ public sealed partial class SettingsPage : Page
         _inputs.Clear();
         _errors.Clear();
         BuildAppearanceCard();
+        BuildTerminalCard();
         BuildYamlCard();
         BuildAppPreferencesCard();
         BuildUpdatesCard();
@@ -160,6 +161,139 @@ public sealed partial class SettingsPage : Page
         rows.Children.Add(custom);
         rows.Children.Add(InspectUi.Secondary("Off follows the Windows accent. Custom colors are adjusted for readable light and dark controls."));
         rows.Children.Add(choose);
+        Cards.Children.Add(card);
+    }
+
+    private static List<string> InstalledFontNames()
+    {
+        var names = new List<string>();
+        foreach (var (hive, view) in new[] { (Microsoft.Win32.Registry.LocalMachine, "HKLM"), (Microsoft.Win32.Registry.CurrentUser, "HKCU") })
+        {
+            try
+            {
+                using var key = hive.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts");
+                if (key is not null)
+                {
+                    names.AddRange(key.GetValueNames());
+                }
+            }
+            catch (Exception)
+            {
+                // An unreadable hive just means fewer fonts are offered.
+            }
+        }
+
+        return names;
+    }
+
+    private void BuildTerminalCard()
+    {
+        var settings = App.Host.Settings;
+        var card = InspectUi.Card("Terminal", out var rows);
+        rows.Spacing = 12;
+        rows.Children.Add(InspectUi.Secondary("Font for the Shell tab's terminal. Changes apply immediately to open terminals and are saved for the next launch."));
+
+        var fonts = TerminalProtocol.AvailableFonts(InstalledFontNames(), settings.TerminalFontFamily);
+        var font = new ComboBox
+        {
+            Header = "Font",
+            ItemsSource = fonts,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        var size = new NumberBox
+        {
+            Header = "Size",
+            Minimum = TerminalProtocol.MinFontSize,
+            Maximum = TerminalProtocol.MaxFontSize,
+            SmallChange = 1,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Inline,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Width = 160,
+        };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(font, "Terminal font");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(size, "Terminal font size");
+        var preview = new TextBlock
+        {
+            Text = "user@wslc:~$ ls --color\nbin  dev  etc  home  usr  var\n0O 1lI {}[]() ->  =>  !=",
+            Padding = new Thickness(12),
+        };
+        var previewBox = new Border
+        {
+            Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 0x0C, 0x0C, 0x0C)),
+            CornerRadius = new CornerRadius(4),
+            Child = preview,
+        };
+        preview.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Windows.UI.Color.FromArgb(255, 0xCC, 0xCC, 0xCC));
+        var reset = new Button { Content = "Reset to defaults", HorizontalAlignment = HorizontalAlignment.Left };
+
+        var syncing = false;
+        void Show()
+        {
+            syncing = true;
+            if (!fonts.Contains(settings.TerminalFontFamily, StringComparer.OrdinalIgnoreCase))
+            {
+                fonts.Insert(0, settings.TerminalFontFamily);
+                font.ItemsSource = null;
+                font.ItemsSource = fonts;
+            }
+
+            font.SelectedItem = fonts.First(f => f.Equals(settings.TerminalFontFamily, StringComparison.OrdinalIgnoreCase));
+            size.Value = settings.TerminalFontSize;
+            preview.FontFamily = new Microsoft.UI.Xaml.Media.FontFamily($"{settings.TerminalFontFamily}, Consolas");
+            preview.FontSize = settings.TerminalFontSize;
+            syncing = false;
+        }
+
+        void Commit()
+        {
+            try
+            {
+                settings.Save();
+                settings.TerminalChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Status("Couldn't save terminal settings", ex.Message, InfoBarSeverity.Error);
+            }
+
+            Show();
+        }
+
+        font.SelectionChanged += (_, _) =>
+        {
+            if (!syncing && font.SelectedItem is string f)
+            {
+                settings.TerminalFontFamily = TerminalProtocol.NormalizeFont(f);
+                Commit();
+            }
+        };
+        size.ValueChanged += (_, args) =>
+        {
+            if (syncing)
+            {
+                return;
+            }
+
+            if (double.IsNaN(args.NewValue))
+            {
+                Show();
+                return;
+            }
+
+            settings.TerminalFontSize = TerminalProtocol.ClampFontSize((int)Math.Round(args.NewValue));
+            Commit();
+        };
+        reset.Click += (_, _) =>
+        {
+            settings.ResetTerminal();
+            Commit();
+        };
+
+        rows.Children.Add(font);
+        rows.Children.Add(size);
+        rows.Children.Add(previewBox);
+        rows.Children.Add(reset);
+        Show();
         Cards.Children.Add(card);
     }
 

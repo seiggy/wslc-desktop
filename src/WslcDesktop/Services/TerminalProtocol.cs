@@ -8,8 +8,41 @@ public static class TerminalProtocol
     public const short DefaultColumns = 120;
     public const short DefaultRows = 30;
 
-    public static readonly string[] Fonts = ["Cascadia Mono", "Cascadia Code", "Consolas", "Courier New"];
-    public static readonly int[] FontSizes = [11, 12, 13, 14, 16, 18, 20];
+    public const string DefaultFont = "Cascadia Mono";
+    public const int DefaultFontSize = 14;
+    public const int MinFontSize = 8;
+    public const int MaxFontSize = 32;
+
+    /// <summary>Well-known monospace families offered when they're installed.</summary>
+    public static readonly string[] CandidateFonts =
+    [
+        "Cascadia Mono", "Cascadia Code", "Consolas", "Courier New", "Lucida Console", "JetBrains Mono", "Fira Code",
+        "Source Code Pro", "Hack", "Iosevka", "MesloLGS NF", "Roboto Mono", "Ubuntu Mono", "Inconsolata", "Cousine",
+    ];
+
+    public static int ClampFontSize(int size) => Math.Clamp(size, MinFontSize, MaxFontSize);
+
+    public static string NormalizeFont(string? family) => string.IsNullOrWhiteSpace(family) ? DefaultFont : family.Trim();
+
+    /// <summary>The candidate fonts present in <paramref name="installed"/> (registry-style names such as "Consolas (TrueType)"), always including <paramref name="current"/> and falling back to Consolas.</summary>
+    public static List<string> AvailableFonts(IEnumerable<string> installed, string current)
+    {
+        var names = installed.ToList();
+        bool Has(string family) => names.Any(n => n.StartsWith(family, StringComparison.OrdinalIgnoreCase)
+            && (n.Length == family.Length || n[family.Length] is ' ' or '('));
+        var result = CandidateFonts.Where(Has).ToList();
+        if (result.Count == 0)
+        {
+            result.Add("Consolas");
+        }
+
+        if (!result.Contains(current, StringComparer.OrdinalIgnoreCase))
+        {
+            result.Insert(0, current);
+        }
+
+        return result;
+    }
 
     /// <summary>Quotes one argument per the Windows <c>CommandLineToArgvW</c> rules.</summary>
     public static string QuoteArgument(string arg)

@@ -22,7 +22,7 @@ Pick a shell (such as `sh`), choose **Start shell** and type straight into the t
 ![vi in the shell](/screenshots/container-shell-vi.png)
 
 - **Copy and paste:** select text to copy with Ctrl+Shift+C (or Ctrl+C while text is selected); paste with Ctrl+V, Ctrl+Shift+V or right-click.
-- **Font:** the **Font** and **Size** pickers change the terminal font. The choice lasts until the app closes.
+- **Font:** set the terminal font and size under **Settings > Terminal** (see [Settings](/settings)). Changes apply to open terminals and are saved.
 - **Fallback:** if the terminal can't start (for example the native terminal library is missing), the tab falls back to the simple line-based shell, which has no TTY.
 - **Secrets:** the raw terminal stream isn't passed through secret redaction, so values you print in the shell are shown as-is.
 
