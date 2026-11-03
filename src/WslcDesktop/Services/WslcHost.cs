@@ -270,13 +270,38 @@ public sealed class WslcHost
         await op;
     }
 
-    public Task<IReadOnlyList<ImageSummary>> GetImageSummariesAsync() => WslcCli.ListImagesAsync(SessionName);
+    private ImageCatalog? _imageCatalog;
 
-    public Task<ImageDetail> InspectImageAsync(string target) => WslcCli.InspectImageAsync(SessionName, target);
+    /// <summary>Images from every visible WSLc session (image stores are per session), throttled and failure tolerant.</summary>
+    public ImageCatalog ImageCatalog => _imageCatalog ??= new ImageCatalog(
+        SessionName,
+        async () => (await WslcCli.ListSessionsAsync()).Select(s => s.Name).ToList(),
+        WslcCli.ListImagesAsync,
+        TimeProvider.System,
+        TimeSpan.FromSeconds(10));
 
-    public Task DeleteImageAsync(string nameOrId) => _attached
-        ? WslcCli.RunAsync("--session", SessionName, "rmi", nameOrId)
-        : Run(s => s.DeleteImage(nameOrId));
+    public bool IsAppSession(string session) => string.Equals(session, SessionName, StringComparison.OrdinalIgnoreCase);
+
+    public Task<ImageDetail> InspectImageAsync(string session, string target) => WslcCli.InspectImageAsync(session, target);
+
+    /// <summary>Deletes an image from the session that owns it.</summary>
+    public async Task DeleteImageAsync(string session, string nameOrId)
+    {
+        if (!IsAppSession(session))
+        {
+            await WslcCli.RunAsync("--session", session, "rmi", nameOrId);
+        }
+        else if (_attached)
+        {
+            await WslcCli.RunAsync("--session", SessionName, "rmi", nameOrId);
+        }
+        else
+        {
+            await Run(s => s.DeleteImage(nameOrId));
+        }
+
+        ImageCatalog.Invalidate(session);
+    }
 
     // The API cannot enumerate containers; wslc.exe can.
     public Task<IReadOnlyList<ContainerRow>> GetContainersAsync(CancellationToken ct = default) => WslcCli.ListContainersAsync(SessionName, ct);

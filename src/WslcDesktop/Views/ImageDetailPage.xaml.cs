@@ -9,6 +9,7 @@ namespace WslcDesktop.Views;
 public sealed partial class ImageDetailPage : Page
 {
     private string _target = string.Empty;
+    private string _session = string.Empty;
 
     public ImageDetailPage()
     {
@@ -18,20 +19,17 @@ public sealed partial class ImageDetailPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        _target = (string)e.Parameter;
+        var image = (ImageRef)e.Parameter;
+        _target = image.Target;
+        _session = image.Session;
         TitleText.Text = _target.StartsWith("sha256:", StringComparison.Ordinal) ? "Untagged image" : _target;
     }
 
     private string _runReference = string.Empty;
+    private bool _canCopy;
 
-    private async void Run_Click(object sender, RoutedEventArgs e)
-    {
-        var created = await ContainersPage.ShowNewContainerDialogAsync(XamlRoot, _runReference);
-        if (created is not null)
-        {
-            await ImagesPage.OfferOpenContainerAsync(XamlRoot, Frame, created);
-        }
-    }
+    private async void Run_Click(object sender, RoutedEventArgs e) =>
+        await ImagesPage.RunFromAsync(XamlRoot, Frame, _session, _runReference, _canCopy);
 
     private void Back_Click(object sender, RoutedEventArgs e)
     {
@@ -50,7 +48,7 @@ public sealed partial class ImageDetailPage : Page
         ImageDetail detail;
         try
         {
-            detail = await App.Host.InspectImageAsync(_target);
+            detail = await App.Host.InspectImageAsync(_session, _target);
         }
         catch (Exception ex)
         {
@@ -63,8 +61,10 @@ public sealed partial class ImageDetailPage : Page
         var tagged = detail.Tags.Count > 0;
         TitleText.Text = tagged ? detail.Tags[0] : "Untagged image";
         _runReference = RunImage.Reference(detail.Tags, detail.Id);
+        _canCopy = tagged;
         RunButton.IsEnabled = true;
 
+        AddRow(OverviewRows, "Session", App.Host.IsAppSession(_session) ? $"{_session} (this app)" : _session);
         AddRow(OverviewRows, "Status", tagged ? "Tagged" : "Untagged");
         AddRow(OverviewRows, "Tags", tagged ? string.Join('\n', detail.Tags) : "None");
         AddRow(OverviewRows, "Image ID", detail.Id);

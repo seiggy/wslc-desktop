@@ -86,7 +86,7 @@ public sealed partial class ContainersPage : Page
     }
 
     /// <summary>Shows the New container dialog, optionally pre-filled with an image; returns the created container's name, or null if cancelled.</summary>
-    internal static async Task<string?> ShowNewContainerDialogAsync(XamlRoot xamlRoot, string? prefillImage)
+    internal static async Task<string?> ShowNewContainerDialogAsync(XamlRoot xamlRoot, string? prefillImage, bool prefillInAppSession = true)
     {
         string? created = null;
         IReadOnlyList<ImageRow> images = [];
@@ -269,7 +269,7 @@ public sealed partial class ContainersPage : Page
             bar.Visibility = status.Visibility = Visibility.Visible;
             try
             {
-                if (imageName != prefillImage && !HasImage(imageNames, imageName))
+                if ((imageName != prefillImage || !prefillInAppSession) && !HasImage(imageNames, imageName))
                 {
                     status.Text = $"Pulling {imageName}…";
                     var progress = new Progress<Microsoft.WSL.Containers.ImageProgress>(p =>

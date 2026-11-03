@@ -26,6 +26,8 @@
     <Compile Include="..\..\src\WslcDesktop\Services\StartupPolicy.cs" Link="Linked\StartupPolicy.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\VolumeSize.cs" Link="Linked\VolumeSize.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\RunImage.cs" Link="Linked\RunImage.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\ImageModels.cs" Link="Linked\ImageModels.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\ImageCatalog.cs" Link="Linked\ImageCatalog.cs" />
   </ItemGroup>
 
   <ItemGroup>
