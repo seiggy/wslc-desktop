@@ -5,14 +5,33 @@ namespace WslcDesktop.Compose;
 /// <summary>Runs wslc with the given arguments (without --session) and returns stdout; throws on a non-zero exit.</summary>
 public delegate Task<string> WslcExec(IReadOnlyList<string> args);
 
+/// <summary>Like <see cref="WslcExec"/>, but also sets variables in the wslc process's environment (used to pass secrets).</summary>
+public delegate Task<string> WslcExecEnv(IReadOnlyList<string> args, IReadOnlyDictionary<string, string> environment);
+
 public sealed record StackContainer(string Name, string Service, string State);
 
 /// <summary>Executes compose plans against wslc: up, down and start/stop, with health and completion waits.</summary>
-public sealed class ComposeRunner(WslcExec exec, Action<string> log)
+public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv? execEnv = null, Func<string, string?>? secrets = null)
 {
     public TimeSpan WaitTimeout { get; init; } = TimeSpan.FromMinutes(3);
 
     public TimeSpan PollInterval { get; init; } = TimeSpan.FromSeconds(1);
+
+    private async Task<string> ExecRunAsync(IReadOnlyList<string> args)
+    {
+        if (!SecretTokens.ContainsAny(args))
+        {
+            return await exec(args);
+        }
+
+        if (secrets is null || execEnv is null)
+        {
+            throw new InvalidOperationException("This stack uses secrets, but no secret store is available.");
+        }
+
+        using var prepared = SecretInjection.Prepare(args, secrets);
+        return await execEnv(prepared.Args, prepared.Environment);
+    }
 
     public async Task UpAsync(ComposePlan plan, CancellationToken ct = default)
     {
@@ -94,7 +113,7 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log)
         }
 
         log($"Starting {action.Service}…");
-        await exec(action.Args);
+        await ExecRunAsync(action.Args);
         foreach (var extra in action.After ?? [])
         {
             await exec(extra);

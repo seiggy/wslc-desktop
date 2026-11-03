@@ -39,6 +39,7 @@ export default defineConfig({
           { text: 'Volumes', link: '/features/volumes' },
           { text: 'Networks', link: '/features/networks' },
           { text: 'Stacks (Compose)', link: '/features/stacks' },
+          { text: 'Secrets', link: '/features/secrets' },
           { text: 'Environment', link: '/features/environment' },
         ],
       },

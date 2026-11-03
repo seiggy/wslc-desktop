@@ -33,6 +33,7 @@
                 </NavigationViewItem>
                 <NavigationViewItem Content="Volumes" Icon="Folder" Tag="volumes" />
                 <NavigationViewItem Content="Networks" Icon="World" Tag="networks" />
+                <NavigationViewItem Content="Secrets" Icon="Permissions" Tag="secrets" />
                 <NavigationViewItem Content="Environment" Icon="AllApps" Tag="sessions" />
             </NavigationView.MenuItems>
 

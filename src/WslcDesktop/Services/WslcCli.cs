@@ -152,7 +152,7 @@ public static class WslcCli
         }
 
         args.Add(container);
-        return StreamAsync(args, onLine, ct);
+        return StreamAsync(args, line => onLine(SecretService.Default.Redact(line)), ct);
     }
 
     /// <summary>Starts an interactive (piped, non-TTY) shell inside a running container.</summary>
@@ -160,7 +160,7 @@ public static class WslcCli
     {
         var info = CreateStartInfo("--session", session, "exec", "--interactive", container, shell);
         info.RedirectStandardInput = true;
-        return new ShellProcess(info, onOutput, onExit);
+        return new ShellProcess(info, text => onOutput(SecretService.Default.Redact(text)), onExit);
     }
 
     internal static ProcessStartInfo CreateStartInfo(params string[] args)
@@ -275,7 +275,7 @@ public static class WslcCli
 
     public static async Task<ImageDetail> InspectImageAsync(string session, string target)
     {
-        var output = await RunAsync("--session", session, "image", "inspect", target);
+        var output = SecretService.Default.Redact(await RunAsync("--session", session, "image", "inspect", target));
         using var doc = JsonDocument.Parse(output);
         var root = doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0
             ? doc.RootElement[0]
@@ -312,7 +312,13 @@ public static class WslcCli
 
     internal static Task<string> RunAsync(params string[] args) => RunAsync(CancellationToken.None, args);
 
-    internal static async Task<string> RunAsync(CancellationToken ct, params string[] args)
+    internal static Task<string> RunAsync(CancellationToken ct, params string[] args) => RunAsync(null, ct, args);
+
+    /// <summary>Runs wslc with extra environment variables, used to hand secret values to <c>--env NAME</c> without putting them on the command line.</summary>
+    internal static Task<string> RunWithEnvAsync(IReadOnlyDictionary<string, string> environment, IReadOnlyList<string> args) =>
+        RunAsync(environment, CancellationToken.None, [.. args]);
+
+    private static async Task<string> RunAsync(IReadOnlyDictionary<string, string>? environment, CancellationToken ct, string[] args)
     {
         var info = new ProcessStartInfo("wslc")
         {
@@ -324,6 +330,11 @@ public static class WslcCli
         foreach (var a in args)
         {
             info.ArgumentList.Add(a);
+        }
+
+        foreach (var (key, value) in environment ?? new Dictionary<string, string>())
+        {
+            info.Environment[key] = value;
         }
 
         try
@@ -344,7 +355,7 @@ public static class WslcCli
                         .Where(l => l.Length > 0
                             && !l.StartsWith("If this error was unexpected", StringComparison.Ordinal)
                             && !l.StartsWith("https://github.com/microsoft/WSL/issues", StringComparison.Ordinal)));
-                throw new InvalidOperationException(message.Length > 0 ? message : $"wslc exited with {process.ExitCode}.");
+                throw new InvalidOperationException(message.Length > 0 ? SecretService.Default.Redact(message) : $"wslc exited with {process.ExitCode}.");
             }
 
             return await stdout;

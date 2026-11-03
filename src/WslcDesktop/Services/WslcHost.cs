@@ -118,7 +118,13 @@ public sealed class WslcHost
     public ContainerMonitor Monitor { get; } = new();
 
     public Compose.ComposeRunner CreateComposeRunner(Action<string> log) =>
-        new(args => WslcCli.RunAsync(["--session", SessionName, .. args]), log);
+        new(
+            args => WslcCli.RunAsync(["--session", SessionName, .. args]),
+            line => log(SecretService.Default.Redact(line)),
+            (args, env) => WslcCli.RunWithEnvAsync(env, ["--session", SessionName, .. args]),
+            SecretService.Default.Get);
+
+    public SecretService Secrets => SecretService.Default;
 
     public TelemetryService Telemetry { get; } = new();
 
@@ -235,11 +241,27 @@ public sealed class WslcHost
 
     public Task CreateContainerAsync(NewContainerSpec spec) => WslcResources.CreateContainerAsync(SessionName, spec);
 
-    public Task CreateContainerAsync(string name, string image, string[] commandLine)
+    /// <summary>
+    /// Creates a container from a name, image and command. <paramref name="env"/> may contain <c>${secret:NAME}</c> tokens in
+    /// its values: in an owned session they go through <c>ProcessSettings.EnvironmentVariables</c>; when attached they are
+    /// passed to wslc as inherited <c>--env NAME</c> variables so values never reach a command line.
+    /// </summary>
+    public Task CreateContainerAsync(string name, string image, string[] commandLine, IReadOnlyDictionary<string, string>? env = null)
     {
+        var secrets = SecretService.Default;
+        var resolved = (env ?? new Dictionary<string, string>())
+            .ToDictionary(kv => kv.Key, kv => Compose.SecretTokens.Resolve(kv.Value, secrets.Get), StringComparer.Ordinal);
         if (_attached)
         {
-            return WslcCli.RunAsync(["--session", SessionName, "create", "--name", name, image, .. commandLine]);
+            var args = new List<string> { "--session", SessionName, "create", "--name", name };
+            foreach (var key in resolved.Keys)
+            {
+                args.AddRange(["--env", key]);
+            }
+
+            args.Add(image);
+            args.AddRange(commandLine);
+            return WslcCli.RunWithEnvAsync(resolved, args);
         }
 
         return Run(s =>
@@ -248,6 +270,11 @@ public sealed class WslcHost
             if (commandLine.Length > 0)
             {
                 init.CommandLine = commandLine;
+            }
+
+            if (resolved.Count > 0)
+            {
+                init.EnvironmentVariables = resolved;
             }
 
             using var c = s.CreateContainer(new ContainerSettings(image) { Name = name, InitProcess = init });
@@ -293,19 +320,20 @@ public sealed class WslcHost
         c.Delete(c.State == ContainerState.Running ? DeleteContainerOption.Force : DeleteContainerOption.None);
     });
 
-    public Task<string> InspectContainerAsync(string name)
+    public async Task<string> InspectContainerAsync(string name)
     {
         if (_attached)
         {
-            return WslcCli.RunAsync("--session", SessionName, "inspect", name);
+            return SecretService.Default.Redact(await WslcCli.RunAsync("--session", SessionName, "inspect", name));
         }
 
         var s = Require();
-        return Task.Run(() =>
+        var json = await Task.Run(() =>
         {
             using var c = s.OpenContainer(name, ProcessOutputMode.Discard);
             return c.Inspect();
         });
+        return SecretService.Default.Redact(json);
     }
 
     private Task WithContainer(string name, Action<Container> action) => Run(s =>

@@ -45,7 +45,20 @@ public static class Interpolator
                     throw new ComposeException($"Invalid interpolation (missing '}}') in \"{input}\".");
                 }
 
-                sb.Append(Braced(input[(i + 2)..end], env));
+                var body = input[(i + 2)..end];
+                if (body.StartsWith(SecretTokens.Prefix, StringComparison.Ordinal))
+                {
+                    // Secret tokens are resolved at run time, never during planning.
+                    var secretName = body[SecretTokens.Prefix.Length..];
+                    sb.Append(SecretTokens.IsValidName(secretName)
+                        ? SecretTokens.Format(secretName)
+                        : throw new ComposeException($"Invalid secret reference \"${{{body}}}\"; names use letters, digits, '.', '_' and '-'."));
+                }
+                else
+                {
+                    sb.Append(Braced(body, env));
+                }
+
                 i = end + 1;
             }
             else if (IsNameStart(next))

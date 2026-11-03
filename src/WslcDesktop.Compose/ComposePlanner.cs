@@ -12,7 +12,7 @@ public static partial class ComposePlanner
         "image", "build", "command", "entrypoint", "environment", "env_file", "working_dir", "user", "ports", "expose",
         "volumes", "networks", "network_mode", "healthcheck", "mem_limit", "cpus", "depends_on", "container_name",
         "hostname", "domainname", "labels", "stop_signal", "stop_grace_period", "tty", "stdin_open", "shm_size",
-        "tmpfs", "dns", "dns_search", "pull_policy",
+        "tmpfs", "dns", "dns_search", "pull_policy", "secrets",
     ];
 
     private static readonly Dictionary<string, string> UnsupportedServiceKeys = new(StringComparer.Ordinal)
@@ -20,7 +20,6 @@ public static partial class ComposePlanner
         ["restart"] = "WSLc has no restart policy, so this container won't restart automatically",
         ["deploy"] = "deploy (replicas, resources, placement, restart_policy) isn't supported; a single container is started with no resource limits from it",
         ["profiles"] = "profiles aren't supported; this service is always started",
-        ["secrets"] = "secrets aren't supported and won't be mounted",
         ["configs"] = "configs aren't supported and won't be mounted",
         ["extends"] = "extends isn't supported; the service is not merged with the referenced one",
         ["links"] = "links aren't supported; use networks and service names instead",
@@ -36,20 +35,59 @@ public static partial class ComposePlanner
         var errors = new List<string>();
         var project = string.Empty;
         var actions = new List<ComposeAction>();
+        IReadOnlyList<string> secretRefs = [];
+        IReadOnlyList<string> missing = [];
         try
         {
             var root = YamlTree.ParseDocument(yaml);
             root = (Dictionary<string, object?>)Interpolator.ApplyTree(root, options.Env)!;
             project = ProjectName(root, options);
             Build(root, project, options, actions, warnings, errors);
+            (secretRefs, missing) = CheckSecrets(actions, options, warnings, errors);
         }
         catch (ComposeException e)
         {
             errors.Add(e.Message);
         }
 
-        return new ComposePlan(project, actions, warnings, errors);
+        return new ComposePlan(project, actions, warnings, errors) { SecretRefs = secretRefs, MissingSecrets = missing };
     }
+
+    /// <summary>Secret tokens may only appear as environment values; collects the referenced names and flags the ones that aren't stored.</summary>
+    private static (IReadOnlyList<string> Refs, IReadOnlyList<string> Missing) CheckSecrets(
+        List<ComposeAction> actions, ComposeOptions options, List<string> warnings, List<string> errors)
+    {
+        var refs = new List<string>();
+        foreach (var action in actions)
+        {
+            for (var i = 0; i < action.Args.Count; i++)
+            {
+                var arg = action.Args[i];
+                if (!SecretTokens.Contains(arg))
+                {
+                    continue;
+                }
+
+                if (action.Kind == ActionKind.RunService && i > 0 && action.Args[i - 1] == "--env")
+                {
+                    refs.AddRange(SecretTokens.Find(arg).Where(n => !refs.Contains(n)));
+                }
+                else
+                {
+                    errors.Add($"{action.Description}: secrets can only be used in environment variable values.");
+                }
+            }
+        }
+
+        var missing = options.SecretExists is null ? [] : refs.Where(n => !options.SecretExists(n)).ToList();
+        foreach (var name in missing)
+        {
+            warnings.Add($"Secret '{name}' isn't stored yet. Add it on the Secrets page, then plan again.");
+        }
+
+        return (refs, missing);
+    }
+
 
     public static string NormalizeProjectName(string name)
     {
@@ -75,14 +113,35 @@ public static partial class ComposePlanner
         Dictionary<string, object?> root, string project, ComposeOptions options,
         List<ComposeAction> actions, List<string> warnings, List<string> errors)
     {
-        foreach (var key in root.Keys.Where(k => k is not ("version" or "name" or "services" or "networks" or "volumes") && !k.StartsWith("x-", StringComparison.Ordinal)))
+        foreach (var key in root.Keys.Where(k => k is not ("version" or "name" or "services" or "networks" or "volumes" or "secrets") && !k.StartsWith("x-", StringComparison.Ordinal)))
         {
             warnings.Add(key switch
             {
-                "secrets" or "configs" => $"Top-level '{key}' isn't supported by WSLc and will be ignored.",
+                "configs" => $"Top-level '{key}' isn't supported by WSLc and will be ignored.",
                 "include" => "'include' isn't supported; included compose files are not loaded.",
                 _ => $"Top-level '{key}' isn't supported by WSLc and will be ignored.",
             });
+        }
+
+        // A top-level secret without file/environment/content is a reference to a stored secret (by "name:", else its key).
+        var secretMap = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (key, value) in Map(root.GetValueOrDefault("secrets")) ?? [])
+        {
+            var def = Map(value) ?? [];
+            if (def.ContainsKey("file") || def.ContainsKey("environment") || def.ContainsKey("content"))
+            {
+                warnings.Add($"Secret '{key}': file, environment and content sources aren't supported; store it on the Secrets page and reference it by name instead.");
+                continue;
+            }
+
+            var id = def.GetValueOrDefault("name") as string ?? key;
+            if (!SecretTokens.IsValidName(id))
+            {
+                errors.Add($"Secret '{key}' maps to '{id}', which isn't a valid stored secret name.");
+                continue;
+            }
+
+            secretMap[key] = id;
         }
 
         var services = Map(root.GetValueOrDefault("services")) ?? [];
@@ -124,7 +183,7 @@ public static partial class ComposePlanner
         foreach (var (name, value) in services)
         {
             var svc = Map(value) ?? throw new ComposeException($"Service '{name}' must be a mapping.");
-            var (run, build) = PlanService(project, name, svc, services, options, networkRefs, volumeRefs, usedNetworks, healthchecked, warnings, errors);
+            var (run, build) = PlanService(project, name, svc, services, options, networkRefs, volumeRefs, usedNetworks, healthchecked, secretMap, warnings, errors);
             runActions[name] = run;
             if (build is not null)
             {
@@ -244,7 +303,7 @@ public static partial class ComposePlanner
     private static (ComposeAction Run, ComposeAction? Build) PlanService(
         string project, string name, Dictionary<string, object?> svc, Dictionary<string, object?> allServices,
         ComposeOptions options, Dictionary<string, NetworkRef> networkRefs, Dictionary<string, VolumeRef> volumeRefs,
-        HashSet<string> usedNetworks, HashSet<string> healthchecked, List<string> warnings, List<string> errors)
+        HashSet<string> usedNetworks, HashSet<string> healthchecked, Dictionary<string, string> secretMap, List<string> warnings, List<string> errors)
     {
         void Warn(string text) => warnings.Add($"Service '{name}': {text}");
 
@@ -363,12 +422,37 @@ public static partial class ComposePlanner
             args.AddRange(["--tmpfs", t]);
         }
 
+        var explicitEnv = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (k, v) in KeyValues(svc.GetValueOrDefault("environment")))
         {
             var val = v ?? options.Env.GetValueOrDefault(k);
             if (val is not null)
             {
                 args.AddRange(["--env", $"{k}={val}"]);
+                explicitEnv.Add(k);
+            }
+        }
+
+        // WSLc has no secret mounts, so a compose secret is delivered as an environment variable named after it.
+        foreach (var entry in List(svc.GetValueOrDefault("secrets")) ?? [])
+        {
+            var source = entry as string ?? Map(entry)?.GetValueOrDefault("source") as string;
+            var target = Map(entry)?.GetValueOrDefault("target") as string ?? source;
+            if (source is null || target is null)
+            {
+                Warn("a secrets entry has no source and was ignored.");
+            }
+            else if (!secretMap.TryGetValue(source, out var id))
+            {
+                errors.Add($"Service '{name}' uses secret '{source}', which isn't defined (or isn't a stored secret) in the top-level secrets.");
+            }
+            else
+            {
+                var envName = SecretEnvName().Replace(Path.GetFileName(target).ToUpperInvariant(), "_");
+                if (explicitEnv.Add(envName))
+                {
+                    args.AddRange(["--env", $"{envName}={SecretTokens.Format(id)}"]);
+                }
             }
         }
 
@@ -974,6 +1058,9 @@ public static partial class ComposePlanner
     private static bool IsTrue(object? o) => o is string s && s.Equals("true", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsFalse(object? o) => o is string s && s.Equals("false", StringComparison.OrdinalIgnoreCase);
+
+    [GeneratedRegex("[^A-Z0-9_]")]
+    private static partial Regex SecretEnvName();
 
     [GeneratedRegex("[^a-z0-9_-]")]
     private static partial Regex InvalidNameChars();

@@ -64,7 +64,13 @@ public sealed record ComposePlan(
     IReadOnlyList<string> Warnings,
     IReadOnlyList<string> Errors)
 {
-    public bool CanRun => Errors.Count == 0 && Actions.Count > 0;
+    /// <summary>Stored secrets the plan references through <c>${secret:NAME}</c> tokens or compose <c>secrets:</c>.</summary>
+    public IReadOnlyList<string> SecretRefs { get; init; } = [];
+
+    /// <summary>Referenced secrets that the store doesn't have; the stack can't run until they're added.</summary>
+    public IReadOnlyList<string> MissingSecrets { get; init; } = [];
+
+    public bool CanRun => Errors.Count == 0 && Actions.Count > 0 && MissingSecrets.Count == 0;
 }
 
 public sealed class ComposeOptions
@@ -79,4 +85,7 @@ public sealed class ComposeOptions
     public IReadOnlyDictionary<string, string> Env { get; init; } = new Dictionary<string, string>();
 
     public Func<string, bool> FileExists { get; init; } = File.Exists;
+
+    /// <summary>Reports whether a stored secret exists (names only, never values); null skips the check.</summary>
+    public Func<string, bool>? SecretExists { get; init; }
 }

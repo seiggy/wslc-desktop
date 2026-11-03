@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json;
+using WslcDesktop.Compose;
 
 namespace WslcDesktop.Services;
 
@@ -155,7 +156,7 @@ public static class WslcResources
         (await ListNetworksAsync(session)).Select(r => r.Name).ToList();
 
     public static async Task<string> InspectAsync(string session, ResourceKind kind, string name) =>
-        await WslcCli.RunAsync("--session", session, Noun(kind), "inspect", "--format", "json", name);
+        SecretService.Default.Redact(await WslcCli.RunAsync("--session", session, Noun(kind), "inspect", "--format", "json", name));
 
     public static Task CreateVolumeAsync(string session, string name, string driver) =>
         WslcCli.RunAsync("--session", session, "volume", "create", "--driver", driver, name);
@@ -230,6 +231,13 @@ public static class WslcResources
 
         args.Add(spec.Image);
         args.AddRange(spec.Command);
+        if (SecretTokens.ContainsAny(args))
+        {
+            using var prepared = SecretInjection.Prepare(args, SecretService.Default.Get);
+            await WslcCli.RunWithEnvAsync(prepared.Environment, prepared.Args);
+            return;
+        }
+
         await WslcCli.RunAsync(args.ToArray());
     }
 
