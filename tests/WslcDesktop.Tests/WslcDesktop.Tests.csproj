@@ -30,6 +30,10 @@
     <Compile Include="..\..\src\WslcDesktop\Services\ImageCatalog.cs" Link="Linked\ImageCatalog.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\SessionCatalog.cs" Link="Linked\SessionCatalog.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\ContainerListing.cs" Link="Linked\ContainerListing.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\TerminalProtocol.cs" Link="Linked\TerminalProtocol.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\ConPtySession.cs" Link="Linked\ConPtySession.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\VtScreen.cs" Link="Linked\VtScreen.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\VtInput.cs" Link="Linked\VtInput.cs" />
   </ItemGroup>
 
   <ItemGroup>

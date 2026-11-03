@@ -58,7 +58,7 @@
                 VerticalAlignment="Center" />
         </StackPanel>
 
-        <Pivot Grid.Row="1">
+        <Pivot Grid.Row="1" x:Name="DetailPivot" SelectionChanged="DetailPivot_SelectionChanged">
             <PivotItem Header="Logs">
                 <Grid RowSpacing="12">
                     <Grid.RowDefinitions>
@@ -84,7 +84,7 @@
                 </Grid>
             </PivotItem>
 
-            <PivotItem Header="Shell">
+            <PivotItem Header="Shell" x:Name="ShellTabItem">
                 <Grid>
                     <InfoBar
                         x:Name="ShellStoppedNotice"
@@ -113,6 +113,7 @@
                         <Button x:Name="ShellToggle" Click="ShellToggle_Click" Content="Start shell" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Bottom" />
                         <TextBlock x:Name="ShellStatus" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Bottom" />
                     </StackPanel>
+                    <controls:TerminalView x:Name="Terminal" Grid.Row="1" Visibility="Collapsed" />
                     <controls:OutputView x:Name="ShellView" Grid.Row="1" />
                     <TextBox
                         x:Name="ShellInput"
