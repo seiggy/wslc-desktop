@@ -26,7 +26,7 @@ services:
 
 The token also works in the **New container** dialog (pick a stored secret from the list, or type `KEY=${secret:name}`).
 
-Compose's top-level `secrets:` is supported too. An entry with no `file`, `environment` or `content` points at a stored secret (use `name:` to map to a different stored name):
+Compose's top-level `secrets:` is supported too. An entry with no `file`, `environment` or `content` points at a stored secret (use `name:` to map to a different stored name). An entry with a `file:`, `environment:` or `content:` source is stored under the entry's key, and the app offers to import the source's current content (see below). WSLc has no secret mounts, so there is no option to keep referencing the file.
 
 ```yaml
 services:
@@ -41,7 +41,22 @@ This becomes the environment variable `DB_PASSWORD`. WSLc has no secret mounts, 
 
 Tokens are rejected anywhere else (labels, build args, commands, ports, and so on). `env_file` contents aren't scanned for tokens.
 
-If a referenced secret isn't stored, the Up preview shows a warning with a field to add it right there, and **Up** stays disabled until it exists.
+## Creating secrets while importing a compose file
+
+You don't need to visit the Secrets page first. When a compose file contains `${secret:NAME}` tokens or `secrets:` entries, the Up dialog shows a **Secrets needed** section:
+
+![Up dialog listing the secrets a compose file needs](/screenshots/stacks-secrets-needed.png)
+
+- Every secret is listed with the services that use it and its state: **Stored**, **Needed**, **Ready to save**, **Left unset** or **Will replace stored value**.
+- For a missing secret, type a value (masked, with a reveal button) or press **Generate** for a random 32-character value. Add an optional label if you like.
+- **Save** stores one secret now; **Save all** stores every entry that has a value. Whatever is still unsaved when you press **Up** is saved first.
+- **Import from …** appears for secrets with a `file:`, `environment:` or `content:` source and fills the value from that source.
+- A stored secret shows **Stored** with **Replace** (enter a new value) and **Keep stored value**.
+- **Leave unset for now** saves nothing. The consequence is that **Up** stays disabled until every secret is stored or has a value, because an unresolved token can't be started.
+
+**Up** enables as soon as every required secret is stored or ready. Values typed in the dialog are kept only in memory until saved, so **Cancel** stores nothing. Values are never logged, and the preview keeps showing tokens.
+
+The same section appears in the **New container** dialog when you type a `${secret:NAME}` token for a secret that isn't stored yet; **Create** saves them first.
 
 ## How the value reaches the container
 

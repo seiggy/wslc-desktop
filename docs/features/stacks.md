@@ -13,6 +13,8 @@ Stacks bring up a [compose file](/compose) as a group of WSLc containers, networ
 
    ![Compose plan with a warning](/screenshots/stacks-preview.png)
 
+   If the file references secrets, a **Secrets needed** section lets you create the missing ones right here; see [Secrets](/features/secrets#creating-secrets-while-importing-a-compose-file).
+
 4. Choose **Up**. The app creates networks and volumes, builds images where needed and starts services in dependency order.
 
 ![A running stack](/screenshots/stacks.png)
