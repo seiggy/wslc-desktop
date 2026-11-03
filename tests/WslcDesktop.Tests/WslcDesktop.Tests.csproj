@@ -19,6 +19,12 @@
     <Compile Include="..\..\src\WslcDesktop\Services\AccentPalette.cs" Link="Linked\AccentPalette.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\TrayPolicy.cs" Link="Linked\TrayPolicy.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\UpdatePolicy.cs" Link="Linked\UpdatePolicy.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\SecretStore.cs" Link="Linked\SecretStore.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\SecretService.cs" Link="Linked\SecretService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WslcDesktop.Compose\WslcDesktop.Compose.csproj" />
   </ItemGroup>
 
   <ItemGroup>

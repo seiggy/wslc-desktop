@@ -31,7 +31,8 @@ Top-level networks support `driver`, `internal`, `driver_opts`, `labels`, `ipam`
 | `deploy` | Replicas, resources and placement are ignored; one container starts. |
 | `scale` | One container is started. |
 | `profiles` | Ignored; the service always starts. |
-| `secrets`, `configs` | Not mounted. Top-level `secrets`/`configs` are ignored. |
+| `configs` | Not mounted. Top-level `configs` are ignored. |
+| `secrets` | Supported as environment variables; see [Secrets](/features/secrets). |
 | `extends`, top-level `include` | Not resolved. |
 | `links` | Use networks and service names instead. |
 | `platform` | Platform selection isn't supported. |

@@ -178,12 +178,50 @@ public sealed partial class StacksPage : Page
         void Replan()
         {
             var name = projectBox.Text.Trim();
-            plan = ComposePlanner.Plan(yaml, new ComposeOptions { ProjectName = name.Length > 0 ? name : null, Directory = directory, Env = env });
+            var stored = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                foreach (var s in App.Host.Secrets.List())
+                {
+                    stored.Add(s.Name);
+                }
+            }
+            catch
+            {
+                // Unreadable store: every reference shows as missing.
+            }
+
+            plan = ComposePlanner.Plan(yaml, new ComposeOptions { ProjectName = name.Length > 0 ? name : null, Directory = directory, Env = env, SecretExists = stored.Contains });
             summary.Children.Clear();
             summary.Children.Add(new TextBlock { Text = $"Planned actions ({plan.Actions.Count})", Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"] });
             foreach (var a in plan.Actions)
             {
-                summary.Children.Add(new TextBlock { Text = "• " + a.Description, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(8, 0, 0, 0) });
+                summary.Children.Add(new TextBlock { Text = "• " + App.Host.Secrets.Redact(a.Description), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(8, 0, 0, 0) });
+            }
+
+            foreach (var missing in plan.MissingSecrets)
+            {
+                var pw = new PasswordBox { Header = $"Value for secret '{missing}'", PasswordRevealMode = PasswordRevealMode.Peek, MinWidth = 260 };
+                var save = new Button { Content = "Save secret", VerticalAlignment = VerticalAlignment.Bottom };
+                var rowError = new TextBlock { Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorCriticalBrush"], TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
+                var captured = missing;
+                save.Click += (_, _) =>
+                {
+                    try
+                    {
+                        App.Host.Secrets.Save(captured, pw.Password, string.Empty);
+                        Replan();
+                    }
+                    catch (Exception ex)
+                    {
+                        rowError.Text = ex.Message;
+                        rowError.Visibility = Visibility.Visible;
+                    }
+                };
+                var row = new StackPanel { Spacing = 6, Margin = new Thickness(8, 4, 0, 4) };
+                row.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { pw, save } });
+                row.Children.Add(rowError);
+                summary.Children.Add(row);
             }
 
             foreach (var w in plan.Warnings)

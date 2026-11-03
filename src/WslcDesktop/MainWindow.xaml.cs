@@ -111,6 +111,7 @@ public sealed partial class MainWindow : Window
                 "images" => typeof(ImagesPage),
                 "stacks" => typeof(StacksPage),
                 "volumes" or "networks" => typeof(ResourcesPage),
+                "secrets" => typeof(SecretsPage),
                 "sessions" => typeof(SessionsPage),
                 _ => typeof(ContainersPage),
             }, tag switch

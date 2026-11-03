@@ -137,7 +137,7 @@ public class PlannerTests
     [InlineData("restart: always", "restart")]
     [InlineData("deploy: { replicas: 3 }", "deploy")]
     [InlineData("profiles: [debug]", "profiles")]
-    [InlineData("secrets: [s]", "secrets")]
+    [InlineData("configs: [c]", "configs")]
     [InlineData("configs: [c]", "configs")]
     [InlineData("extends: { service: other }", "extends")]
     [InlineData("privileged: true", "privileged")]

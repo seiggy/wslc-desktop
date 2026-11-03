@@ -102,7 +102,40 @@ public sealed partial class ContainersPage : Page
         var command = new TextBox { Header = "Command (optional)", PlaceholderText = "/bin/sleep 3600" };
         var ports = new TextBox { Header = "Ports (one per line)", PlaceholderText = "8080:80", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
         var mounts = new TextBox { Header = "Volumes and bind mounts (one per line)", PlaceholderText = "my-data:/data", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
-        var env = new TextBox { Header = "Environment variables (one per line)", PlaceholderText = "KEY=value", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var env = new TextBox { Header = "Environment variables (one per line)", PlaceholderText = "KEY=value or KEY=${secret:name}", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var secretNames = new List<string>();
+        try
+        {
+            secretNames.AddRange(App.Host.Secrets.List().Select(s => s.Name));
+        }
+        catch
+        {
+            // Secrets are optional; the dialog still works without the store.
+        }
+
+        var secretPicker = new ComboBox
+        {
+            Header = "Use a stored secret",
+            PlaceholderText = secretNames.Count > 0 ? "Add a secret as an environment variable" : "No secrets stored yet (add them on the Secrets page)",
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            ItemsSource = secretNames,
+            IsEnabled = secretNames.Count > 0,
+        };
+        secretPicker.SelectionChanged += (_, _) =>
+        {
+            if (secretPicker.SelectedItem is string picked)
+            {
+                var variable = new string(picked.ToUpperInvariant().Select(c => char.IsAsciiLetterOrDigit(c) ? c : '_').ToArray());
+                env.Text = (env.Text.Length > 0 && !env.Text.EndsWith('\n') ? env.Text + "\r" : env.Text) + $"{variable}={SecretTokens.Format(picked)}";
+                secretPicker.SelectedItem = null;
+            }
+        };
+        var envNote = new TextBlock
+        {
+            Text = "Secret values are resolved only when the container is created and never shown here. Substring redaction elsewhere in the app is best-effort.",
+            TextWrapping = TextWrapping.Wrap,
+            Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
+        };
         var network = new ComboBox { Header = "Network", HorizontalAlignment = HorizontalAlignment.Stretch };
         var networkNames = new List<string> { "Default (bridge)" };
         try
@@ -120,7 +153,7 @@ public sealed partial class ContainersPage : Page
         var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
         var bar = new ProgressBar { IsIndeterminate = true, Visibility = Visibility.Collapsed };
         var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
-        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, ports, mounts, env, network, startAfter, status, bar, error } };
+        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, ports, mounts, env, secretPicker, envNote, network, startAfter, status, bar, error } };
 
         var dialog = new ContentDialog
         {
@@ -173,9 +206,17 @@ public sealed partial class ContainersPage : Page
                     bar.IsIndeterminate = true;
                 }
 
+                // A typed value matching a stored secret becomes its token so it is injected, not kept in plain text.
+                var envLines = Lines(App.Host.Secrets.Redact(env.Text));
+                var stored = App.Host.Secrets.List().Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                if (envLines.SelectMany(SecretTokens.Find).FirstOrDefault(n => !stored.Contains(n)) is { } missing)
+                {
+                    throw new InvalidOperationException($"The secret '{missing}' isn't stored. Add it on the Secrets page first.");
+                }
+
                 status.Text = "Creating container…";
                 await App.Host.CreateContainerAsync(new NewContainerSpec(
-                    containerName, imageName, commandLine, Lines(ports.Text), Lines(mounts.Text), Lines(env.Text),
+                    containerName, imageName, commandLine, Lines(ports.Text), Lines(mounts.Text), envLines,
                     network.SelectedIndex > 0 ? (string)network.SelectedItem : string.Empty));
                 if (startAfter.IsChecked == true)
                 {
