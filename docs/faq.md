@@ -2,7 +2,7 @@
 
 ## How is this different from Docker Desktop?
 
-WSLc Desktop Manager manages WSLc, the container runtime built into WSL, rather than a VM and daemon. It uses familiar terms (containers, images, volumes, networks, stacks) but doesn't imitate features WSLc lacks, such as restart policies.
+WSLc Desktop Manager manages WSLc, the container runtime built into WSL, rather than a VM and daemon. It uses familiar terms (containers, images, volumes, networks, stacks) but doesn't imitate features WSLc lacks. Where it can fill a gap safely it does so in the app, for example [restart policies](/features/restart-policy), which only run while the app is running.
 
 ## Does it replace the `wslc` CLI?
 

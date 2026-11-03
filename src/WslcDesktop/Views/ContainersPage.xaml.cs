@@ -62,7 +62,7 @@ public sealed partial class ContainersPage : Page
             }
 
             var history = App.Host.Telemetry.GetHistory(row.Name);
-            item.Update(row, history.Count > 0 ? history[^1] : null);
+            item.Update(row, history.Count > 0 ? history[^1] : null, App.Host.Restart.GetInfo(row.Name));
             item.SetHeader(stack.Length > 0 && stack != previousStack
                 ? $"Stack: {stack} ({rows.Count(x => x.Stack == stack)})"
                 : string.Empty);
@@ -149,11 +149,26 @@ public sealed partial class ContainersPage : Page
 
         network.ItemsSource = networkNames;
         network.SelectedIndex = 0;
+        var restart = new ComboBox { Header = "Restart policy", ItemsSource = RestartDisplay.ModeLabels, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var retries = new NumberBox { Header = "Max restarts (0 = default limit)", Minimum = 0, Maximum = 100, Value = 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact, Visibility = Visibility.Collapsed };
+        var restartNote = new TextBlock
+        {
+            Text = "Applied by WSLc Desktop Manager, so it only works while the app is running.",
+            Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
+            Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            TextWrapping = TextWrapping.Wrap,
+            Visibility = Visibility.Collapsed,
+        };
+        restart.SelectionChanged += (_, _) =>
+        {
+            retries.Visibility = restart.SelectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+            restartNote.Visibility = restart.SelectedIndex > 0 ? Visibility.Visible : Visibility.Collapsed;
+        };
         var startAfter = new CheckBox { Content = "Start after creating", IsChecked = true };
         var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
         var bar = new ProgressBar { IsIndeterminate = true, Visibility = Visibility.Collapsed };
         var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
-        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, ports, mounts, env, secretPicker, envNote, network, startAfter, status, bar, error } };
+        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, ports, mounts, env, secretPicker, envNote, network, restart, retries, restartNote, startAfter, status, bar, error } };
 
         var dialog = new ContentDialog
         {
@@ -184,7 +199,7 @@ public sealed partial class ContainersPage : Page
             var commandLine = command.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             error.IsOpen = false;
-            image.IsEnabled = name.IsEnabled = command.IsEnabled = ports.IsEnabled = mounts.IsEnabled = env.IsEnabled = network.IsEnabled = startAfter.IsEnabled = false;
+            image.IsEnabled = name.IsEnabled = command.IsEnabled = ports.IsEnabled = mounts.IsEnabled = env.IsEnabled = network.IsEnabled = restart.IsEnabled = retries.IsEnabled = startAfter.IsEnabled = false;
             dialog.IsPrimaryButtonEnabled = false;
             bar.Visibility = status.Visibility = Visibility.Visible;
             try
@@ -218,6 +233,11 @@ public sealed partial class ContainersPage : Page
                 await App.Host.CreateContainerAsync(new NewContainerSpec(
                     containerName, imageName, commandLine, Lines(ports.Text), Lines(mounts.Text), envLines,
                     network.SelectedIndex > 0 ? (string)network.SelectedItem : string.Empty));
+                if (restart.SelectedIndex > 0)
+                {
+                    App.Host.SetRestartPolicy(containerName, RestartDisplay.FromSelection(restart.SelectedIndex, (int)retries.Value), startAfter.IsChecked == true);
+                }
+
                 if (startAfter.IsChecked == true)
                 {
                     status.Text = "Starting container…";
@@ -229,7 +249,7 @@ public sealed partial class ContainersPage : Page
                 args.Cancel = true;
                 error.Message = ex.Message;
                 error.IsOpen = true;
-                image.IsEnabled = name.IsEnabled = command.IsEnabled = ports.IsEnabled = mounts.IsEnabled = env.IsEnabled = network.IsEnabled = startAfter.IsEnabled = true;
+                image.IsEnabled = name.IsEnabled = command.IsEnabled = ports.IsEnabled = mounts.IsEnabled = env.IsEnabled = network.IsEnabled = restart.IsEnabled = retries.IsEnabled = startAfter.IsEnabled = true;
                 bar.Visibility = status.Visibility = Visibility.Collapsed;
                 Validate();
             }

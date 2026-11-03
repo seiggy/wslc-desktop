@@ -32,14 +32,16 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" MinWidth="160" />
                 <ColumnDefinition Width="110" />
+                <ColumnDefinition Width="150" />
                 <ColumnDefinition Width="64" />
                 <ColumnDefinition Width="84" />
                 <ColumnDefinition Width="136" />
             </Grid.ColumnDefinitions>
             <TextBlock Style="{StaticResource ColumnHeaderStyle}" Text="Name" />
             <TextBlock Grid.Column="1" Style="{StaticResource ColumnHeaderStyle}" Text="State" />
-            <TextBlock Grid.Column="2" Style="{StaticResource ColumnHeaderStyle}" Text="CPU" />
-            <TextBlock Grid.Column="3" Style="{StaticResource ColumnHeaderStyle}" Text="Memory" />
+            <TextBlock Grid.Column="2" Style="{StaticResource ColumnHeaderStyle}" Text="Restart" />
+            <TextBlock Grid.Column="3" Style="{StaticResource ColumnHeaderStyle}" Text="CPU" />
+            <TextBlock Grid.Column="4" Style="{StaticResource ColumnHeaderStyle}" Text="Memory" />
         </Grid>
 
         <ListView
@@ -62,6 +64,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" MinWidth="160" />
                             <ColumnDefinition Width="110" />
+                            <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="64" />
                             <ColumnDefinition Width="84" />
                             <ColumnDefinition Width="136" />
@@ -75,9 +78,10 @@
                             <Ellipse Width="8" Height="8" Fill="{ThemeResource TextFillColorDisabledBrush}" Visibility="{x:Bind StoppedVisibility, Mode=OneWay}" />
                             <TextBlock Text="{x:Bind State, Mode=OneWay}" />
                         </StackPanel>
-                        <TextBlock Grid.Column="2" Text="{x:Bind Cpu, Mode=OneWay}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="3" Text="{x:Bind Memory, Mode=OneWay}" VerticalAlignment="Center" />
-                        <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Grid.Column="2" Foreground="{x:Bind RestartBrush, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind Restart, Mode=OneWay}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Restart, Mode=OneWay}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="3" Text="{x:Bind Cpu, Mode=OneWay}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="4" Text="{x:Bind Memory, Mode=OneWay}" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" VerticalAlignment="Center">
                             <Button
                                 AutomationProperties.Name="Start"
                                 Click="Start_Click"

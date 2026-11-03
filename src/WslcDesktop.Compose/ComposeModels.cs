@@ -56,7 +56,8 @@ public sealed record ComposeAction(
     IReadOnlyList<string> Args,
     string? Service = null,
     IReadOnlyList<ServiceWait>? Waits = null,
-    IReadOnlyList<IReadOnlyList<string>>? After = null);
+    IReadOnlyList<IReadOnlyList<string>>? After = null,
+    string? Restart = null);
 
 public sealed record ComposePlan(
     string Project,

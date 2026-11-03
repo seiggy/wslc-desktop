@@ -68,6 +68,18 @@ internal sealed class TrayController
         _window.Close();
     }
 
+    // The window is never shown, so there is no flash at sign-in; the tray icon restores it.
+    public void StartHidden() => SetBackground(true);
+
+    public void StartMinimized()
+    {
+        _window.AppWindow.Show(false);
+        if (_window.AppWindow.Presenter is OverlappedPresenter p)
+        {
+            p.Minimize();
+        }
+    }
+
     public void Dispose()
     {
         _host.Monitor.Updated -= OnMonitorUpdated;

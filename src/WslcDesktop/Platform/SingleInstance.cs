@@ -18,7 +18,7 @@ internal static class SingleInstance
     public static event Action? ActivationRequested;
 
     /// <summary>Returns true when another instance owns the app and this process should exit.</summary>
-    public static bool RedirectIfSecondary()
+    public static bool RedirectIfSecondary(bool quiet = false)
     {
         try
         {
@@ -27,6 +27,11 @@ internal static class SingleInstance
             {
                 main.Activated += (_, _) => ActivationRequested?.Invoke();
                 return false;
+            }
+
+            if (quiet)
+            {
+                return true;
             }
 
             AllowSetForegroundWindow(-1);
@@ -45,6 +50,19 @@ internal static class SingleInstance
         }
 
         return ActivateExistingOrWarn();
+    }
+
+    /// <summary>True when Windows launched the MSIX StartupTask at sign-in.</summary>
+    public static bool IsStartupTaskActivation()
+    {
+        try
+        {
+            return AppInstance.GetCurrent().GetActivatedEventArgs().Kind == ExtendedActivationKind.StartupTask;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     private static bool ActivateExistingOrWarn()

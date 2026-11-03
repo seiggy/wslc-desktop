@@ -28,6 +28,29 @@
                 Content="&#xE72B;"
                 FontFamily="{StaticResource SymbolThemeFontFamily}" />
             <TextBlock x:Name="TitleText" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+            <ComboBox
+                x:Name="RestartPicker"
+                AutomationProperties.Name="Restart policy"
+                MinWidth="150"
+                SelectionChanged="RestartPicker_Changed"
+                VerticalAlignment="Center" />
+            <NumberBox
+                x:Name="RestartRetries"
+                AutomationProperties.Name="Maximum restarts"
+                Maximum="100"
+                Minimum="0"
+                PlaceholderText="Max restarts"
+                SpinButtonPlacementMode="Compact"
+                ValueChanged="RestartPicker_Changed"
+                Visibility="Collapsed"
+                VerticalAlignment="Center"
+                Width="130" />
+            <TextBlock
+                x:Name="RestartStatus"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                TextTrimming="CharacterEllipsis"
+                VerticalAlignment="Center" />
         </StackPanel>
 
         <Pivot Grid.Row="1">

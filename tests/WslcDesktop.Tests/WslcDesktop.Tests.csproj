@@ -21,6 +21,9 @@
     <Compile Include="..\..\src\WslcDesktop\Services\UpdatePolicy.cs" Link="Linked\UpdatePolicy.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\SecretStore.cs" Link="Linked\SecretStore.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\SecretService.cs" Link="Linked\SecretService.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\RestartPolicy.cs" Link="Linked\RestartPolicy.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\RestartDisplay.cs" Link="Linked\RestartDisplay.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\StartupPolicy.cs" Link="Linked\StartupPolicy.cs" />
   </ItemGroup>
 
   <ItemGroup>

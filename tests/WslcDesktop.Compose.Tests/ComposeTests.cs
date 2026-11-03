@@ -134,7 +134,6 @@ public class PlannerTests
     }
 
     [Theory]
-    [InlineData("restart: always", "restart")]
     [InlineData("deploy: { replicas: 3 }", "deploy")]
     [InlineData("profiles: [debug]", "profiles")]
     [InlineData("configs: [c]", "configs")]

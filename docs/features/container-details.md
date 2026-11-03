@@ -2,6 +2,8 @@
 
 Select a container to open its detail page. Four tabs cover everyday troubleshooting. Use the back arrow to return to the list.
 
+Next to the title, the **restart policy** picker changes how the app restarts this container, with a one-line status beside it. See [restart policies](/features/restart-policy).
+
 ## Logs
 
 ![Container logs](/screenshots/container-logs.png)

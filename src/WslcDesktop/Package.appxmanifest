@@ -8,9 +8,10 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap uap10 desktop6 rescap">
+  IgnorableNamespaces="uap uap5 uap10 desktop6 rescap">
 
   <Identity
     Name="seiggy.DesktopManagerforWSLc"
@@ -47,6 +48,12 @@
                          Square310x310Logo="Assets\Square310x310Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+      <Extensions>
+        <!-- Start with Windows (Settings > Start with Windows). Off until the user turns it on; see StartupRegistration. -->
+        <uap5:Extension Category="windows.startupTask" Executable="WslcDesktop.exe" EntryPoint="Windows.FullTrustApplication">
+          <uap5:StartupTask TaskId="WslcDesktopStartup" Enabled="false" DisplayName="WSLc Desktop Manager" />
+        </uap5:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

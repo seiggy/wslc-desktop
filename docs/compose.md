@@ -6,7 +6,7 @@ WSLc Desktop Manager reads a standard compose file and translates it into `wslc`
 
 <<< @/public/examples/demo-stack/compose.yaml{yaml}
 
-[Download compose.yaml](/examples/demo-stack/compose.yaml). With project name `demo-stack`, this creates the network `demo-stack_front`, the volume `demo-stack_site-data`, then runs `demo-stack-cache` and `demo-stack-web` (after `cache`). The `restart` key produces a warning in the preview.
+[Download compose.yaml](/examples/demo-stack/compose.yaml). With project name `demo-stack`, this creates the network `demo-stack_front`, the volume `demo-stack_site-data`, then runs `demo-stack-cache` and `demo-stack-web` (after `cache`). The `restart: unless-stopped` key becomes an app-level [restart policy](/features/restart-policy).
 
 ## Naming
 
@@ -17,7 +17,7 @@ WSLc Desktop Manager reads a standard compose file and translates it into `wslc`
 
 ## Supported service keys
 
-`image`, `build` (`context`, `dockerfile`, `args`, `target`), `command`, `entrypoint`, `environment`, `env_file`, `working_dir`, `user`, `ports`, `expose`, `volumes`, `networks`, `network_mode`, `healthcheck`, `mem_limit`, `cpus`, `depends_on`, `container_name`, `hostname`, `domainname`, `labels`, `stop_signal`, `stop_grace_period`, `tty`, `stdin_open`, `shm_size`, `tmpfs`, `dns`, `dns_search`, `pull_policy`.
+`image`, `build` (`context`, `dockerfile`, `args`, `target`), `command`, `entrypoint`, `environment`, `env_file`, `working_dir`, `user`, `ports`, `expose`, `volumes`, `networks`, `network_mode`, `healthcheck`, `mem_limit`, `cpus`, `depends_on`, `container_name`, `hostname`, `domainname`, `labels`, `stop_signal`, `stop_grace_period`, `tty`, `stdin_open`, `shm_size`, `tmpfs`, `dns`, `dns_search`, `pull_policy`, `restart` (applied by the app, see [restart policies](/features/restart-policy)).
 
 `${VAR}` interpolation and `x-` extension keys are accepted. Services start in `depends_on` order, waiting for health where a healthcheck is defined.
 
@@ -27,7 +27,6 @@ Top-level networks support `driver`, `internal`, `driver_opts`, `labels`, `ipam`
 
 | Key | What happens |
 | --- | --- |
-| `restart` | WSLc has no restart policy; the container won't restart automatically. (`restart: "no"` is fine.) |
 | `deploy` | Replicas, resources and placement are ignored; one container starts. |
 | `scale` | One container is started. |
 | `profiles` | Ignored; the service always starts. |
