@@ -21,3 +21,5 @@ Select an image to see its overview (session, tags, ID, digest, size, OS/archite
 ::: info
 WSLc reports each layer's digest but not its size or the command that created it, so only digests are shown.
 :::
+
+![Running an image owned by another session](/screenshots/image-other-session-run.png)
