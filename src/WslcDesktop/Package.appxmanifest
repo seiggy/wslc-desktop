@@ -50,7 +50,7 @@
       </uap:VisualElements>
       <Extensions>
         <!-- Start with Windows (Settings > Start with Windows). Off until the user turns it on; see StartupRegistration. -->
-        <uap5:Extension Category="windows.startupTask" Executable="$targetnametoken$.exe" EntryPoint="Windows.FullTrustApplication">
+        <uap5:Extension Category="windows.startupTask" Executable="WslcDesktop.exe" EntryPoint="Windows.FullTrustApplication">
           <uap5:StartupTask TaskId="WslcDesktopStartup" Enabled="false" DisplayName="WSLc Desktop Manager" />
         </uap5:Extension>
       </Extensions>
