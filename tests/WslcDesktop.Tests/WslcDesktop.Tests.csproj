@@ -18,6 +18,7 @@
     <Compile Include="..\..\src\WslcDesktop\Services\AppSettings.cs" Link="Linked\AppSettings.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\AccentPalette.cs" Link="Linked\AccentPalette.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\TrayPolicy.cs" Link="Linked\TrayPolicy.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\UpdatePolicy.cs" Link="Linked\UpdatePolicy.cs" />
   </ItemGroup>
 
   <ItemGroup>

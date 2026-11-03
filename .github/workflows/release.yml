@@ -84,7 +84,7 @@ jobs:
           </configuration>
           '@ | Set-Content "$env:RUNNER_TEMP\nuget.ci.config"
 
-      - name: Build portable EXE and unsigned Store MSIX (${{ matrix.arch }})
+      - name: Build portable zip, Velopack-ready publish and unsigned Store MSIX (${{ matrix.arch }})
         shell: pwsh
         run: >
           ./tools/packaging/Build-Release.ps1
@@ -92,6 +92,25 @@ jobs:
           -Version $env:VERSION
           -OutDir artifacts
           -NuGetConfig "$env:RUNNER_TEMP\nuget.ci.config"
+
+      - name: Fetch previous release packages for delta generation
+        shell: pwsh
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          dotnet tool install -g vpk --version 1.2.161
+          $pre = if ($env:VERSION.Contains('-')) { @('--pre') } else { @() }
+          vpk '[win]' download github --repoUrl "https://github.com/$env:GITHUB_REPOSITORY" --token $env:GH_TOKEN `
+            --channel win-${{ matrix.arch }} --outputDir velopack-${{ matrix.arch }} @pre
+
+      # Unsigned for now. To sign, add -SignParams (signtool args) or -AzureTrustedSignFile here; see RELEASING.md.
+      - name: Pack Velopack installer and update packages (${{ matrix.arch }})
+        shell: pwsh
+        run: |
+          dotnet tool update -g vpk --version 1.2.161
+          ./tools/packaging/Pack-Velopack.ps1 -Arch ${{ matrix.arch }} -Version $env:VERSION -OutDir velopack-${{ matrix.arch }}
+          Copy-Item velopack-${{ matrix.arch }}\* artifacts -Force
 
       - uses: actions/upload-artifact@v4
         with:

@@ -1,5 +1,6 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Velopack;
 using WslcDesktop.Platform;
 
 namespace WslcDesktop;
@@ -8,8 +9,11 @@ namespace WslcDesktop;
 public static class Program
 {
     [STAThread]
-    public static int Main()
+    public static int Main(string[] args)
     {
+        // Must run first: handles install/update/uninstall hooks and may exit the process before any UI exists.
+        VelopackApp.Build().Run();
+
         WinRT.ComWrappersSupport.InitializeComWrappers();
         if (SingleInstance.RedirectIfSecondary())
         {
