@@ -151,5 +151,5 @@ jobs:
             gh release upload "$TAG" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              --title "WSLc Desktop $TAG" --generate-notes --notes-file artifacts/release-notes.md "${flags[@]}"
+              --title "WSLc Desktop Manager $TAG" --generate-notes --notes-file artifacts/release-notes.md "${flags[@]}"
           fi

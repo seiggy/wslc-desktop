@@ -22,6 +22,7 @@ The release workflow builds unsigned packages using the Partner Center identity 
 
 | Partner Center field | Value |
 | --- | --- |
+| Reserved app name / Package/Properties/DisplayName | `WSLc Desktop Manager` |
 | Package/Identity/Name | `seiggy.DesktopManagerforWSLc` |
 | Package/Identity/Publisher | `CN=CE168BCD-6F3C-4900-89EA-A9A764FE595F` |
 | Package/Properties/PublisherDisplayName | `seiggy` |
@@ -31,6 +32,7 @@ Download `WslcDesktop-<v>.appxbundle` from the GitHub Release or the `release-fi
 the app's Partner Center submission. PR builds also provide a `store-bundle` workflow artifact for validation, built with version `1.0.0.0`;
 use a release build with the intended version for submission. Complete the listing, declarations, and certification steps in Partner Center.
 Microsoft signs the packages after certification; no purchased certificate, PFX, or test-certificate trust setup is needed.
+Both the package display name and application visual-elements display name must match the reserved app name above.
 Store review also needs justification for the restricted capabilities below. The package family name and SID are derived from the identity,
 not stamped separately into the manifest.
 

@@ -22,10 +22,10 @@ public static class TrayPolicy
 
     public static string Tooltip(int? running, int? total) => running switch
     {
-        null => "WSLc Desktop",
-        0 => "WSLc Desktop — no containers running",
-        1 => "WSLc Desktop — 1 container running",
-        _ => $"WSLc Desktop — {running} containers running",
+        null => "WSLc Desktop Manager",
+        0 => "WSLc Desktop Manager — no containers running",
+        1 => "WSLc Desktop Manager — 1 container running",
+        _ => $"WSLc Desktop Manager — {running} containers running",
     };
 
     public static string StatusLine(int? running, int? total) => running is null

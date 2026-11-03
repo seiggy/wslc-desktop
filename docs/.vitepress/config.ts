@@ -4,7 +4,7 @@ import { defineConfig } from 'vitepress'
 const base = process.env.DOCS_BASE ?? '/wslc-desktop/'
 
 export default defineConfig({
-  title: 'WSLc Desktop',
+  title: 'WSLc Desktop Manager',
   description: 'A native Windows desktop app for managing WSLc containers, images, volumes, networks and compose stacks.',
   base,
   cleanUrls: true,

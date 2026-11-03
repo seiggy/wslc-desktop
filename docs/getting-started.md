@@ -18,7 +18,7 @@ The MSIX packages and app bundle on GitHub are unsigned Microsoft Store submissi
 
 ## First run
 
-1. Launch **WSLc Desktop**. It starts its own WSLc session named `WslcDesktop`, separate from the default session used by the `wslc` command line.
+1. Launch **WSLc Desktop Manager**. It starts its own WSLc session named `WslcDesktop`, separate from the default session used by the `wslc` command line.
 2. If the WSLc components are missing, the app offers an **Install components** button. Use it, then **Retry**.
 3. The **Containers** page opens. Anything you create here lives in the `WslcDesktop` session.
 

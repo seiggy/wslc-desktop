@@ -22,7 +22,7 @@ Both preferences apply immediately. The tray icon follows the taskbar's theme in
 
 ![WSLc configuration](/screenshots/settings.png)
 
-These values are saved to wslc's `settings.yaml` (`%LOCALAPPDATA%\wslc\settings.yaml`). That file configures the **default session** (the one the `wslc` command line uses) and any new session it creates. WSLc Desktop runs its own session and doesn't read this file. The editor keeps your comments and unknown keys when saving.
+These values are saved to wslc's `settings.yaml` (`%LOCALAPPDATA%\wslc\settings.yaml`). That file configures the **default session** (the one the `wslc` command line uses) and any new session it creates. WSLc Desktop Manager runs its own session and doesn't read this file. The editor keeps your comments and unknown keys when saving.
 
 | Setting | Purpose |
 | --- | --- |

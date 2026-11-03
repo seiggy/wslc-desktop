@@ -1,6 +1,6 @@
 # Compose guide
 
-WSLc Desktop reads a standard compose file and translates it into `wslc` commands. It supports the common subset and tells you, before anything runs, about every key it can't honour. See [Stacks](/features/stacks) for the UI.
+WSLc Desktop Manager reads a standard compose file and translates it into `wslc` commands. It supports the common subset and tells you, before anything runs, about every key it can't honour. See [Stacks](/features/stacks) for the UI.
 
 ## Sample file
 

@@ -2,7 +2,7 @@
     x:Class="WslcDesktop.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="WSLc Desktop">
+    Title="WSLc Desktop Manager">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
@@ -10,7 +10,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TitleBar x:Name="AppTitleBar" Title="WSLc Desktop" />
+        <TitleBar x:Name="AppTitleBar" Title="WSLc Desktop Manager" />
 
         <NavigationView
             x:Name="Nav"
