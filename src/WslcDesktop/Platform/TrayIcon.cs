@@ -25,7 +25,7 @@ internal sealed class TrayIcon : IDisposable
     private nint _hwnd;
     private nint _icon;
     private bool _added;
-    private string _tooltip = "WSLc Desktop";
+    private string _tooltip = "WSLc Desktop Manager";
 
     public TrayIcon(string assetDir)
     {
@@ -239,7 +239,7 @@ internal sealed class TrayIcon : IDisposable
 
         try
         {
-            AppendMenu(menu, 0, IdOpen, "Open WSLc Desktop");
+            AppendMenu(menu, 0, IdOpen, "Open WSLc Desktop Manager");
             AppendMenu(menu, 0x3 /* MF_GRAYED */, 0, StatusProvider?.Invoke() ?? "Status unavailable");
             AppendMenu(menu, 0x800 /* MF_SEPARATOR */, 0, null);
             AppendMenu(menu, 0, IdExit, "Exit");

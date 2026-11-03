@@ -32,8 +32,10 @@ $architectures = foreach ($package in $msix) {
         finally { $reader.Dispose() }
         if ($manifest.Identity.Name -cne $expected.Identity.Name -or
             $manifest.Identity.Publisher -cne $expected.Identity.Publisher -or
-            $manifest.Properties.PublisherDisplayName -cne $expected.Properties.PublisherDisplayName) {
-            throw "$($package.Name) does not match the Partner Center identity in Package.appxmanifest."
+            $manifest.Properties.PublisherDisplayName -cne $expected.Properties.PublisherDisplayName -or
+            $manifest.Properties.DisplayName -cne $expected.Properties.DisplayName -or
+            $manifest.Applications.Application.VisualElements.DisplayName -cne $expected.Applications.Application.VisualElements.DisplayName) {
+            throw "$($package.Name) does not match the Partner Center identity or app display names in Package.appxmanifest."
         }
         if ($manifest.Identity.Version -cne $bundleVersion) {
             throw "$($package.Name) must have version $bundleVersion; found $($manifest.Identity.Version)."

@@ -6,7 +6,7 @@
 
 The app couldn't create or attach to its `WslcDesktop` session, for example with *Cannot create a file when that file already exists*.
 
-1. **Run only one instance of the app at a time.** Two instances compete for the same session. Close every WSLc Desktop window (check Task Manager for stray `WslcDesktop.exe` processes), then choose **Retry** or relaunch.
+1. **Run only one instance of the app at a time.** Two instances compete for the same session. Close every WSLc Desktop Manager window (check Task Manager for stray `WslcDesktop.exe` processes), then choose **Retry** or relaunch.
 2. Check the [Environment](/features/environment) page or run `wslc system session list` to see whether a stale `WslcDesktop` session is still registered.
 3. Make sure WSL is up to date (`wsl --update`) and that `wslc --help` works in a terminal.
 

@@ -88,9 +88,9 @@ internal static class SingleInstance
 
         MessageBox(
             0,
-            $"WSLc Desktop is already running (process {others[0].Id}) but isn't responding.\n\n"
-                + "Close it from Task Manager, then open WSLc Desktop again.",
-            "WSLc Desktop",
+            $"WSLc Desktop Manager is already running (process {others[0].Id}) but isn't responding.\n\n"
+                + "Close it from Task Manager, then open WSLc Desktop Manager again.",
+            "WSLc Desktop Manager",
             0x30 /* MB_ICONWARNING */);
         return true;
     }

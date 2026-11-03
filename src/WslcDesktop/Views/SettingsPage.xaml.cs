@@ -128,7 +128,7 @@ public sealed partial class SettingsPage : Page
         rows.Spacing = 12;
         rows.Children.Add(new TextBlock
         {
-            Text = "How WSLc Desktop behaves on your desktop. Changes apply immediately.",
+            Text = "How WSLc Desktop Manager behaves on your desktop. Changes apply immediately.",
             TextWrapping = TextWrapping.Wrap,
             Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
         });
@@ -191,7 +191,7 @@ public sealed partial class SettingsPage : Page
         rows.Children.Add(new TextBlock
         {
             Text = "settings.yaml configures wslc's default session — the one the wslc command line uses — and any new session it creates. "
-                + "WSLc Desktop runs its own session (WslcDesktop), which doesn't read this file; see App session below.",
+                + "WSLc Desktop Manager runs its own session (WslcDesktop), which doesn't read this file; see App session below.",
             TextWrapping = TextWrapping.Wrap,
             Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
         });
@@ -382,7 +382,7 @@ public sealed partial class SettingsPage : Page
         rows.Spacing = 12;
         rows.Children.Add(new TextBlock
         {
-            Text = "Resources for the session WSLc Desktop runs your containers in. These are passed to WSLc when the app starts, "
+            Text = "Resources for the session WSLc Desktop Manager runs your containers in. These are passed to WSLc when the app starts, "
                 + "so changes apply the next time you open the app.",
             TextWrapping = TextWrapping.Wrap,
             Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
@@ -424,7 +424,7 @@ public sealed partial class SettingsPage : Page
             try
             {
                 host.Settings.Save();
-                Status("Saved", "Restart WSLc Desktop to apply the new session resources.", InfoBarSeverity.Success);
+                Status("Saved", "Restart WSLc Desktop Manager to apply the new session resources.", InfoBarSeverity.Success);
             }
             catch (Exception ex)
             {

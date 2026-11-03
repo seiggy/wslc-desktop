@@ -1,12 +1,12 @@
 ---
 layout: home
 hero:
-  name: WSLc Desktop
+  name: WSLc Desktop Manager
   text: A native Windows app for WSLc
   tagline: Manage containers, images, volumes, networks and compose stacks without living in the command line. Built for people who know Docker Desktop.
   image:
     src: /logo.svg
-    alt: WSLc Desktop logo
+    alt: WSLc Desktop Manager logo
   actions:
     - theme: brand
       text: Get started
@@ -33,8 +33,8 @@ features:
 
 ## See it in action
 
-![The Containers page in WSLc Desktop](/screenshots/containers.png)
+![The Containers page in WSLc Desktop Manager](/screenshots/containers.png)
 
-WSLc Desktop is a native WinUI 3 wrapper over the [WSLc](https://wsl.dev) container runtime. It follows the vocabulary Docker Desktop users already know, but stays honest about what WSLc can and can't do: anything WSLc doesn't support is called out rather than imitated.
+WSLc Desktop Manager is a native WinUI 3 wrapper over the [WSLc](https://wsl.dev) container runtime. It follows the vocabulary Docker Desktop users already know, but stays honest about what WSLc can and can't do: anything WSLc doesn't support is called out rather than imitated.
 
 </div>

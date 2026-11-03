@@ -162,9 +162,10 @@ public class TrayPolicyTests
     [Fact]
     public void TooltipAndStatusText()
     {
-        Assert.Equal("WSLc Desktop", TrayPolicy.Tooltip(null, null));
-        Assert.Equal("WSLc Desktop — 1 container running", TrayPolicy.Tooltip(1, 3));
-        Assert.Equal("WSLc Desktop — 2 containers running", TrayPolicy.Tooltip(2, 3));
+        Assert.Equal("WSLc Desktop Manager", TrayPolicy.Tooltip(null, null));
+        Assert.Equal("WSLc Desktop Manager — no containers running", TrayPolicy.Tooltip(0, 3));
+        Assert.Equal("WSLc Desktop Manager — 1 container running", TrayPolicy.Tooltip(1, 3));
+        Assert.Equal("WSLc Desktop Manager — 2 containers running", TrayPolicy.Tooltip(2, 3));
         Assert.Equal("2 of 3 containers running", TrayPolicy.StatusLine(2, 3));
         Assert.Equal("Status unavailable", TrayPolicy.StatusLine(null, null));
     }

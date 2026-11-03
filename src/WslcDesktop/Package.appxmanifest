@@ -18,7 +18,7 @@
     Version="1.0.0.0" />
 
   <Properties>
-    <DisplayName>WSLc Desktop</DisplayName>
+    <DisplayName>WSLc Desktop Manager</DisplayName>
     <PublisherDisplayName>seiggy</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
     <!-- Keep %LOCALAPPDATA% writes real so wslc's settings.yaml and the WSLc session data are shared with the CLI. -->
@@ -37,7 +37,7 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="WSLc Desktop"
+        DisplayName="WSLc Desktop Manager"
         Description="A desktop app for managing WSLc containers, images, stacks and sessions."
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"

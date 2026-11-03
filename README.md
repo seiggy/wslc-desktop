@@ -1,14 +1,14 @@
-# WSLc Desktop
+# WSLc Desktop Manager
 
-<p align="center"><img src="assets/branding/wslc-desktop-logo.svg" alt="WSLc Desktop logo: a stack of image layers with a small penguin" width="160"></p>
+<p align="center"><img src="assets/branding/wslc-desktop-logo.svg" alt="WSLc Desktop Manager logo: a stack of image layers with a small penguin" width="160"></p>
 
-WSLc Desktop is a native Windows app for managing [WSLc](https://wsl.dev/) containers. If you're used to Docker Desktop, the workflow should feel familiar: pick an image, create a container, and check its logs when something goes wrong.
+WSLc Desktop Manager is a native Windows app for managing [WSLc](https://wsl.dev/) containers. If you're used to Docker Desktop, the workflow should feel familiar: pick an image, create a container, and check its logs when something goes wrong.
 
 The app is built around what WSLc actually supports. You can manage a Compose stack from the UI, for example, but you'll see warnings for settings the runtime can't apply. We think knowing what will run matters more than making every Compose file look supported.
 
 [Documentation](https://seiggy.github.io/wslc-desktop/) · [Downloads](https://github.com/seiggy/wslc-desktop/releases) · [Report an issue](https://github.com/seiggy/wslc-desktop/issues)
 
-![WSLc Desktop showing the Containers page](docs/public/screenshots/containers.png)
+![WSLc Desktop Manager showing the Containers page](docs/public/screenshots/containers.png)
 
 ## What you can do
 
@@ -30,7 +30,7 @@ The [feature walkthroughs](https://seiggy.github.io/wslc-desktop/features/contai
 - **Windows 11** with WSL and container support.
 - **`wslc.exe` on your `PATH`.** Run `wslc --help` in a terminal to check that it's available.
 
-WSLc Desktop needs the WSLc runtime to manage containers. Installing the desktop app alone doesn't replace that requirement.
+WSLc Desktop Manager needs the WSLc runtime to manage containers. Installing the desktop app alone doesn't replace that requirement.
 
 ### Install
 
@@ -45,13 +45,13 @@ Microsoft signs the Store-distributed packages after certification; GitHub relea
 
 ### First run
 
-Launch **WSLc Desktop**. If the app reports missing WSLc components, choose **Install components**, let installation finish, then choose **Retry**. Once connected, the app opens the Containers page.
+Launch **WSLc Desktop Manager**. If the app reports missing WSLc components, choose **Install components**, let installation finish, then choose **Retry**. Once connected, the app opens the Containers page.
 
 From there, pull an image on **Images**, or choose **New container** on **Containers** and enter an image reference. For a multi-service project, open your Compose file from **Stacks** and review the plan before choosing **Up**.
 
 ### Your app containers use a separate session
 
-WSLc Desktop creates or reconnects to a session named `WslcDesktop`. The `wslc` CLI's default session is separate, so containers created there won't appear in the app.
+WSLc Desktop Manager creates or reconnects to a session named `WslcDesktop`. The `wslc` CLI's default session is separate, so containers created there won't appear in the app.
 
 And you can still use the CLI with the app's containers. Specify the session explicitly:
 
