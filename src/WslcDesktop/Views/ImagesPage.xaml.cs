@@ -15,6 +15,8 @@ public sealed partial class ImagesPage : Page
     {
         InitializeComponent();
         List.ItemsSource = _items;
+        _sessionFilter = new SessionFilterController(SessionFilter);
+        _sessionFilter.Changed += Apply;
         Loaded += async (_, _) =>
         {
             _timer.Start();
@@ -24,10 +26,8 @@ public sealed partial class ImagesPage : Page
         _timer.Tick += async (_, _) => await RefreshAsync();
     }
 
-    private const string AllSessions = "All sessions";
-
-    private string? _filter;
-    private bool _updatingFilter;
+    private SessionFilterController _sessionFilter = null!;
+    private string? _filter => _sessionFilter.Filter;
     private bool _refreshing;
     private ImageSnapshot? _last;
 
@@ -63,7 +63,7 @@ public sealed partial class ImagesPage : Page
             return;
         }
 
-        SyncFilter(snap.Sessions);
+        _sessionFilter.Sync(snap.Sessions);
         var images = snap.Images
             .Where(i => _filter is null || string.Equals(i.Session, _filter, StringComparison.OrdinalIgnoreCase))
             .ToList();
@@ -103,61 +103,6 @@ public sealed partial class ImagesPage : Page
         SessionErrorBar.IsOpen = failed.Length > 0;
         EmptyText.Visibility = images.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         EmptyText.Text = _filter is null ? "No images yet. Pull one to get started." : $"No images in session \"{_filter}\".";
-    }
-
-    private void SyncFilter(IReadOnlyList<string> sessions)
-    {
-        var wanted = new List<string> { AllSessions };
-        wanted.AddRange(sessions.Select(s => App.Host.IsAppSession(s) ? $"{s} (this app)" : s));
-        var current = SessionFilter.Items.Cast<string>().ToList();
-        _updatingFilter = true;
-        try
-        {
-            if (!current.SequenceEqual(wanted))
-            {
-                for (var i = current.Count - 1; i >= 0; i--)
-                {
-                    if (!wanted.Contains(current[i]))
-                    {
-                        SessionFilter.Items.RemoveAt(i);
-                    }
-                }
-
-                for (var i = 0; i < wanted.Count; i++)
-                {
-                    if (i >= SessionFilter.Items.Count || (string)SessionFilter.Items[i] != wanted[i])
-                    {
-                        SessionFilter.Items.Insert(i, wanted[i]);
-                    }
-                }
-            }
-
-            if (_filter is not null && !sessions.Contains(_filter, StringComparer.OrdinalIgnoreCase))
-            {
-                _filter = null;
-            }
-
-            var label = _filter is null ? AllSessions : wanted[1 + sessions.ToList().FindIndex(s => string.Equals(s, _filter, StringComparison.OrdinalIgnoreCase))];
-            if (!Equals(SessionFilter.SelectedItem, label))
-            {
-                SessionFilter.SelectedItem = label;
-            }
-        }
-        finally
-        {
-            _updatingFilter = false;
-        }
-    }
-
-    private void SessionFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_updatingFilter || SessionFilter.SelectedIndex < 0 || _last is null)
-        {
-            return;
-        }
-
-        _filter = SessionFilter.SelectedIndex == 0 ? null : _last.Sessions[SessionFilter.SelectedIndex - 1];
-        Apply();
     }
 
     private void List_ItemClick(object sender, ItemClickEventArgs e)

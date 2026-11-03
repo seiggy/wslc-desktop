@@ -23,8 +23,7 @@
                 x:Name="SessionFilter"
                 Grid.Column="1"
                 MinWidth="200"
-                AutomationProperties.Name="Filter by session"
-                SelectionChanged="SessionFilter_SelectionChanged" />
+                AutomationProperties.Name="Filter by session" />
         </Grid>
 
         <Grid ColumnSpacing="8" Grid.Row="1">

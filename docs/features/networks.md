@@ -1,6 +1,6 @@
 # Networks
 
-**Networks** lists the session's networks. The built-in `bridge`, `host` and `none` networks are always present. Use **Prune unused** to clear networks nothing is attached to, or remove a single network from its row.
+**Networks** lists networks from **every visible WSLc session**, with the owning session in the **Session** column (this app's session carries a **This app** badge) and a session filter at the top right. Each session has its own built-in `bridge`, `host` and `none` networks. **New network** asks which session to create it in (defaults to the filtered session, otherwise this app's). Remove a single network from its row; it acts on the owning session. **Prune unused** clears networks nothing is attached to in the filtered session, or in this app's session when the filter shows all sessions.
 
 ![Networks list](/screenshots/networks.png)
 

@@ -2,8 +2,6 @@ using Microsoft.WSL.Containers;
 
 namespace WslcDesktop.Services;
 
-public sealed record ContainerRow(string Name, string Image, string Id, string State, string Command, string Ports, string Labels = "", string Status = "");
-
 public sealed record ImageRow(string Name, string Size, DateTimeOffset Created);
 
 /// <summary>
@@ -204,11 +202,11 @@ public sealed class WslcHost
 
     public TelemetryService Telemetry { get; } = new();
 
-    public Task StreamLogsAsync(string container, int tail, bool follow, bool timestamps, Action<string> onLine, CancellationToken ct) =>
-        WslcCli.StreamLogsAsync(SessionName, container, tail, follow, timestamps, onLine, ct);
+    public Task StreamLogsAsync(string container, int tail, bool follow, bool timestamps, Action<string> onLine, CancellationToken ct, string? session = null) =>
+        WslcCli.StreamLogsAsync(session ?? SessionName, container, tail, follow, timestamps, onLine, ct);
 
-    public ShellProcess StartShell(string container, string shell, Action<string> onOutput, Action<int> onExit) =>
-        WslcCli.StartShell(SessionName, container, shell, onOutput, onExit);
+    public ShellProcess StartShell(string container, string shell, Action<string> onOutput, Action<int> onExit, string? session = null) =>
+        WslcCli.StartShell(session ?? SessionName, container, shell, onOutput, onExit);
 
     public static readonly TimeSpan SessionDisposeBudget = TimeSpan.FromSeconds(1);
 
@@ -275,10 +273,34 @@ public sealed class WslcHost
     /// <summary>Images from every visible WSLc session (image stores are per session), throttled and failure tolerant.</summary>
     public ImageCatalog ImageCatalog => _imageCatalog ??= new ImageCatalog(
         SessionName,
-        async () => (await WslcCli.ListSessionsAsync()).Select(s => s.Name).ToList(),
+        ListSessionNamesAsync,
         WslcCli.ListImagesAsync,
         TimeProvider.System,
         TimeSpan.FromSeconds(10));
+
+    private static async Task<IReadOnlyList<string>> ListSessionNamesAsync() =>
+        (await WslcCli.ListSessionsAsync()).Select(s => s.Name).ToList();
+
+    private SessionCatalog<ContainerRow>? _containerCatalog;
+
+    /// <summary>
+    /// Containers from every visible session. The app's session comes from the monitor (no extra wslc call); other
+    /// sessions are read through wslc.exe, throttled.
+    /// </summary>
+    public SessionCatalog<ContainerRow> ContainerCatalog => _containerCatalog ??= new(
+        SessionName,
+        ListSessionNamesAsync,
+        s => IsAppSession(s) ? Task.FromResult(Monitor.Containers) : WslcCli.ListContainersAsync(s),
+        TimeProvider.System,
+        TimeSpan.FromSeconds(5));
+
+    private SessionCatalog<ResourceRow>? _volumeCatalog;
+    private SessionCatalog<ResourceRow>? _networkCatalog;
+
+    /// <summary>Volumes or networks from every visible session (both are per session).</summary>
+    public SessionCatalog<ResourceRow> ResourceCatalog(ResourceKind kind) => kind == ResourceKind.Volume
+        ? _volumeCatalog ??= new(SessionName, ListSessionNamesAsync, WslcResources.ListVolumesAsync, TimeProvider.System, TimeSpan.FromSeconds(10))
+        : _networkCatalog ??= new(SessionName, ListSessionNamesAsync, WslcResources.ListNetworksAsync, TimeProvider.System, TimeSpan.FromSeconds(10));
 
     public bool IsAppSession(string session) => string.Equals(session, SessionName, StringComparison.OrdinalIgnoreCase);
 
@@ -317,29 +339,39 @@ public sealed class WslcHost
     public Task<IReadOnlyList<ResourceRow>> GetResourcesAsync(ResourceKind kind) =>
         kind == ResourceKind.Volume ? WslcResources.ListVolumesAsync(SessionName) : WslcResources.ListNetworksAsync(SessionName);
 
-    public Task<string> InspectResourceAsync(ResourceKind kind, string name) => WslcResources.InspectAsync(SessionName, kind, name);
+    public Task<string> InspectResourceAsync(ResourceKind kind, string name, string? session = null) => WslcResources.InspectAsync(session ?? SessionName, kind, name);
 
-    public Task CreateVolumeAsync(string name, string driver, long? sizeBytes = null) => WslcResources.CreateVolumeAsync(SessionName, name, driver, sizeBytes);
+    public Task CreateVolumeAsync(string name, string driver, long? sizeBytes = null, string? session = null) => WslcResources.CreateVolumeAsync(session ?? SessionName, name, driver, sizeBytes);
 
-    public Task CreateNetworkAsync(string name, string driver, string subnet, string gateway, bool isInternal) =>
-        WslcResources.CreateNetworkAsync(SessionName, name, driver, subnet, gateway, isInternal);
+    public Task CreateNetworkAsync(string name, string driver, string subnet, string gateway, bool isInternal, string? session = null) =>
+        WslcResources.CreateNetworkAsync(session ?? SessionName, name, driver, subnet, gateway, isInternal);
 
-    public Task RemoveResourceAsync(ResourceKind kind, string name) => WslcResources.RemoveAsync(SessionName, kind, name);
+    public async Task RemoveResourceAsync(ResourceKind kind, string name, string? session = null)
+    {
+        session ??= SessionName;
+        await WslcResources.RemoveAsync(session, kind, name);
+        ResourceCatalog(kind).Invalidate(session);
+    }
 
     public Task RegistryLoginAsync(string server, string username, string password) =>
         WslcRegistry.LoginAsync(SessionName, server, username, password);
 
     public Task RegistryLogoutAsync(string server) => WslcRegistry.LogoutAsync(SessionName, server);
 
-    public Task PruneResourcesAsync(ResourceKind kind) => WslcResources.PruneAsync(SessionName, kind);
+    public async Task PruneResourcesAsync(ResourceKind kind, string? session = null)
+    {
+        session ??= SessionName;
+        await WslcResources.PruneAsync(session, kind);
+        ResourceCatalog(kind).Invalidate(session);
+    }
 
-    public Task<IReadOnlyList<string>> GetNetworkNamesAsync() => WslcResources.ListNetworkNamesAsync(SessionName);
+    public Task<IReadOnlyList<string>> GetNetworkNamesAsync(string? session = null) => WslcResources.ListNetworkNamesAsync(session ?? SessionName);
 
-    public Task ConnectNetworkAsync(string network, string container, string alias) =>
-        WslcResources.ConnectAsync(SessionName, network, container, alias);
+    public Task ConnectNetworkAsync(string network, string container, string alias, string? session = null) =>
+        WslcResources.ConnectAsync(session ?? SessionName, network, container, alias);
 
-    public Task DisconnectNetworkAsync(string network, string container) =>
-        WslcResources.DisconnectAsync(SessionName, network, container);
+    public Task DisconnectNetworkAsync(string network, string container, string? session = null) =>
+        WslcResources.DisconnectAsync(session ?? SessionName, network, container);
 
     public Task CreateContainerAsync(NewContainerSpec spec) => WslcResources.CreateContainerAsync(SessionName, spec);
 
@@ -383,8 +415,20 @@ public sealed class WslcHost
         });
     }
 
-    public Task StartContainerAsync(string name)
+    /// <summary>Runs a wslc container command in another session; app restart policies only apply to the app's session.</summary>
+    private async Task OtherSessionAsync(string session, params string[] args)
     {
+        await WslcCli.RunAsync(["--session", session, .. args]);
+        ContainerCatalog.Invalidate(session);
+    }
+
+    public Task StartContainerAsync(string name, string? session = null)
+    {
+        if (session is not null && !IsAppSession(session))
+        {
+            return OtherSessionAsync(session, "start", name);
+        }
+
         Restart.NotifyUserStarted(name);
         return StartContainerCoreAsync(name);
     }
@@ -418,16 +462,27 @@ public sealed class WslcHost
         }
     }
 
-    public Task StopContainerAsync(string name)
+    public Task StopContainerAsync(string name, string? session = null)
     {
+        if (session is not null && !IsAppSession(session))
+        {
+            return OtherSessionAsync(session, "stop", name);
+        }
+
         Restart.NotifyUserStopped(name);
         return _attached
             ? WslcCli.RunAsync("--session", SessionName, "stop", name)
             : WithContainer(name, c => c.Stop(Signal.SIGTERM, TimeSpan.FromSeconds(10)));
     }
 
-    public async Task DeleteContainerAsync(string name)
+    public async Task DeleteContainerAsync(string name, string? session = null)
     {
+        if (session is not null && !IsAppSession(session))
+        {
+            await OtherSessionAsync(session, "rm", "--force", name);
+            return;
+        }
+
         Restart.NotifyUserStopped(name);
         await (_attached
             ? WslcCli.RunAsync("--session", SessionName, "rm", "--force", name)
@@ -441,8 +496,13 @@ public sealed class WslcHost
     public void SetRestartPolicy(string name, RestartPolicy policy, bool running) =>
         Restart.SetPolicy(name, policy, running);
 
-    public async Task<string> InspectContainerAsync(string name)
+    public async Task<string> InspectContainerAsync(string name, string? session = null)
     {
+        if (session is not null && !IsAppSession(session))
+        {
+            return SecretService.Default.Redact(await WslcCli.RunAsync("--session", session, "inspect", name));
+        }
+
         if (_attached)
         {
             return SecretService.Default.Redact(await WslcCli.RunAsync("--session", SessionName, "inspect", name));

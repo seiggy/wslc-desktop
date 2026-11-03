@@ -28,6 +28,8 @@
     <Compile Include="..\..\src\WslcDesktop\Services\RunImage.cs" Link="Linked\RunImage.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\ImageModels.cs" Link="Linked\ImageModels.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\ImageCatalog.cs" Link="Linked\ImageCatalog.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\SessionCatalog.cs" Link="Linked\SessionCatalog.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\ContainerListing.cs" Link="Linked\ContainerListing.cs" />
   </ItemGroup>
 
   <ItemGroup>

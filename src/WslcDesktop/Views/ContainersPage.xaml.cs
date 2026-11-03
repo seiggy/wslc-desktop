@@ -8,16 +8,22 @@ namespace WslcDesktop.Views;
 public sealed partial class ContainersPage : Page
 {
     private readonly System.Collections.ObjectModel.ObservableCollection<ContainerItem> _items = [];
+    private readonly SessionFilterController _sessionFilter;
+    private SessionSnapshot<ContainerRow>? _snapshot;
+    private bool _refreshing;
+    private bool _again;
 
     public ContainersPage()
     {
         InitializeComponent();
         List.ItemsSource = _items;
+        _sessionFilter = new SessionFilterController(SessionFilter);
+        _sessionFilter.Changed += Apply;
         Loaded += (_, _) =>
         {
             App.Host.Monitor.Updated += OnChanged;
             App.Host.Telemetry.Updated += OnChanged;
-            Sync();
+            _ = RefreshAsync();
         };
         Unloaded += (_, _) =>
         {
@@ -26,30 +32,65 @@ public sealed partial class ContainersPage : Page
         };
     }
 
-    private void OnChanged() => DispatcherQueue.TryEnqueue(Sync);
+    private void OnChanged() => DispatcherQueue.TryEnqueue(() => _ = RefreshAsync());
+
+    // The app's session is polled by the monitor; other sessions are merged in (throttled) by the catalog.
+    private async Task RefreshAsync(bool force = false)
+    {
+        if (_refreshing)
+        {
+            _again = true;
+            return;
+        }
+
+        _refreshing = true;
+        try
+        {
+            do
+            {
+                _again = false;
+                _snapshot = await App.Host.ContainerCatalog.RefreshAsync(force);
+                force = false;
+                Apply();
+            }
+            while (_again);
+        }
+        catch (Exception e)
+        {
+            ErrorBar.Title = "Couldn't list containers";
+            ErrorBar.Message = e.Message;
+            ErrorBar.IsOpen = true;
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
 
     // Update items in place so rows don't flicker or lose focus on every poll.
-    private void Sync()
+    private void Apply()
     {
+        if (_snapshot is not { } snap)
+        {
+            return;
+        }
+
         var monitor = App.Host.Monitor;
-        var rows = monitor.Containers
-            .Select(r => (Row: r, Stack: ComposeLabels.TryParse(r.Labels, out var p, out _) ? p : string.Empty))
-            .OrderBy(x => x.Stack.Length > 0)
-            .ThenBy(x => x.Stack, StringComparer.Ordinal)
-            .ToList();
-        foreach (var gone in _items.Where(i => rows.All(r => r.Row.Name != i.Name)).ToList())
+        _sessionFilter.Sync(snap.Sessions);
+        var entries = ContainerListing.Build(snap, _sessionFilter.Filter);
+        foreach (var gone in _items.Where(i => entries.All(e => e.Key != i.Key)).ToList())
         {
             _items.Remove(gone);
         }
 
-        var previousStack = string.Empty;
-        for (var n = 0; n < rows.Count; n++)
+        for (var n = 0; n < entries.Count; n++)
         {
-            var (row, stack) = rows[n];
-            var item = _items.FirstOrDefault(i => i.Name == row.Name);
+            var entry = entries[n];
+            var row = entry.Row;
+            var item = _items.FirstOrDefault(i => i.Key == entry.Key);
             if (item is null)
             {
-                item = new ContainerItem(row.Name);
+                item = new ContainerItem(entry.Session, entry.IsThisApp, row.Name);
                 _items.Insert(Math.Min(n, _items.Count), item);
             }
             else
@@ -61,27 +102,38 @@ public sealed partial class ContainersPage : Page
                 }
             }
 
-            var history = App.Host.Telemetry.GetHistory(row.Name);
-            item.Update(row, history.Count > 0 ? history[^1] : null, App.Host.Restart.GetInfo(row.Name));
-            item.SetHeader(stack.Length > 0 && stack != previousStack
-                ? $"Stack: {stack} ({rows.Count(x => x.Stack == stack)})"
-                : string.Empty);
-            previousStack = stack;
+            // Telemetry and restart policies are app features for the app's own session only.
+            var history = entry.IsThisApp ? App.Host.Telemetry.GetHistory(row.Name) : [];
+            item.Update(row, history.Count > 0 ? history[^1] : null, entry.IsThisApp ? App.Host.Restart.GetInfo(row.Name) : null);
+            item.SetHeader(entry.Header);
         }
 
-        EmptyText.Visibility = monitor.HasLoaded && rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        var failed = string.Join('\n', snap.Failures.Select(f => $"{f.Session}: {f.Message}"));
+        if (SessionErrorBar.Message != failed)
+        {
+            SessionErrorBar.Message = failed;
+        }
+
+        SessionErrorBar.IsOpen = failed.Length > 0;
+        EmptyText.Visibility = monitor.HasLoaded && entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyText.Text = _sessionFilter.Filter is null
+            ? "No containers yet. Create one from an image."
+            : $"No containers in session \"{_sessionFilter.Filter}\".";
         ErrorBar.Title = "Couldn't list containers";
         ErrorBar.Message = monitor.LastError ?? string.Empty;
         ErrorBar.IsOpen = monitor.LastError is not null;
     }
 
-    private Task RefreshAsync() => App.Host.Monitor.RefreshAsync();
-
+    private async Task AfterActionAsync()
+    {
+        await App.Host.Monitor.RefreshAsync();
+        await RefreshAsync(true);
+    }
     private async void New_Click(object sender, RoutedEventArgs e)
     {
         if (await ShowNewContainerDialogAsync(XamlRoot, null) is not null)
         {
-            await RefreshAsync();
+            await AfterActionAsync();
         }
     }
 
@@ -360,23 +412,24 @@ public sealed partial class ContainersPage : Page
         return localNames.Any(n => string.Equals(Normalize(n), wanted, StringComparison.OrdinalIgnoreCase));
     }
 
-    private void List_ItemClick(object sender, ItemClickEventArgs e) =>
-        Frame.Navigate(typeof(ContainerDetailPage), ((ContainerItem)e.ClickedItem).Name);
+    private void List_ItemClick(object sender, ItemClickEventArgs e)
+        { var item = (ContainerItem)e.ClickedItem; Frame.Navigate(typeof(ContainerDetailPage), new ContainerRef(item.Session, item.Name)); }
 
     private async void Start_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't start the container", () => App.Host.StartContainerAsync(NameOf(sender)));
+        await ActAsync("Couldn't start the container", () => App.Host.StartContainerAsync(ItemOf(sender).Name, ItemOf(sender).Session));
 
     private async void Stop_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't stop the container", () => App.Host.StopContainerAsync(NameOf(sender)));
+        await ActAsync("Couldn't stop the container", () => App.Host.StopContainerAsync(ItemOf(sender).Name, ItemOf(sender).Session));
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
     {
-        var name = NameOf(sender);
+        var target = ItemOf(sender);
+        var name = target.Name;
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
             Title = $"Delete \"{name}\"?",
-            Content = "The container is removed, including its writable layer. This can't be undone.",
+            Content = target.IsThisApp ? "The container is removed, including its writable layer. This can't be undone." : $"The container is removed from session \"{target.Session}\", including its writable layer. This can't be undone.",
             PrimaryButtonText = "Delete",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Close,
@@ -386,10 +439,10 @@ public sealed partial class ContainersPage : Page
             return;
         }
 
-        await ActAsync("Couldn't delete the container", () => App.Host.DeleteContainerAsync(name));
+        await ActAsync("Couldn't delete the container", () => App.Host.DeleteContainerAsync(name, target.Session));
     }
 
-    private static string NameOf(object sender) => (string)((FrameworkElement)sender).Tag;
+    private static ContainerItem ItemOf(object sender) => (ContainerItem)((FrameworkElement)sender).Tag;
 
     private async Task ActAsync(string failureTitle, Func<Task> action)
     {
@@ -402,7 +455,7 @@ public sealed partial class ContainersPage : Page
             await ShowAsync(failureTitle, e.Message);
         }
 
-        await RefreshAsync();
+        await AfterActionAsync();
     }
 
     private async Task ShowAsync(string title, string message)

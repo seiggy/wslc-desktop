@@ -13,27 +13,43 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="TitleText" Style="{StaticResource TitleTextBlockStyle}" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="TitleText" Style="{StaticResource TitleTextBlockStyle}" />
+            <ComboBox
+                x:Name="SessionFilter"
+                Grid.Column="1"
+                MinWidth="200"
+                AutomationProperties.Name="Filter by session" />
+        </Grid>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
             <Button x:Name="NewButton" Click="New_Click" Style="{StaticResource AccentButtonStyle}" />
             <Button x:Name="PruneButton" Click="Prune_Click" Content="Prune unused" />
         </StackPanel>
 
-        <InfoBar x:Name="ErrorBar" Grid.Row="2" IsClosable="False" IsOpen="False" Severity="Error" />
+        <StackPanel Grid.Row="2" Spacing="8">
+            <InfoBar x:Name="ErrorBar" IsClosable="False" IsOpen="False" Severity="Error" />
+            <InfoBar x:Name="SessionErrorBar" IsClosable="False" IsOpen="False" Severity="Warning" Title="Some sessions couldn't be read" />
+        </StackPanel>
 
         <Grid Grid.Row="3" Padding="16,0" ColumnSpacing="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" MinWidth="140" />
+                <ColumnDefinition Width="170" />
                 <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="90" />
                 <ColumnDefinition Width="*" MinWidth="120" />
                 <ColumnDefinition Width="40" />
             </Grid.ColumnDefinitions>
             <TextBlock Style="{StaticResource ColumnHeaderStyle}" Text="Name" />
-            <TextBlock Grid.Column="1" Style="{StaticResource ColumnHeaderStyle}" Text="Driver" />
-            <TextBlock x:Name="Col3Header" Grid.Column="2" Style="{StaticResource ColumnHeaderStyle}" />
-            <TextBlock Grid.Column="3" Style="{StaticResource ColumnHeaderStyle}" Text="In use by" />
+            <TextBlock Grid.Column="1" Style="{StaticResource ColumnHeaderStyle}" Text="Session" />
+            <TextBlock Grid.Column="2" Style="{StaticResource ColumnHeaderStyle}" Text="Driver" />
+            <TextBlock x:Name="Col3Header" Grid.Column="3" Style="{StaticResource ColumnHeaderStyle}" />
+            <TextBlock Grid.Column="4" Style="{StaticResource ColumnHeaderStyle}" Text="In use by" />
         </Grid>
 
         <ListView
@@ -49,24 +65,31 @@
                     <Grid Padding="16,8" ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" MinWidth="140" />
+                            <ColumnDefinition Width="170" />
                             <ColumnDefinition Width="100" />
                             <ColumnDefinition Width="90" />
                             <ColumnDefinition Width="*" MinWidth="120" />
                             <ColumnDefinition Width="40" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind Col1}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" Text="{x:Bind Col3}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="3" Text="{x:Bind UsedByText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind Session}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <Border Padding="6,1" VerticalAlignment="Center" Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="4" Visibility="{x:Bind ThisAppVisibility}">
+                                <TextBlock FontSize="11" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Text="This app" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="{x:Bind Col1}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="3" Text="{x:Bind Col3}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="4" Text="{x:Bind UsedByText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <Button
-                            Grid.Column="4"
+                            Grid.Column="5"
                             AutomationProperties.Name="Remove"
                             Click="Remove_Click"
                             Content="&#xE74D;"
                             FontFamily="{StaticResource SymbolThemeFontFamily}"
                             IsEnabled="{x:Bind CanRemove}"
                             Style="{StaticResource SubtleButtonStyle}"
-                            Tag="{x:Bind Name}"
+                            Tag="{x:Bind}"
                             ToolTipService.ToolTip="Remove" />
                     </Grid>
                 </DataTemplate>

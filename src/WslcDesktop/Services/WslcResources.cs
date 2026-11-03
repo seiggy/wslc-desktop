@@ -22,11 +22,19 @@ public sealed record NewContainerSpec(
     string Network);
 
 /// <summary>A volume or network row that is updated in place when a poll reports a change.</summary>
-public sealed class ResourceItem(ResourceRow row) : INotifyPropertyChanged
+public sealed class ResourceItem(SessionEntry<ResourceRow> entry) : INotifyPropertyChanged
 {
-    private ResourceRow _r = row;
+    private ResourceRow _r = entry.Item;
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public string Session { get; } = entry.Session;
+
+    public bool IsThisApp { get; } = entry.IsThisApp;
+
+    public string Key => $"{Session}|{_r.Name}";
+
+    public Microsoft.UI.Xaml.Visibility ThisAppVisibility => IsThisApp ? Microsoft.UI.Xaml.Visibility.Visible : Microsoft.UI.Xaml.Visibility.Collapsed;
 
     public string Name => _r.Name;
 
@@ -278,3 +286,6 @@ public static class WslcResources
             ? v.GetString() ?? string.Empty
             : string.Empty;
 }
+
+/// <summary>Navigation parameter for a volume or network in a specific session.</summary>
+public sealed record ResourceRef(ResourceKind Kind, string Session, string Name);

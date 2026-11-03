@@ -4,6 +4,8 @@ Select a container to open its detail page. Four tabs cover everyday troubleshoo
 
 Next to the title, the **restart policy** picker changes how the app restarts this container, with a one-line status beside it. See [restart policies](/features/restart-policy).
 
+For a container in another WSLc session, the title shows **Session: <name>** instead; logs, shell and inspect work against that session, while the restart policy picker is hidden and the Telemetry tab explains that charts are available only for this app's session.
+
 ## Logs
 
 ![Container logs](/screenshots/container-logs.png)

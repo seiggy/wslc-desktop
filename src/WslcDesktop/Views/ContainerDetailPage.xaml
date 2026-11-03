@@ -28,6 +28,11 @@
                 Content="&#xE72B;"
                 FontFamily="{StaticResource SymbolThemeFontFamily}" />
             <TextBlock x:Name="TitleText" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+            <TextBlock
+                x:Name="SessionText"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                VerticalAlignment="Center" />
             <ComboBox
                 x:Name="RestartPicker"
                 AutomationProperties.Name="Restart policy"

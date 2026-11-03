@@ -51,7 +51,7 @@ public sealed partial class StackDetailPage : Page
             var item = _items.FirstOrDefault(i => i.Name == row.Name);
             if (item is null)
             {
-                item = new ContainerItem(row.Name);
+                item = new ContainerItem(App.Host.SessionId, true, row.Name);
                 _items.Add(item);
             }
 
