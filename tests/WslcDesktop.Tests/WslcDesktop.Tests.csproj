@@ -26,6 +26,8 @@
     <Compile Include="..\..\src\WslcDesktop\Services\StartupPolicy.cs" Link="Linked\StartupPolicy.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\VolumeSize.cs" Link="Linked\VolumeSize.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\RunImage.cs" Link="Linked\RunImage.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\TerminalProtocol.cs" Link="Linked\TerminalProtocol.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\ConPtySession.cs" Link="Linked\ConPtySession.cs" />
   </ItemGroup>
 
   <ItemGroup>

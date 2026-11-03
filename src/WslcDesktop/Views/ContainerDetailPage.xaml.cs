@@ -21,6 +21,7 @@ public sealed partial class ContainerDetailPage : Page
         Loaded += (_, _) =>
         {
             _ready = true;
+            InitShellPickers();
             App.Host.Telemetry.Updated += OnTelemetryUpdated;
             App.Host.Monitor.Updated += OnTelemetryUpdated;
             _wasRunning = IsRunning;
@@ -328,16 +329,96 @@ public sealed partial class ContainerDetailPage : Page
 
     // Shell
 
-    private void ShellToggle_Click(object sender, RoutedEventArgs e)
+    private static string s_terminalFont = TerminalProtocol.Fonts[0];
+    private static int s_terminalFontSize = 14;
+    private bool _terminalActive;
+    private bool _syncingFont;
+
+    private void InitShellPickers()
     {
-        if (_shell is not null)
+        _syncingFont = true;
+        FontPicker.ItemsSource = TerminalProtocol.Fonts.ToList();
+        FontPicker.SelectedIndex = Math.Max(0, Array.IndexOf(TerminalProtocol.Fonts, s_terminalFont));
+        FontSizePicker.ItemsSource = TerminalProtocol.FontSizes.Select(s => s.ToString()).ToList();
+        FontSizePicker.SelectedIndex = Math.Max(0, Array.IndexOf(TerminalProtocol.FontSizes, s_terminalFontSize));
+        _syncingFont = false;
+        Terminal.SetFont(s_terminalFont, s_terminalFontSize);
+    }
+
+    private void Font_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncingFont || FontPicker.SelectedItem is not string font || !int.TryParse(FontSizePicker.SelectedItem as string, out var size))
+        {
+            return;
+        }
+
+        (s_terminalFont, s_terminalFontSize) = (font, size);
+        Terminal.SetFont(font, size);
+    }
+
+    private bool ShellRunning => _terminalActive || _shell is not null;
+
+    private async void ShellToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (ShellRunning)
         {
             StopShell();
             return;
         }
 
-        ShellView.Clear();
         var shell = ShellPicker.SelectedItem as string ?? "sh";
+        ShellToggle.IsEnabled = false;
+        try
+        {
+            if (await TryStartTerminalAsync(shell))
+            {
+                return;
+            }
+
+            StartFallbackShell(shell);
+        }
+        finally
+        {
+            ShellToggle.IsEnabled = true;
+        }
+    }
+
+    /// <summary>Starts the ConPTY terminal; returns false (so the caller falls back) if it can't initialise.</summary>
+    private async Task<bool> TryStartTerminalAsync(string shell)
+    {
+        Terminal.Visibility = Visibility.Visible;
+        ShellView.Visibility = Visibility.Collapsed;
+        ShellInput.Visibility = Visibility.Collapsed;
+        try
+        {
+            await Terminal.StartAsync(App.Host.SessionId, _name, shell, code => DispatcherQueue.TryEnqueue(() =>
+            {
+                if (_terminalActive)
+                {
+                    Terminal.Notice($"[shell exited with code {code}]");
+                    StopShell(keepOutput: true);
+                }
+            }));
+        }
+        catch (Exception ex)
+        {
+            Terminal.Stop();
+            Terminal.Visibility = Visibility.Collapsed;
+            ShellView.Visibility = Visibility.Visible;
+            ShellInput.Visibility = Visibility.Visible;
+            ShellStatus.Text = $"Terminal unavailable ({ex.Message}); using the basic shell.";
+            return false;
+        }
+
+        _terminalActive = true;
+        ShellToggle.Content = "End shell";
+        ShellStatus.Text = $"Connected to {_name}";
+        return true;
+    }
+
+    private void StartFallbackShell(string shell)
+    {
+        ShellView.Clear();
         try
         {
             ShellProcess? started = null;
@@ -358,20 +439,25 @@ public sealed partial class ContainerDetailPage : Page
         }
 
         ShellToggle.Content = "End shell";
-        ShellStatus.Text = $"Connected to {_name} (no TTY: full-screen programs aren't supported)";
+        ShellStatus.Text = $"Connected to {_name} (basic shell, no TTY: full-screen programs aren't supported)";
         ShellInput.IsEnabled = true;
         ShellInput.Focus(FocusState.Programmatic);
     }
 
-    private void StopShell()
+    private void StopShell(bool keepOutput = false)
     {
         _shell?.Dispose();
         _shell = null;
+        if (_terminalActive)
+        {
+            Terminal.Stop();
+            _terminalActive = false;
+        }
+
         ShellToggle.Content = "Start shell";
         ShellInput.IsEnabled = false;
         ShellStatus.Text = string.Empty;
     }
-
     private async void ShellInput_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key != VirtualKey.Enter || _shell is null)
