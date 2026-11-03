@@ -1,17 +1,13 @@
 <UserControl
     x:Class="WslcDesktop.Controls.TerminalView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:wv="using:Microsoft.UI.Xaml.Controls">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <!-- The native Windows Terminal HWND is positioned over this frame; the frame provides the border and the layout slot. -->
     <Border
         x:Name="Frame"
+        AutomationProperties.Name="Terminal"
         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
-        CornerRadius="{ThemeResource ControlCornerRadius}">
-        <wv:WebView2
-            x:Name="Web"
-            AutomationProperties.Name="Terminal"
-            Opacity="0" />
-    </Border>
+        CornerRadius="{ThemeResource ControlCornerRadius}" />
 </UserControl>

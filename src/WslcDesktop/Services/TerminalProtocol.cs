@@ -1,9 +1,8 @@
 using System.Text;
-using System.Text.Json;
 
 namespace WslcDesktop.Services;
 
-/// <summary>UI-free helpers for the terminal: command lines, the WebView message protocol and colour schemes.</summary>
+/// <summary>UI-free helpers for the terminal: command lines, and colour schemes.</summary>
 public static class TerminalProtocol
 {
     public const short DefaultColumns = 120;
@@ -52,68 +51,12 @@ public static class TerminalProtocol
     public static string[] ExecShellArguments(string session, string container, string shell) =>
         ["--session", session, "exec", "--interactive", "--tty", "-e", "TERM=xterm-256color", "-e", "COLORTERM=truecolor", container, shell];
 
-    public static string OutputMessage(ReadOnlySpan<byte> data) =>
-        JsonSerializer.Serialize(new Dictionary<string, string> { ["t"] = "out", ["d"] = Convert.ToBase64String(data) });
-
-    public static string NoticeMessage(string text) =>
-        JsonSerializer.Serialize(new Dictionary<string, string> { ["t"] = "notice", ["d"] = text });
-
-    public static string CommandMessage(string type) =>
-        JsonSerializer.Serialize(new Dictionary<string, string> { ["t"] = type });
-
-    public static string StyleMessage(bool dark, string fontFamily, int fontSize) =>
-        JsonSerializer.Serialize(new Dictionary<string, object>
-        {
-            ["t"] = "style",
-            ["theme"] = Palette(dark),
-            ["fontFamily"] = $"\"{fontFamily}\", Consolas, monospace",
-            ["fontSize"] = fontSize,
-        });
-
-    /// <summary>Parses a message from the page; returns null for anything malformed.</summary>
-    public static TerminalMessage? ParseMessage(string json)
-    {
-        try
-        {
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("t", out var t))
-            {
-                return null;
-            }
-
-            switch (t.GetString())
-            {
-                case "in" when root.TryGetProperty("d", out var d) && d.ValueKind == JsonValueKind.String:
-                    return new TerminalMessage(TerminalMessageKind.Input, Data: d.GetString());
-                case "bin" when root.TryGetProperty("d", out var b) && b.ValueKind == JsonValueKind.String:
-                    return new TerminalMessage(TerminalMessageKind.Binary, Data: b.GetString());
-                case "size" or "ready":
-                    var cols = root.TryGetProperty("cols", out var c) && c.TryGetInt32(out var ci) ? ci : 0;
-                    var rows = root.TryGetProperty("rows", out var r) && r.TryGetInt32(out var ri) ? ri : 0;
-                    return new TerminalMessage(
-                        t.GetString() == "ready" ? TerminalMessageKind.Ready : TerminalMessageKind.Size,
-                        Columns: ClampDimension(cols),
-                        Rows: ClampDimension(rows));
-                default:
-                    return null;
-            }
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
-
     /// <summary>Typed text is UTF-8 encoded.</summary>
     public static byte[] EncodeInput(string data) => Encoding.UTF8.GetBytes(data);
 
-    /// <summary>xterm reports binary (non-UTF-8) mouse input as a string whose chars are bytes 0-255.</summary>
-    public static byte[] EncodeBinaryInput(string data) => Encoding.Latin1.GetBytes(data);
-
     public static short ClampDimension(int value) => (short)Math.Clamp(value, 0, 1000);
 
-    /// <summary>Windows Terminal's Campbell (dark) and One Half Light-style (light) schemes, on a transparent background.</summary>
+    /// <summary>Windows Terminal's Campbell (dark) and One Half Light-style (light) schemes.</summary>
     public static Dictionary<string, string> Palette(bool dark) => dark
         ? new()
         {
@@ -134,13 +77,3 @@ public static class TerminalProtocol
             ["brightBlue"] = "#4FA6ED", ["brightMagenta"] = "#C577DD", ["brightCyan"] = "#47B8BF", ["brightWhite"] = "#FFFFFF",
         };
 }
-
-public enum TerminalMessageKind
-{
-    Ready,
-    Size,
-    Input,
-    Binary,
-}
-
-public sealed record TerminalMessage(TerminalMessageKind Kind, string? Data = null, short Columns = 0, short Rows = 0);

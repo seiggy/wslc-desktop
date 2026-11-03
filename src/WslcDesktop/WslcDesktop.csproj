@@ -20,22 +20,24 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- Custom Program.Main for single-instance redirection (see Program.cs). -->
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TerminalNativeRid Condition="'$(Platform)' == 'x64'">win-x64</TerminalNativeRid>
+    <TerminalNativeRid Condition="'$(Platform)' == 'ARM64'">win-arm64</TerminalNativeRid>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.4" />
     <PackageReference Include="Velopack" Version="1.2.161" />
     <PackageReference Include="Microsoft.WSL.Containers" Version="3.0.3" />
+    <!-- Only the native Microsoft.Terminal.Control.dll (HwndTerminal) is used; the WPF assemblies are excluded. -->
+    <PackageReference Include="CI.Microsoft.Terminal.Wpf" Version="1.25.260303002" ExcludeAssets="compile;runtime;build;buildTransitive" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.*" />
     <ProjectReference Include="..\WslcDesktop.Compose\WslcDesktop.Compose.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\**\*.png;Assets\**\*.ico" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="Terminal\web\**\*" CopyToOutputDirectory="PreserveNewest" />
-    <None Remove="Terminal\web\**\*" />
-    <Page Remove="Terminal\web\**\*" />
-    <Compile Remove="Terminal\web\**\*" />
+    <Content Include="$(NuGetPackageRoot)ci.microsoft.terminal.wpf\1.25.260303002\runtimes\$(TerminalNativeRid)\native\Microsoft.Terminal.Control.dll" Link="Microsoft.Terminal.Control.dll" CopyToOutputDirectory="PreserveNewest" Condition="'$(TerminalNativeRid)' != ''" />
   </ItemGroup>
 
 </Project>

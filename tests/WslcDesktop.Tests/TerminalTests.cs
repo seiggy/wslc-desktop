@@ -26,42 +26,9 @@ public class TerminalTests
     }
 
     [Fact]
-    public void ParseMessage_ReadsInputSizeAndReady()
-    {
-        Assert.Equal(new TerminalMessage(TerminalMessageKind.Input, Data: "ls\r"), TerminalProtocol.ParseMessage("{\"t\":\"in\",\"d\":\"ls\\r\"}"));
-        Assert.Equal(new TerminalMessage(TerminalMessageKind.Size, Columns: 90, Rows: 25), TerminalProtocol.ParseMessage("{\"t\":\"size\",\"cols\":90,\"rows\":25}"));
-        Assert.Equal(TerminalMessageKind.Ready, TerminalProtocol.ParseMessage("{\"t\":\"ready\",\"cols\":1,\"rows\":1}")!.Kind);
-    }
-
-    [Theory]
-    [InlineData("not json")]
-    [InlineData("[]")]
-    [InlineData("{\"t\":\"unknown\"}")]
-    [InlineData("{\"t\":\"in\"}")]
-    public void ParseMessage_RejectsMalformed(string json) => Assert.Null(TerminalProtocol.ParseMessage(json));
-
-    [Fact]
-    public void ParseMessage_ClampsDimensions()
-    {
-        var m = TerminalProtocol.ParseMessage("{\"t\":\"size\",\"cols\":999999,\"rows\":-4}")!;
-        Assert.Equal(1000, m.Columns);
-        Assert.Equal(0, m.Rows);
-    }
-
-    [Fact]
-    public void Input_EncodesUtf8AndBinary()
+    public void Input_EncodesUtf8()
     {
         Assert.Equal([0xC3, 0xA9], TerminalProtocol.EncodeInput("é"));
-        Assert.Equal([0x1B, 0xFF], TerminalProtocol.EncodeBinaryInput("\u001b\u00ff"));
-    }
-
-    [Fact]
-    public void OutputMessage_RoundTripsBytes()
-    {
-        var json = TerminalProtocol.OutputMessage([0x1B, (byte)'[', (byte)'3', (byte)'1', (byte)'m']);
-        using var doc = System.Text.Json.JsonDocument.Parse(json);
-        Assert.Equal("out", doc.RootElement.GetProperty("t").GetString());
-        Assert.Equal("\u001b[31m", Encoding.ASCII.GetString(Convert.FromBase64String(doc.RootElement.GetProperty("d").GetString()!)));
     }
 
     [Fact]

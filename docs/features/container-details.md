@@ -17,13 +17,13 @@ Next to the title, the **restart policy** picker changes how the app restarts th
 
 ![Interactive shell](/screenshots/container-shell.png)
 
-Pick a shell (such as `sh`), choose **Start shell** and type straight into the terminal. It's a real TTY: `wslc exec --interactive --tty` runs under a Windows pseudoconsole (ConPTY) and is drawn with xterm.js, so colors, arrow, Tab and Ctrl keys, Ctrl+C, scrollback and full-screen programs such as `vi`, `top` and `less` work. The terminal resizes with the window and follows the app's light or dark theme.
+Pick a shell (such as `sh`), choose **Start shell** and type straight into the terminal. It's a real TTY: `wslc exec --interactive --tty` runs under a Windows pseudoconsole (ConPTY) and is drawn by Windows Terminal's own native terminal control, so colors, arrow, Tab and Ctrl keys, Ctrl+C, scrollback and full-screen programs such as `vi`, `top` and `less` work. The terminal resizes with the window and follows the app's light or dark theme.
 
 ![vi in the shell](/screenshots/container-shell-vi.png)
 
 - **Copy and paste:** select text to copy with Ctrl+Shift+C (or Ctrl+C while text is selected); paste with Ctrl+V, Ctrl+Shift+V or right-click.
 - **Font:** the **Font** and **Size** pickers change the terminal font. The choice lasts until the app closes.
-- **Fallback:** if the terminal can't start (for example the WebView2 runtime is missing), the tab falls back to the simple line-based shell, which has no TTY.
+- **Fallback:** if the terminal can't start (for example the native terminal library is missing), the tab falls back to the simple line-based shell, which has no TTY.
 - **Secrets:** the raw terminal stream isn't passed through secret redaction, so values you print in the shell are shown as-is.
 
 Choose **End shell** when you're done. See the [terminal decision](/terminal-decision) for why this approach was chosen.
