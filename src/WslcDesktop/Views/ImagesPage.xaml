@@ -39,7 +39,7 @@
                 <ColumnDefinition Width="110" />
                 <ColumnDefinition Width="90" />
                 <ColumnDefinition Width="110" />
-                <ColumnDefinition Width="40" />
+                <ColumnDefinition Width="80" />
             </Grid.ColumnDefinitions>
             <TextBlock Style="{StaticResource ColumnHeaderStyle}" Text="Name" />
             <TextBlock Grid.Column="1" Style="{StaticResource ColumnHeaderStyle}" Text="Status" />
@@ -65,7 +65,7 @@
                             <ColumnDefinition Width="110" />
                             <ColumnDefinition Width="90" />
                             <ColumnDefinition Width="110" />
-                            <ColumnDefinition Width="40" />
+                            <ColumnDefinition Width="80" />
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
@@ -79,15 +79,24 @@
                         <TextBlock Grid.Column="2" Text="{x:Bind UsedBy}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="3" Text="{x:Bind Size}" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="4" Text="{x:Bind CreatedSince}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <Button
-                            Grid.Column="5"
-                            AutomationProperties.Name="Delete"
-                            Click="Delete_Click"
-                            Content="&#xE74D;"
-                            FontFamily="{StaticResource SymbolThemeFontFamily}"
-                            Style="{StaticResource SubtleButtonStyle}"
-                            Tag="{x:Bind Target}"
-                            ToolTipService.ToolTip="Delete" />
+                        <StackPanel Grid.Column="5" Orientation="Horizontal">
+                            <Button
+                                AutomationProperties.Name="Run a container from this image"
+                                Click="Run_Click"
+                                Content="&#xE768;"
+                                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                Tag="{x:Bind RunReference}"
+                                ToolTipService.ToolTip="Run a container from this image" />
+                            <Button
+                                AutomationProperties.Name="Delete"
+                                Click="Delete_Click"
+                                Content="&#xE74D;"
+                                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                Style="{StaticResource SubtleButtonStyle}"
+                                Tag="{x:Bind Target}"
+                                ToolTipService.ToolTip="Delete" />
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

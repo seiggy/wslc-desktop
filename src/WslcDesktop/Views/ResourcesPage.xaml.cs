@@ -95,6 +95,31 @@ public sealed partial class ResourcesPage : Page
         var driver = new ComboBox { Header = "Driver", HorizontalAlignment = HorizontalAlignment.Stretch };
         var subnet = new TextBox { Header = "Subnet (optional)", PlaceholderText = "10.10.0.0/24" };
         var gateway = new TextBox { Header = "Gateway (optional)", PlaceholderText = "10.10.0.1" };
+        var size = new NumberBox
+        {
+            Header = "Size",
+            Value = VolumeSize.DefaultGb,
+            Minimum = 0,
+            Maximum = 1024 * 1024,
+            SmallChange = 1,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Hidden,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        var unit = new ComboBox { Header = "Unit", ItemsSource = VolumeSize.UnitLabels, SelectedIndex = 1, MinWidth = 90 };
+        var sizeRow = new Grid { ColumnSpacing = 8, Visibility = Visibility.Collapsed };
+        sizeRow.ColumnDefinitions.Add(new ColumnDefinition());
+        sizeRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(unit, 1);
+        sizeRow.Children.Add(size);
+        sizeRow.Children.Add(unit);
+        var sizeNote = new TextBlock
+        {
+            Text = "A VHD volume is a virtual disk with a fixed maximum size (3 MB to 64 TB). It only uses host disk space as data is written.",
+            TextWrapping = TextWrapping.Wrap,
+            Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
+            Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            Visibility = Visibility.Collapsed,
+        };
         var isInternal = new CheckBox { Content = "Internal (no external access)" };
         var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
         var panel = new StackPanel { Spacing = 12, MinWidth = 380 };
@@ -104,6 +129,12 @@ public sealed partial class ResourcesPage : Page
         {
             driver.ItemsSource = new[] { "guest", "vhd" };
             driver.SelectedIndex = 0;
+            panel.Children.Add(sizeRow);
+            panel.Children.Add(sizeNote);
+            driver.SelectionChanged += (_, _) =>
+            {
+                sizeRow.Visibility = sizeNote.Visibility = driver.SelectedItem as string == "vhd" ? Visibility.Visible : Visibility.Collapsed;
+            };
         }
         else
         {
@@ -135,7 +166,18 @@ public sealed partial class ResourcesPage : Page
                 var d = (string)driver.SelectedItem;
                 if (_kind == ResourceKind.Volume)
                 {
-                    await App.Host.CreateVolumeAsync(n, d);
+                    long? bytes = null;
+                    if (d == "vhd")
+                    {
+                        if (!VolumeSize.TryToBytes(size.Value, (SizeUnit)unit.SelectedIndex, out var parsed, out var problem))
+                        {
+                            throw new InvalidOperationException(problem);
+                        }
+
+                        bytes = parsed;
+                    }
+
+                    await App.Host.CreateVolumeAsync(n, d, bytes);
                 }
                 else
                 {

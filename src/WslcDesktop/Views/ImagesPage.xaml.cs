@@ -111,6 +111,38 @@ public sealed partial class ImagesPage : Page
         await RefreshAsync();
     }
 
+    private async void Run_Click(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).Tag is not string reference)
+        {
+            return;
+        }
+
+        var created = await ContainersPage.ShowNewContainerDialogAsync(XamlRoot, reference);
+        if (created is not null)
+        {
+            await OfferOpenContainerAsync(XamlRoot, Frame, created);
+        }
+    }
+
+    /// <summary>After a container is created, offers to open its details.</summary>
+    internal static async Task OfferOpenContainerAsync(XamlRoot xamlRoot, Frame frame, string name)
+    {
+        var done = new ContentDialog
+        {
+            XamlRoot = xamlRoot,
+            Title = $"Created \"{name}\"",
+            Content = "The container was created. Open its details?",
+            PrimaryButtonText = "View container",
+            CloseButtonText = "Stay here",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        if (await done.ShowAsync() == ContentDialogResult.Primary)
+        {
+            frame.Navigate(typeof(ContainerDetailPage), name);
+        }
+    }
+
     private async void Delete_Click(object sender, RoutedEventArgs e)
     {
         if (((FrameworkElement)sender).Tag is not string name)
