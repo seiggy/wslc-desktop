@@ -12,9 +12,9 @@ Run `wslc --help` in a terminal. If it prints the command list, the app can find
 
 ## Install
 
-Download the single-file portable EXE for x64 or ARM64 from the [Releases page](https://github.com/seiggy/wslc-desktop/releases). Run it directly: .NET, WinUI, and assets are included and extracted to a per-user runtime cache when launched. WSLc is still required, and app settings and data remain under `%LOCALAPPDATA%`. No release yet? [Build from source](/contributing).
+Download `WslcDesktopManager-win-x64-Setup.exe` (or `-arm64`) from the [Releases page](https://github.com/seiggy/wslc-desktop/releases) and run it. It installs per user and updates from **Settings → Updates**. The installer is unsigned until a certificate is available, so Windows SmartScreen may warn: choose **More info → Run anyway**. Prefer no installer? Extract the portable zip and run `WslcDesktop.exe` (no auto-update). WSLc is still required, and app settings and data remain under `%LOCALAPPDATA%`. No release yet? [Build from source](/contributing).
 
-The MSIX packages and app bundle on GitHub are unsigned Microsoft Store submission files, not sideload installers. Microsoft signs the packages after certification; install through the Microsoft Store once the listing is live, or use the portable EXE.
+The MSIX packages and app bundle on GitHub are unsigned Microsoft Store submission files, not sideload installers. Microsoft signs the packages after certification; install through the Microsoft Store once the listing is live, or use the installer.
 
 ## First run
 

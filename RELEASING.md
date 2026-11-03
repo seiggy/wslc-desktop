@@ -9,7 +9,11 @@ Releases are built by `.github/workflows/release.yml`.
 
 | File | Description |
 | --- | --- |
-| `WslcDesktop-<v>-win-x64-portable.exe`, `…-win-arm64-portable.exe` | Single-file, self-contained unpackaged build. Run the EXE directly; no companion files or runtime installation required. |
+| `WslcDesktopManager-win-x64-Setup.exe`, `…-win-arm64-Setup.exe` | **Recommended.** Velopack installer (unsigned): per-user install to `%LOCALAPPDATA%\WslcDesktopManager`, Start menu/desktop shortcuts, in-app updates. |
+| `WslcDesktopManager-<v>-win-<arch>-full.nupkg`, `…-delta.nupkg` | Velopack update packages. Installed apps download these from the GitHub Release. Deltas exist when a previous release is available. |
+| `RELEASES-win-<arch>`, `releases.win-<arch>.json`, `assets.win-<arch>.json` | Velopack update feed for the `win-x64` / `win-arm64` channels. Required for in-app updates; don't delete. |
+| `WslcDesktopManager-win-<arch>-Portable.zip` | Velopack portable bundle (needs no install; updates only via the installed app). |
+| `WslcDesktop-<v>-win-x64-portable.zip`, `…-win-arm64-portable.zip` | Plain self-contained folder, zipped. Extract and run `WslcDesktop.exe`. No self-extraction, so it starts immediately. No auto-update. |
 | `WslcDesktop-<v>-x64.msix`, `…-arm64.msix` | Unsigned Microsoft Store MSIX packages; not sideload installers. |
 | `WslcDesktop-<v>.appxbundle` | Unsigned Store submission bundle containing both architectures. Upload this file to Partner Center; the individual MSIX files need not be uploaded as well. |
 | `SHA256SUMS.txt` | Checksums of every file. |
@@ -41,9 +45,9 @@ Store review also needs justification for the restricted capabilities below. The
 not stamped separately into the manifest.
 
 The GitHub MSIX packages and bundle are submission artifacts, not directly installable unsigned packages. For direct downloads, use the
-portable EXE. The workflow no longer generates sideload packages or self-signed certificates, and no longer reads `MSIX_CERT_PFX_BASE64`,
+Velopack `Setup.exe` or the portable zip. The workflow no longer generates sideload packages or self-signed certificates, and no longer reads `MSIX_CERT_PFX_BASE64`,
 `MSIX_CERT_PASSWORD`, or `MSIX_PUBLISHER`; any previously configured values can be removed from repository settings.
-Store signing does not sign the portable EXE. Older GitHub releases retain their original test-signed packages.
+Store signing does not sign the Velopack or portable files (unsigned until a certificate is available). Older GitHub releases retain their original test-signed packages.
 
 See Microsoft's [MSIX Store submission requirements](https://learn.microsoft.com/windows/apps/publish/publish-your-app/msix/app-package-requirements).
 
@@ -73,19 +77,45 @@ together with disabled file-system write virtualization, keeps these files at th
 and WSLc can use the same configuration and storage. Container data is intended to remain available independently of the
 GUI installation. Access remains subject to the current user's Windows permissions.
 
+## Velopack installer and updates
+
+[Velopack](https://docs.velopack.io/) provides the direct-download installer and auto-update; MSIX/appxbundle stay for the Store.
+
+- `Program.Main` calls `VelopackApp.Build().Run()` before anything else; it handles install/update/uninstall hooks.
+- `UpdateService` checks the GitHub Release feed (`GithubSource`, prereleases only when the installed build is a prerelease),
+  downloads, and applies on restart. UI: **Settings → Updates**. It shows "managed elsewhere" for Store, portable-zip and dev builds.
+- `Pack-Velopack.ps1` runs `vpk pack` per architecture on the publish folder `Build-Release.ps1` leaves in `publish\win-<arch>`.
+  Each architecture uses its own channel (`win-x64`, `win-arm64`) so feeds never mix. The release workflow first runs `vpk download github`
+  to fetch the previous release (for delta packages), packs, and uploads the files with the other assets via `gh release`.
+- The pack id is `WslcDesktopManager` so the install folder (`%LOCALAPPDATA%\WslcDesktopManager`) never overlaps
+  `%LOCALAPPDATA%\WslcDesktop`, which holds app settings and container storage. Don't rename it to `WslcDesktop`:
+  uninstalling would then delete user data.
+- Local test feed: set `WSLC_UPDATE_FEED` to a folder (or URL) of vpk output to make an installed app update from it instead of GitHub.
+
+### Signing later
+
+Releases are unsigned, so Windows SmartScreen shows "Windows protected your PC" on first run (More info → Run anyway).
+To sign once a certificate exists, pass signing arguments to `Pack-Velopack.ps1`; it forwards them to `vpk pack`, which signs
+every executable and the Setup.exe: `-SignParams '/td sha256 /fd sha256 /f cert.pfx /p <password>'` (signtool) or
+`-AzureTrustedSignFile metadata.json` (Azure Trusted Signing). In `release.yml`, add the flag to the *Pack Velopack* step
+and supply secrets from repository secrets; no other change is needed. See Velopack's [code signing docs](https://docs.velopack.io/packaging/signing).
+
+### Why the portable build is a folder, not a single EXE
+
+The previous single-file portable EXE (~245 MB) self-extracts ~225 MB to `%TEMP%\.net` on launch. Measured on a dev machine:
+a warm run showed its window in ~0.5 s, but a never-before-seen file took ~9 s (Defender scanning the download plus extraction),
+and ~8 s again on a second run, with no UI during that time. Managed code cannot show a splash before extraction finishes.
+The zipped folder starts in ~0.6 s with the same files, so it replaced the single-file EXE.
+
 ## Packaging notes
 
 - Unpackaged is still the default (`WindowsPackageType=None`); the release script builds the MSIX with `-p:WindowsPackageType=MSIX`.
-- Portable publishing uses `Properties/PublishProfiles/Portable.pubxml`: `PublishSingleFile`, `IncludeAllContentForSelfExtract`,
-  .NET self-contained, and Windows App SDK self-contained. WinUI requires extraction of the bundled native runtime, PRI, and assets.
-  This is one file to distribute, not a zero-extraction executable. The .NET host caches the extracted files under
-  `%TEMP%\.net` by default (or `DOTNET_BUNDLE_EXTRACT_BASE_DIR` when configured). First launch needs writable space there.
-  App settings and container data continue to live under `%LOCALAPPDATA%`; WSLc remains an external prerequisite.
-- Portable builds embed debug symbols; both PR and release builds reject any extra files in the portable output.
-  MSIX builds do not enable single-file publishing.
-- To publish just the portable EXE locally:
+- Portable publishing uses `Properties/PublishProfiles/Portable.pubxml` (self-contained .NET and Windows App SDK, not single-file).
+  App settings and container data live under `%LOCALAPPDATA%`; WSLc remains an external prerequisite.
+- To publish just the portable folder locally:
   `dotnet publish src\WslcDesktop -c Release -p:Platform=x64 -r win-x64 -p:PublishProfile=Portable -p:DebugType=embedded -p:RestoreConfigFile=.github\nuget.ci.config -o out\portable`.
-  See Microsoft's [single-file WinUI deployment requirements](https://learn.microsoft.com/windows/apps/package-and-deploy/unpackage-winui-app#single-file-exe).
+- Local Velopack build: `dotnet tool install -g vpk --version 1.2.161`, run `Build-Release.ps1`, then
+  `.\tools\packaging\Pack-Velopack.ps1 -Arch x64 -Version 1.0.0 -OutDir out\velopack`.
 - Capabilities: `runFullTrust` (WinUI 3 desktop app that starts `wslc.exe` and uses the WSLc API) and `unvirtualizedResources`.
   The manifest sets `desktop6:FileSystemWriteVirtualization` and `RegistryWriteVirtualization` to `disabled`, so
   `%LOCALAPPDATA%\wslc\settings.yaml` and `%LOCALAPPDATA%\WslcDesktop\` are the real paths shared with the CLI and the WSLc service,

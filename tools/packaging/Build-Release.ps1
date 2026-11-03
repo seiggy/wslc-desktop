@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Builds the portable (self-contained, single-file) EXE and unsigned Microsoft Store MSIX for one platform.
+  Builds the portable (self-contained folder, zipped) build and unsigned Microsoft Store MSIX for one platform.
 .EXAMPLE
   ./tools/packaging/Build-Release.ps1 -Arch x64 -Version 1.2.3 -OutDir artifacts
 #>
@@ -9,7 +9,8 @@ param(
     [Parameter(Mandatory)][ValidateSet('x64', 'arm64')][string]$Arch,
     [Parameter(Mandatory)][string]$Version,
     [string]$OutDir = 'artifacts',
-    [string]$NuGetConfig
+    [string]$NuGetConfig,
+    [string]$PublishDir
 )
 
 $ErrorActionPreference = 'Stop'
@@ -47,18 +48,17 @@ function Reset-BuildOutput {
 $common = @('-c', 'Release', "-p:Platform=$platform", '-r', $rid, '--no-restore', '-nologo', '-v:m',
     "-p:Version=$core", "-p:InformationalVersion=$full")
 
-# WinUI's single-file support bundles all content and extracts it at launch.
+# Self-contained folder (no self-extraction, so it starts immediately). Zipped for download and reused by Pack-Velopack.ps1.
 Write-Host "== Portable ($rid)"
 Reset-BuildOutput
-$pub = Join-Path $OutDir "portable-$Arch"
+$pub = if ($PublishDir) { $PublishDir } else { Join-Path $repo "publish\$rid" }
+Remove-Item $pub -Recurse -Force -ErrorAction SilentlyContinue
 dotnet publish $project @common -p:PublishProfile=Portable -p:DebugType=embedded -o $pub
 if ($LASTEXITCODE) { throw 'publish failed' }
-$files = @(Get-ChildItem $pub -File -Recurse)
-if ($files.Count -ne 1 -or $files[0].Name -ne 'WslcDesktop.exe') {
-    throw "Portable publish must contain only WslcDesktop.exe; found: $($files.Name -join ', ')"
-}
-Move-Item $files[0].FullName (Join-Path $OutDir "WslcDesktop-$full-win-$Arch-portable.exe") -Force
-Remove-Item $pub -Recurse -Force
+if (-not (Test-Path (Join-Path $pub 'WslcDesktop.exe'))) { throw 'Portable publish did not produce WslcDesktop.exe.' }
+$zip = Join-Path $OutDir "WslcDesktop-$full-win-$Arch-portable.zip"
+Remove-Item $zip -Force -ErrorAction SilentlyContinue
+Compress-Archive -Path (Join-Path $pub '*') -DestinationPath $zip -CompressionLevel Optimal
 
 # Preserve the Partner Center identity and stamp only the release version.
 Write-Host "== MSIX ($rid)"

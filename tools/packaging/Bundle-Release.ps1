@@ -73,7 +73,7 @@ finally { Remove-Item $stage -Recurse -Force }
 @"
 > **Microsoft Store submission packages.** The MSIX packages and appxbundle are unsigned and use the app's
 > Partner Center identity. Upload the appxbundle to Partner Center; Microsoft signs it after certification.
-> These downloads are not sideload installers. For direct use outside the Store, download the portable EXE.
+> These downloads are not sideload installers. For direct use outside the Store, download the Velopack `Setup.exe` or the portable zip.
 "@ | Set-Content (Join-Path $Directory 'release-notes.md')
 
 $sums = Get-ChildItem $Directory -File | Where-Object Name -NotIn @('SHA256SUMS.txt', 'release-notes.md') |

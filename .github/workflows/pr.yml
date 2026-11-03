@@ -62,10 +62,16 @@ jobs:
           dotnet build tests/WslcDesktop.Compose.Tests -c Release --no-restore
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Build single-file portable EXE and unsigned Store MSIX
+      - name: Build portable zip and unsigned Store MSIX
         shell: pwsh
         run: |
           ./tools/packaging/Build-Release.ps1 -Arch ('${{ matrix.platform }}'.ToLowerInvariant()) -Version 1.0.0 -OutDir artifacts -NuGetConfig "$env:NUGET_CONFIG"
+
+      - name: Pack Velopack installer (smoke test)
+        shell: pwsh
+        run: |
+          dotnet tool install -g vpk --version 1.2.161
+          ./tools/packaging/Pack-Velopack.ps1 -Arch ('${{ matrix.platform }}'.ToLowerInvariant()) -Version 1.0.0 -OutDir velopack
 
       - name: Upload unsigned Store MSIX
         uses: actions/upload-artifact@v4

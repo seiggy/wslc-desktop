@@ -7,6 +7,8 @@ public partial class App : Application
 {
     public static WslcHost Host { get; } = new();
 
+    public static UpdateService Updates { get; } = new();
+
     private Window? _window;
 
     public static nint WindowHandle { get; private set; }

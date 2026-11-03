@@ -38,8 +38,9 @@ Download a build for your machine from [Releases](https://github.com/seiggy/wslc
 
 | Format | How to use it |
 | --- | --- |
-| Portable EXE | Run the single `WslcDesktop-<version>-win-<architecture>-portable.exe`. Includes .NET, WinUI, and app assets; no installer or companion files. Runtime files are extracted to a per-user cache on launch. |
-| MSIX or app bundle | Unsigned Microsoft Store submission files, not direct installers. Install through the Microsoft Store once the listing is live, or use the portable EXE. |
+| Installer (recommended) | Run `WslcDesktopManager-win-<architecture>-Setup.exe`. Installs per user, adds shortcuts, and updates in-app (**Settings → Updates**). The installer is unsigned for now, so SmartScreen may show "Windows protected your PC": choose **More info → Run anyway**. |
+| Portable zip | Extract `WslcDesktop-<version>-win-<architecture>-portable.zip` anywhere and run `WslcDesktop.exe`. Includes .NET, WinUI, and app assets; no updates, so download a newer zip to update. Unblock the zip (Properties → Unblock) before extracting to avoid SmartScreen prompts. |
+| MSIX or app bundle | Unsigned Microsoft Store submission files, not direct installers. Install through the Microsoft Store once the listing is live, or use the installer. |
 
 Microsoft signs the Store-distributed packages after certification; GitHub releases no longer generate test-signing certificates or sideload installers. Portable refers to app distribution: settings and container data still live under `%LOCALAPPDATA%`, and WSLc is still required. See [Releasing](RELEASING.md) for Store submission and packaging details. If a release build isn't available, [build from source](#build-from-source).
 
