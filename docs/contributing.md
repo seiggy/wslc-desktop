@@ -2,7 +2,7 @@
 
 ## Build the app
 
-You need Windows 11, WSL with container support and the .NET SDK the repository targets (see the README and `src/WslcDesktop/*.csproj`; the PR build workflow documents the SDK used in CI).
+You need Windows 11 22H2 (build 22621) or later, WSL with container support and the .NET SDK the repository targets (see the README and `src/WslcDesktop/*.csproj`; the PR build workflow documents the SDK used in CI).
 
 ```powershell
 dotnet build src\WslcDesktop -p:Platform=x64 -r win-x64

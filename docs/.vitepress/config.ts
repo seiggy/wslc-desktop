@@ -55,6 +55,7 @@ export default defineConfig({
           { text: 'Troubleshooting', link: '/troubleshooting' },
           { text: 'FAQ', link: '/faq' },
           { text: 'Contributing', link: '/contributing' },
+          { text: 'Privacy policy', link: '/privacy' },
         ],
       },
     ],
@@ -64,6 +65,6 @@ export default defineConfig({
       text: 'Edit this page on GitHub',
     },
     search: { provider: 'local' },
-    footer: { message: 'Released under the MIT License.' },
+    footer: { message: `Released under the MIT License. <a href="${base}privacy">Privacy policy</a>.` },
   },
 })

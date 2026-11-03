@@ -40,6 +40,11 @@ $architectures = foreach ($package in $msix) {
         if ($manifest.Identity.Version -cne $bundleVersion) {
             throw "$($package.Name) must have version $bundleVersion; found $($manifest.Identity.Version)."
         }
+        $family = $manifest.Dependencies.TargetDeviceFamily
+        $expectedFamily = $expected.Dependencies.TargetDeviceFamily
+        if ($family.Name -cne $expectedFamily.Name -or $family.MinVersion -cne $expectedFamily.MinVersion) {
+            throw "$($package.Name) must target $($expectedFamily.Name) with minimum Windows version $($expectedFamily.MinVersion); found $($family.Name) $($family.MinVersion)."
+        }
         $manifest.Identity.ProcessorArchitecture
     }
     finally { $archive.Dispose() }
