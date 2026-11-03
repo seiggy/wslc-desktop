@@ -550,4 +550,10 @@ public sealed partial class ContainerDetailPage : Page
 
         line.Points = points;
     }
+
+    private void DetailPivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // The native terminal window ignores XAML tab clipping, so collapse its panel on other tabs.
+        ShellPanel.Visibility = ReferenceEquals(DetailPivot.SelectedItem, ShellTabItem) ? Visibility.Visible : Visibility.Collapsed;
+    }
 }

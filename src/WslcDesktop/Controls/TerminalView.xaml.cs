@@ -232,7 +232,8 @@ public sealed partial class TerminalView : UserControl
             return;
         }
 
-        if (hide || !_wantVisible || XamlRoot is null || !IsLoaded || ActualWidth < 2 || ActualHeight < 2)
+        if (hide || !_wantVisible || XamlRoot is null || !IsLoaded || ActualWidth < 2 || ActualHeight < 2
+            || !IsEffectivelyVisible() || Microsoft.UI.Xaml.Media.VisualTreeHelper.GetOpenPopupsForXamlRoot(XamlRoot).Count > 0)
         {
             NativeTerminal.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0,
                 NativeTerminal.SWP_HIDEWINDOW | NativeTerminal.SWP_NOMOVE | NativeTerminal.SWP_NOSIZE | NativeTerminal.SWP_NOACTIVATE);
@@ -247,6 +248,23 @@ public sealed partial class TerminalView : UserControl
         var w = Math.Max(1, (int)Math.Round((Frame.ActualWidth - 2 * inset) * scale));
         var h = Math.Max(1, (int)Math.Round((Frame.ActualHeight - 2 * inset) * scale));
         NativeTerminal.SetWindowPos(_hwnd, NativeTerminal.HWND_TOP, x, y, w, h, NativeTerminal.SWP_SHOWWINDOW | NativeTerminal.SWP_NOACTIVATE);
+    }
+
+    /// <summary>A native child window ignores XAML ancestry, so a collapsed or transparent ancestor (e.g. another tab) must hide it.</summary>
+    private bool IsEffectivelyVisible()
+    {
+        DependencyObject? node = this;
+        while (node is not null)
+        {
+            if (node is UIElement element && (element.Visibility != Visibility.Visible || element.Opacity <= 0))
+            {
+                return false;
+            }
+
+            node = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(node);
+        }
+
+        return true;
     }
 
     private IntPtr SubclassProc(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam, UIntPtr id, UIntPtr refData)

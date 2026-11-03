@@ -53,7 +53,7 @@
                 VerticalAlignment="Center" />
         </StackPanel>
 
-        <Pivot Grid.Row="1">
+        <Pivot Grid.Row="1" x:Name="DetailPivot" SelectionChanged="DetailPivot_SelectionChanged">
             <PivotItem Header="Logs">
                 <Grid RowSpacing="12">
                     <Grid.RowDefinitions>
@@ -79,7 +79,7 @@
                 </Grid>
             </PivotItem>
 
-            <PivotItem Header="Shell">
+            <PivotItem Header="Shell" x:Name="ShellTabItem">
                 <Grid>
                     <InfoBar
                         x:Name="ShellStoppedNotice"
