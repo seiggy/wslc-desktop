@@ -406,23 +406,42 @@ public sealed partial class ContainerDetailPage : Page
             Terminal.Visibility = Visibility.Collapsed;
             ShellView.Visibility = Visibility.Visible;
             ShellInput.Visibility = Visibility.Visible;
-            ShellStatus.Text = $"Terminal unavailable ({ex.Message}); using the basic shell.";
+            ShellStatus.Text = $"Terminal unavailable ({ex.GetType().Name}: {ex.Message}); using the basic shell.";
+            LogBackend($"fallback: {ex}");
             return false;
         }
 
         _terminalActive = true;
         ShellToggle.Content = "End shell";
-        ShellStatus.Text = $"Connected to {_name}";
+        ShellStatus.Text = $"Connected to {_name} (Windows Terminal control)";
+        LogBackend("native terminal active");
         return true;
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex s_ansi =
+        new("\u001b\\[[0-9;?]*[ -/]*[@-~]|\\[[0-9;?]*m", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static void LogBackend(string message)
+    {
+        try
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WslcDesktop");
+            Directory.CreateDirectory(dir);
+            File.AppendAllText(Path.Combine(dir, "terminal.log"), $"{DateTime.Now:s} {message}{Environment.NewLine}");
+        }
+        catch (IOException)
+        {
+        }
     }
 
     private void StartFallbackShell(string shell)
     {
         ShellView.Clear();
+        LogBackend("basic piped shell active");
         try
         {
             ShellProcess? started = null;
-            started = App.Host.StartShell(_name, shell, ShellView.Append, code => DispatcherQueue.TryEnqueue(() =>
+            started = App.Host.StartShell(_name, shell, line => ShellView.Append(s_ansi.Replace(line, string.Empty)), code => DispatcherQueue.TryEnqueue(() =>
             {
                 if (ReferenceEquals(_shell, started))
                 {
