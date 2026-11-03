@@ -85,7 +85,7 @@ $note = if ($selfSigned) {
 @"
 > **Test-signed build.** The MSIX packages and bundle in this release are signed with a throwaway self-signed certificate
 > (``$Publisher``) because no release signing certificate was configured. To install them, first trust
-> ``WslcDesktop-$full-test-signing.cer`` (Local Machine > Trusted People), or use the portable zip instead.
+> ``WslcDesktop-$full-test-signing.cer`` (Local Machine > Trusted People), or use the portable EXE instead.
 "@
 } else { "MSIX packages and the bundle are signed with the project's release certificate (``$Publisher``)." }
 Set-Content (Join-Path $Directory 'signing-notes.md') $note

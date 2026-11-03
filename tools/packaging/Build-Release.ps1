@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Builds the portable (self-contained) zip and the unsigned per-architecture MSIX for one platform.
+  Builds the portable (self-contained, single-file) EXE and unsigned per-architecture MSIX for one platform.
 .EXAMPLE
   ./tools/packaging/Build-Release.ps1 -Arch x64 -Version 1.2.3 -Publisher "CN=Contoso" -OutDir artifacts
 #>
@@ -37,7 +37,7 @@ $restoreArgs = @()
 if ($NuGetConfig) { $restoreArgs += '--configfile', $NuGetConfig }
 
 Write-Host "== Restore ($rid)"
-dotnet restore $project -r $rid "-p:Platform=$platform" @restoreArgs
+dotnet restore $project -r $rid "-p:Platform=$platform" -p:SelfContained=true @restoreArgs
 if ($LASTEXITCODE) { throw 'restore failed' }
 
 function Reset-BuildOutput {
@@ -48,16 +48,17 @@ function Reset-BuildOutput {
 $common = @('-c', 'Release', "-p:Platform=$platform", '-r', $rid, '--no-restore', '-nologo', '-v:m',
     "-p:Version=$core", "-p:InformationalVersion=$full")
 
-# WinUI 3 does not support true single-file publishing, so the portable build is one
-# self-contained folder that is zipped.
+# WinUI's single-file support bundles all content and extracts it at launch.
 Write-Host "== Portable ($rid)"
 Reset-BuildOutput
 $pub = Join-Path $OutDir "portable-$Arch"
-dotnet publish $project @common --self-contained -p:WindowsPackageType=None -o $pub
+dotnet publish $project @common -p:PublishProfile=Portable -p:DebugType=embedded -o $pub
 if ($LASTEXITCODE) { throw 'publish failed' }
-$zip = Join-Path $OutDir "WslcDesktop-$full-win-$Arch-portable.zip"
-Remove-Item $zip -ErrorAction SilentlyContinue
-Compress-Archive -Path (Join-Path $pub '*') -DestinationPath $zip -CompressionLevel Optimal
+$files = @(Get-ChildItem $pub -File -Recurse)
+if ($files.Count -ne 1 -or $files[0].Name -ne 'WslcDesktop.exe') {
+    throw "Portable publish must contain only WslcDesktop.exe; found: $($files.Name -join ', ')"
+}
+Move-Item $files[0].FullName (Join-Path $OutDir "WslcDesktop-$full-win-$Arch-portable.exe") -Force
 Remove-Item $pub -Recurse -Force
 
 # The manifest is stamped for the build and restored afterwards so the working tree stays clean.

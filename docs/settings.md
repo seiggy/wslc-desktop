@@ -1,6 +1,22 @@
 # Settings and registries
 
-Open **Settings** at the bottom of the navigation. It has three sections.
+Open **Settings** at the bottom of the navigation.
+
+## Appearance
+
+Choose **Use Windows setting**, **Light**, or **Dark** under **Theme**. The Windows setting follows your app color mode.
+By default the app also follows your Windows accent color. Turn on **Use custom accent color**, choose **Choose accent color**,
+pick a color or enter its hex value, then choose **Apply color**. Turn the switch off to follow Windows again.
+
+Changes apply immediately across the app and persist for the next launch. Custom accent shades are adjusted for readable
+controls in both themes; Windows high-contrast colors remain in control when a contrast theme is enabled.
+Appearance preferences are saved in `%LOCALAPPDATA%\WslcDesktop\settings.json`, not WSLc's `settings.yaml`.
+
+## App preferences
+
+**Minimize to tray** hides the minimized window from the taskbar. **Close button minimizes to tray** makes the close button
+hide the app instead of quitting. Click the tray icon to restore the window; choose **Exit** from its menu to quit.
+Both preferences apply immediately. The tray icon follows the taskbar's theme independently of the app's theme.
 
 ## WSLc configuration
 

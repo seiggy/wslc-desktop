@@ -19,7 +19,7 @@ The app is built around what WSLc actually supports. You can manage a Compose st
 | Stacks | Open a Compose file, review the execution plan and compatibility warnings, then bring the stack up or down. |
 | Images | Pull from public or private registries. Inspect image configuration and layer digests, see which containers use an image, and delete images you no longer need. |
 | Volumes and networks | Inspect resources and their attached containers. Remove individual resources or prune unused ones. Attach and detach networks from a container's Inspect tab. |
-| Environment and settings | View WSL versions and sessions. Configure the app's CPU and memory limits, enable GPU access, or sign in to a registry. |
+| Environment and settings | View WSL versions and sessions. Choose light, dark, or Windows-default appearance and a custom accent. Configure the app's CPU and memory limits, enable GPU access, or sign in to a registry. |
 
 The [feature walkthroughs](https://seiggy.github.io/wslc-desktop/features/containers) cover each page with screenshots.
 
@@ -38,10 +38,10 @@ Download a build for your machine from [Releases](https://github.com/seiggy/wslc
 
 | Format | How to use it |
 | --- | --- |
-| Portable ZIP | Extract the whole archive and run `WslcDesktop.exe`. The build is self-contained; keep its accompanying files together. |
+| Portable EXE | Run the single `WslcDesktop-<version>-win-<architecture>-portable.exe`. Includes .NET, WinUI, and app assets; no installer or companion files. Runtime files are extracted to a per-user cache on launch. |
 | MSIX or app bundle | Install the package for your architecture, or use the bundle containing both architectures. Check the release notes for signing information. |
 
-Some releases may use a test-signing certificate. Those packages require certificate trust setup before installation; the portable ZIP doesn't need that setup. See [Releasing](RELEASING.md) for signing and packaging details. If a release build isn't available, [build from source](#build-from-source).
+Some releases may use a test-signing certificate. Those packages require certificate trust setup before installation; the portable EXE doesn't need that setup. Portable refers to app distribution: settings and container data still live under `%LOCALAPPDATA%`, and WSLc is still required. See [Releasing](RELEASING.md) for signing and packaging details. If a release build isn't available, [build from source](#build-from-source).
 
 ### First run
 

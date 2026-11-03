@@ -3,8 +3,8 @@ using System.Text.Json;
 namespace WslcDesktop.Services;
 
 /// <summary>
-/// Settings for the app's own WslcDesktop session. wslc's settings.yaml only configures the CLI's default
-/// session, so these are passed to the SDK when the session starts and take effect after a restart.
+/// App preferences and resources for the app's own WslcDesktop session.
+/// Session resources take effect after a restart; appearance and tray preferences apply immediately.
 /// </summary>
 public sealed class AppSettings
 {
@@ -24,6 +24,11 @@ public sealed class AppSettings
 
     public bool CloseMinimizesToTray { get; set; }
 
+    public string Theme { get; set; } = "System";
+
+    // Null follows Windows; custom colors are opaque #RRGGBB.
+    public string? AccentColor { get; set; }
+
     // Server names only; credentials live in wslc's credential store and are never read or written here.
     public List<string> Registries { get; set; } = [];
 
@@ -41,6 +46,12 @@ public sealed class AppSettings
                     s.CpuCount = Math.Clamp(s.CpuCount, 1, (uint)Environment.ProcessorCount);
                     s.MemoryMb = Math.Max(s.MemoryMb, 512);
                     s.Registries ??= [];
+                    if (s.Theme is not ("System" or "Light" or "Dark"))
+                    {
+                        s.Theme = "System";
+                    }
+
+                    s.AccentColor = AccentPalette.Normalize(s.AccentColor);
                     return s;
                 }
             }

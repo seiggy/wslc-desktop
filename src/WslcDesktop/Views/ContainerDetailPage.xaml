@@ -147,7 +147,7 @@
                                     <Polyline x:Name="NetRxLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
                                     <Polyline x:Name="NetTxLine" Stroke="{ThemeResource SystemFillColorCautionBrush}" StrokeThickness="2" />
                                 </Grid>
-                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Receive (blue), transmit (amber), per second" />
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Receive (accent), transmit (amber), per second" />
                             </StackPanel>
                         </Border>
 
@@ -159,7 +159,7 @@
                                     <Polyline x:Name="BlockReadLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
                                     <Polyline x:Name="BlockWriteLine" Stroke="{ThemeResource SystemFillColorCautionBrush}" StrokeThickness="2" />
                                 </Grid>
-                                <TextBlock x:Name="PidsValue" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Read (blue), write (amber), per second" />
+                                <TextBlock x:Name="PidsValue" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Read (accent), write (amber), per second" />
                             </StackPanel>
                         </Border>
                     </Grid>
