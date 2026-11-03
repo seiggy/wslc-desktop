@@ -15,8 +15,7 @@ public static class InspectUi
             Padding = new Thickness(16),
             CornerRadius = new CornerRadius(4),
             BorderThickness = new Thickness(1),
-            Background = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
-            BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
+            Style = (Style)Application.Current.Resources["InspectCardStyle"],
             Child = new StackPanel
             {
                 Spacing = 12,
@@ -56,7 +55,7 @@ public static class InspectUi
     public static TextBlock Secondary(string text) => new()
     {
         Text = text,
-        Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+        Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
     };
 
     public static TextBlock Mono(string text) => new()

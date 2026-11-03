@@ -13,6 +13,8 @@ public partial class App : Application
 
     internal static Platform.TrayController? Tray { get; private set; }
 
+    internal static AppearanceService? Appearance { get; private set; }
+
     public App()
     {
         InitializeComponent();
@@ -21,11 +23,13 @@ public partial class App : Application
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         _window = new MainWindow();
+        Appearance = new AppearanceService(_window);
         WindowHandle = WinRT.Interop.WindowNative.GetWindowHandle(_window);
         Tray = new Platform.TrayController(_window, Host);
         _window.Closed += (_, _) =>
         {
             Tray.Dispose();
+            Appearance.Dispose();
             Host.Shutdown();
         };
         Platform.SingleInstance.ActivationRequested += () => _window.DispatcherQueue.TryEnqueue(Tray.Restore);

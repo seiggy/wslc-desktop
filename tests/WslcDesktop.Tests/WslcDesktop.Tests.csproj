@@ -16,6 +16,7 @@
   <!-- The app is WinUI; the UI-free logic is compiled in directly so it can be tested on plain net10.0. -->
   <ItemGroup>
     <Compile Include="..\..\src\WslcDesktop\Services\AppSettings.cs" Link="Linked\AppSettings.cs" />
+    <Compile Include="..\..\src\WslcDesktop\Services\AccentPalette.cs" Link="Linked\AccentPalette.cs" />
     <Compile Include="..\..\src\WslcDesktop\Services\TrayPolicy.cs" Link="Linked\TrayPolicy.cs" />
   </ItemGroup>
 

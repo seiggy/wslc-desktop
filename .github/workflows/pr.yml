@@ -52,6 +52,7 @@ jobs:
         run: |
           dotnet restore src/WslcDesktop -r ${{ matrix.rid }} -p:Platform=${{ matrix.platform }} --configfile $env:NUGET_CONFIG
           dotnet restore tests/WslcDesktop.Compose.Tests --configfile $env:NUGET_CONFIG
+          dotnet restore tests/WslcDesktop.Tests --configfile $env:NUGET_CONFIG
 
       - name: Build solution
         shell: pwsh
@@ -60,6 +61,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet build tests/WslcDesktop.Compose.Tests -c Release --no-restore
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify single-file portable publish
+        shell: pwsh
+        run: |
+          dotnet publish src/WslcDesktop -c Release -r ${{ matrix.rid }} -p:Platform=${{ matrix.platform }} -p:PublishProfile=Portable -p:DebugType=embedded -p:RestoreConfigFile="$env:NUGET_CONFIG" -o portable
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $files = @(Get-ChildItem portable -File -Recurse)
+          if ($files.Count -ne 1 -or $files[0].Name -ne 'WslcDesktop.exe') {
+            throw "Expected one portable EXE; found: $($files.Name -join ', ')"
+          }
 
       - name: Report warnings
         if: always()
@@ -77,19 +88,22 @@ jobs:
       - name: Test
         if: matrix.test
         shell: pwsh
-        run: >
-          dotnet test tests/WslcDesktop.Compose.Tests -c Release --no-restore
-          --logger "trx;LogFileName=test-results.trx"
-          --results-directory TestResults
+        run: |
+          dotnet test tests/WslcDesktop.Compose.Tests -c Release --no-restore --logger "trx;LogFileName=compose.trx" --results-directory TestResults
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet test tests/WslcDesktop.Tests -c Release --no-restore --logger "trx;LogFileName=app.trx" --results-directory TestResults
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Test summary
         if: always() && matrix.test
         shell: pwsh
         run: |
-          $trx = Get-ChildItem TestResults -Filter *.trx -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          $trx = @(Get-ChildItem TestResults -Filter *.trx -Recurse -ErrorAction SilentlyContinue)
           if (-not $trx) { "No test results produced." >> $env:GITHUB_STEP_SUMMARY; exit 0 }
-          $c = ([xml](Get-Content $trx.FullName)).TestRun.ResultSummary.Counters
-          "### Tests: total $($c.total), passed $($c.passed), failed $($c.failed), not executed $($c.notExecuted)" >> $env:GITHUB_STEP_SUMMARY
+          foreach ($file in $trx) {
+            $c = ([xml](Get-Content $file.FullName)).TestRun.ResultSummary.Counters
+            "### $($file.BaseName): total $($c.total), passed $($c.passed), failed $($c.failed), not executed $($c.notExecuted)" >> $env:GITHUB_STEP_SUMMARY
+          }
 
       - name: Upload test results
         if: always() && matrix.test

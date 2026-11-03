@@ -85,7 +85,7 @@ jobs:
           </configuration>
           '@ | Set-Content "$env:RUNNER_TEMP\nuget.ci.config"
 
-      - name: Build portable zip and MSIX (${{ matrix.arch }})
+      - name: Build portable EXE and MSIX (${{ matrix.arch }})
         shell: pwsh
         run: >
           ./tools/packaging/Build-Release.ps1

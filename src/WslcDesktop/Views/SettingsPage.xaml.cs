@@ -33,10 +33,92 @@ public sealed partial class SettingsPage : Page
         Cards.Children.Clear();
         _inputs.Clear();
         _errors.Clear();
+        BuildAppearanceCard();
         BuildYamlCard();
         BuildAppPreferencesCard();
         BuildAppSessionCard();
         BuildRegistryCard();
+    }
+
+    private void BuildAppearanceCard()
+    {
+        var settings = App.Host.Settings;
+        var card = InspectUi.Card("Appearance", out var rows);
+        rows.Spacing = 12;
+        rows.Children.Add(InspectUi.Secondary("Changes apply immediately and are saved for the next launch."));
+
+        var theme = new ComboBox { Header = "Theme", HorizontalAlignment = HorizontalAlignment.Stretch };
+        theme.Items.Add("Use Windows setting");
+        theme.Items.Add("Light");
+        theme.Items.Add("Dark");
+        theme.SelectedIndex = settings.Theme switch { "Light" => 1, "Dark" => 2, _ => 0 };
+        theme.SelectionChanged += (_, _) =>
+        {
+            var previous = settings.Theme;
+            settings.Theme = theme.SelectedIndex switch { 1 => "Light", 2 => "Dark", _ => "System" };
+            if (!SaveAppearance())
+            {
+                settings.Theme = previous;
+                theme.SelectedIndex = previous switch { "Light" => 1, "Dark" => 2, _ => 0 };
+            }
+        };
+        rows.Children.Add(theme);
+
+        var custom = new ToggleSwitch { Header = "Use custom accent color", IsOn = settings.AccentColor is not null };
+        var picker = new ColorPicker
+        {
+            IsAlphaEnabled = false,
+            IsMoreButtonVisible = false,
+            IsColorSliderVisible = true,
+            IsColorChannelTextInputVisible = true,
+            IsHexInputVisible = true,
+            Color = settings.AccentColor is { } hex
+                ? Windows.UI.Color.FromArgb(255, (byte)(AccentPalette.Parse(hex) >> 16), (byte)(AccentPalette.Parse(hex) >> 8), (byte)AccentPalette.Parse(hex))
+                : new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent),
+        };
+        var choose = new Button { Content = "Choose accent color", IsEnabled = custom.IsOn };
+        var flyout = new Flyout();
+        var apply = new Button { Content = "Apply color", Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
+        flyout.Content = new StackPanel { Spacing = 12, Children = { picker, apply } };
+        choose.Flyout = flyout;
+        void SetAccent(string? color)
+        {
+            var previous = settings.AccentColor;
+            settings.AccentColor = color;
+            if (!SaveAppearance())
+            {
+                settings.AccentColor = previous;
+                custom.IsOn = previous is not null;
+            }
+
+            choose.IsEnabled = custom.IsOn;
+        }
+
+        custom.Toggled += (_, _) => SetAccent(custom.IsOn ? $"#{picker.Color.R:X2}{picker.Color.G:X2}{picker.Color.B:X2}" : null);
+        apply.Click += (_, _) =>
+        {
+            SetAccent($"#{picker.Color.R:X2}{picker.Color.G:X2}{picker.Color.B:X2}");
+            flyout.Hide();
+        };
+        rows.Children.Add(custom);
+        rows.Children.Add(InspectUi.Secondary("Off follows the Windows accent. Custom colors are adjusted for readable light and dark controls."));
+        rows.Children.Add(choose);
+        Cards.Children.Add(card);
+    }
+
+    private bool SaveAppearance()
+    {
+        try
+        {
+            App.Host.Settings.Save();
+            App.Appearance?.Apply();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Status("Couldn't save appearance", ex.Message, InfoBarSeverity.Error);
+            return false;
+        }
     }
 
     private void BuildAppPreferencesCard()
@@ -48,7 +130,7 @@ public sealed partial class SettingsPage : Page
         {
             Text = "How WSLc Desktop behaves on your desktop. Changes apply immediately.",
             TextWrapping = TextWrapping.Wrap,
-            Foreground = InspectUi.Secondary(string.Empty).Foreground,
+            Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
         });
 
         AddPreference(
@@ -89,7 +171,7 @@ public sealed partial class SettingsPage : Page
             Children =
             {
                 toggle,
-                new TextBlock { Text = help, TextWrapping = TextWrapping.Wrap, FontSize = 12, Foreground = InspectUi.Secondary(string.Empty).Foreground },
+                new TextBlock { Text = help, TextWrapping = TextWrapping.Wrap, FontSize = 12, Style = (Style)Application.Current.Resources["SecondaryTextStyle"] },
             },
         });
     }
@@ -111,7 +193,7 @@ public sealed partial class SettingsPage : Page
             Text = "settings.yaml configures wslc's default session — the one the wslc command line uses — and any new session it creates. "
                 + "WSLc Desktop runs its own session (WslcDesktop), which doesn't read this file; see App session below.",
             TextWrapping = TextWrapping.Wrap,
-            Foreground = InspectUi.Secondary(string.Empty).Foreground,
+            Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
         });
         var path = InspectUi.Mono(_file.Path);
         rows.Children.Add(path);
@@ -128,7 +210,7 @@ public sealed partial class SettingsPage : Page
         _fileState = new TextBlock
         {
             Text = _file.Exists ? string.Empty : "The file doesn't exist yet; saving creates it.",
-            Foreground = InspectUi.Secondary(string.Empty).Foreground,
+            Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
         };
         rows.Children.Add(_fileState);
 
@@ -159,7 +241,7 @@ public sealed partial class SettingsPage : Page
             var error = new TextBlock
             {
                 TextWrapping = TextWrapping.Wrap,
-                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorCriticalBrush"],
+                Style = (Style)Application.Current.Resources["ErrorTextStyle"],
                 Visibility = Visibility.Collapsed,
             };
             _inputs[def.Key] = input;
@@ -167,7 +249,7 @@ public sealed partial class SettingsPage : Page
             rows.Children.Add(new StackPanel
             {
                 Spacing = 4,
-                Children = { input, new TextBlock { Text = def.Help, TextWrapping = TextWrapping.Wrap, FontSize = 12, Foreground = InspectUi.Secondary(string.Empty).Foreground }, error },
+                Children = { input, new TextBlock { Text = def.Help, TextWrapping = TextWrapping.Wrap, FontSize = 12, Style = (Style)Application.Current.Resources["SecondaryTextStyle"] }, error },
             });
         }
 
@@ -303,7 +385,7 @@ public sealed partial class SettingsPage : Page
             Text = "Resources for the session WSLc Desktop runs your containers in. These are passed to WSLc when the app starts, "
                 + "so changes apply the next time you open the app.",
             TextWrapping = TextWrapping.Wrap,
-            Foreground = InspectUi.Secondary(string.Empty).Foreground,
+            Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
         });
         InspectUi.AddRow(rows, "Running with", $"{host.StartedCpuCount} CPUs, {host.StartedMemoryMb:N0} MB memory");
         InspectUi.AddRow(rows, "Storage", Path.Combine(
@@ -372,7 +454,7 @@ public sealed partial class SettingsPage : Page
             Text = "Sign in to private registries so images can be pulled. Credentials are handed to wslc and kept in its credential store; "
                 + "this app never stores or shows them. WSLc can't list saved credentials, so the list below shows registries you signed in to from here.",
             TextWrapping = TextWrapping.Wrap,
-            Foreground = InspectUi.Secondary(string.Empty).Foreground,
+            Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
         });
 
         _registryList = new StackPanel { Spacing = 4 };
