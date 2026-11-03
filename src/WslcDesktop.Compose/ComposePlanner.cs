@@ -36,27 +36,30 @@ public static partial class ComposePlanner
         var actions = new List<ComposeAction>();
         IReadOnlyList<string> secretRefs = [];
         IReadOnlyList<string> missing = [];
+        IReadOnlyList<SecretNeed> needs = [];
         try
         {
             var root = YamlTree.ParseDocument(yaml);
             root = (Dictionary<string, object?>)Interpolator.ApplyTree(root, options.Env)!;
             project = ProjectName(root, options);
-            Build(root, project, options, actions, warnings, errors);
-            (secretRefs, missing) = CheckSecrets(actions, options, warnings, errors);
+            var imports = new Dictionary<string, SecretImportSource>(StringComparer.Ordinal);
+            Build(root, project, options, actions, warnings, errors, imports);
+            (secretRefs, missing, needs) = CheckSecrets(actions, options, errors, imports);
         }
         catch (ComposeException e)
         {
             errors.Add(e.Message);
         }
 
-        return new ComposePlan(project, actions, warnings, errors) { SecretRefs = secretRefs, MissingSecrets = missing };
+        return new ComposePlan(project, actions, warnings, errors) { SecretRefs = secretRefs, MissingSecrets = missing, SecretNeeds = needs };
     }
 
-    /// <summary>Secret tokens may only appear as environment values; collects the referenced names and flags the ones that aren't stored.</summary>
-    private static (IReadOnlyList<string> Refs, IReadOnlyList<string> Missing) CheckSecrets(
-        List<ComposeAction> actions, ComposeOptions options, List<string> warnings, List<string> errors)
+    /// <summary>Secret tokens may only appear as environment values; collects the referenced names, their users, and which aren't stored.</summary>
+    private static (IReadOnlyList<string> Refs, IReadOnlyList<string> Missing, IReadOnlyList<SecretNeed> Needs) CheckSecrets(
+        List<ComposeAction> actions, ComposeOptions options, List<string> errors, Dictionary<string, SecretImportSource> imports)
     {
         var refs = new List<string>();
+        var users = new Dictionary<string, List<string>>(StringComparer.Ordinal);
         foreach (var action in actions)
         {
             for (var i = 0; i < action.Args.Count; i++)
@@ -69,7 +72,23 @@ public static partial class ComposePlanner
 
                 if (action.Kind == ActionKind.RunService && i > 0 && action.Args[i - 1] == "--env")
                 {
-                    refs.AddRange(SecretTokens.Find(arg).Where(n => !refs.Contains(n)));
+                    foreach (var n in SecretTokens.Find(arg))
+                    {
+                        if (!refs.Contains(n))
+                        {
+                            refs.Add(n);
+                        }
+
+                        if (!users.TryGetValue(n, out var list))
+                        {
+                            users[n] = list = [];
+                        }
+
+                        if (action.Service is { } svc && !list.Contains(svc))
+                        {
+                            list.Add(svc);
+                        }
+                    }
                 }
                 else
                 {
@@ -79,12 +98,10 @@ public static partial class ComposePlanner
         }
 
         var missing = options.SecretExists is null ? [] : refs.Where(n => !options.SecretExists(n)).ToList();
-        foreach (var name in missing)
-        {
-            warnings.Add($"Secret '{name}' isn't stored yet. Add it on the Secrets page, then plan again.");
-        }
-
-        return (refs, missing);
+        var needs = refs
+            .Select(n => new SecretNeed(n, users.GetValueOrDefault(n) ?? [], !missing.Contains(n), imports.GetValueOrDefault(n)))
+            .ToList();
+        return (refs, missing, needs);
     }
 
 
@@ -110,7 +127,7 @@ public static partial class ComposePlanner
 
     private static void Build(
         Dictionary<string, object?> root, string project, ComposeOptions options,
-        List<ComposeAction> actions, List<string> warnings, List<string> errors)
+        List<ComposeAction> actions, List<string> warnings, List<string> errors, Dictionary<string, SecretImportSource> imports)
     {
         foreach (var key in root.Keys.Where(k => k is not ("version" or "name" or "services" or "networks" or "volumes" or "secrets") && !k.StartsWith("x-", StringComparison.Ordinal)))
         {
@@ -127,13 +144,13 @@ public static partial class ComposePlanner
         foreach (var (key, value) in Map(root.GetValueOrDefault("secrets")) ?? [])
         {
             var def = Map(value) ?? [];
-            if (def.ContainsKey("file") || def.ContainsKey("environment") || def.ContainsKey("content"))
-            {
-                warnings.Add($"Secret '{key}': file, environment and content sources aren't supported; store it on the Secrets page and reference it by name instead.");
-                continue;
-            }
+            var fromFile = def.GetValueOrDefault("file") as string;
+            var fromEnv = def.GetValueOrDefault("environment") as string;
+            var fromContent = def.GetValueOrDefault("content") as string;
+            var hasSource = fromFile is not null || fromEnv is not null || fromContent is not null;
 
-            var id = def.GetValueOrDefault("name") as string ?? key;
+            // A file/environment/content secret is stored under its key (a "name:" there means something else in compose).
+            var id = hasSource ? key : def.GetValueOrDefault("name") as string ?? key;
             if (!SecretTokens.IsValidName(id))
             {
                 errors.Add($"Secret '{key}' maps to '{id}', which isn't a valid stored secret name.");
@@ -141,6 +158,13 @@ public static partial class ComposePlanner
             }
 
             secretMap[key] = id;
+            if (hasSource)
+            {
+                imports[id] = new SecretImportSource(
+                    fromFile is null ? null : Path.GetFullPath(Path.Combine(options.Directory, fromFile)),
+                    fromEnv,
+                    fromContent);
+            }
         }
 
         var services = Map(root.GetValueOrDefault("services")) ?? [];

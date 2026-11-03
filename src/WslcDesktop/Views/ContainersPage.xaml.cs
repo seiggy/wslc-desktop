@@ -168,13 +168,14 @@ public sealed partial class ContainersPage : Page
         var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
         var bar = new ProgressBar { IsIndeterminate = true, Visibility = Visibility.Collapsed };
         var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
-        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, ports, mounts, env, secretPicker, envNote, network, restart, retries, restartNote, startAfter, status, bar, error } };
+        var secretsPanel = new Controls.SecretsNeededPanel(App.Host.Secrets) { ActionName = "Create" };
+        var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, ports, mounts, env, secretPicker, secretsPanel, envNote, network, restart, retries, restartNote, startAfter, status, bar, error } };
 
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
             Title = "New container",
-            Content = new ScrollViewer { Content = panel, MaxHeight = 640, Padding = new Thickness(0, 0, 16, 0) },
+            Content = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, MaxHeight = 640, Padding = new Thickness(0, 0, 16, 0) },
             PrimaryButtonText = "Create",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
@@ -182,7 +183,29 @@ public sealed partial class ContainersPage : Page
         };
 
         void Validate() => dialog.IsPrimaryButtonEnabled =
-            ImageText().Length > 0 && name.Text.Trim().Length > 0;
+            ImageText().Length > 0 && name.Text.Trim().Length > 0 && secretsPanel.IsSatisfied;
+
+        // Tokens typed for secrets that aren't stored yet become inline "create it now" rows.
+        void SyncSecrets()
+        {
+            HashSet<string> stored;
+            try
+            {
+                stored = App.Host.Secrets.List().Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                stored = [];
+            }
+
+            var missing = Lines(env.Text).SelectMany(SecretTokens.Find).Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(n => !stored.Contains(n)).Select(n => new SecretNeed(n, [], false)).ToList();
+            secretsPanel.SetNeeds(missing);
+            Validate();
+        }
+
+        env.TextChanged += (_, _) => SyncSecrets();
+        secretsPanel.StateChanged += Validate;
 
         string ImageText() => (image.SelectedItem as string ?? image.Text ?? string.Empty).Trim();
 
@@ -222,11 +245,16 @@ public sealed partial class ContainersPage : Page
                 }
 
                 // A typed value matching a stored secret becomes its token so it is injected, not kept in plain text.
+                if (!secretsPanel.Commit())
+                {
+                    throw new InvalidOperationException("A secret couldn't be saved; see the message under it.");
+                }
+
                 var envLines = Lines(App.Host.Secrets.Redact(env.Text));
                 var stored = App.Host.Secrets.List().Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
                 if (envLines.SelectMany(SecretTokens.Find).FirstOrDefault(n => !stored.Contains(n)) is { } missing)
                 {
-                    throw new InvalidOperationException($"The secret '{missing}' isn't stored. Add it on the Secrets page first.");
+                    throw new InvalidOperationException($"The secret '{missing}' isn't stored.");
                 }
 
                 status.Text = "Creating container…";

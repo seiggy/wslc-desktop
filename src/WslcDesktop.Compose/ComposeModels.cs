@@ -59,6 +59,15 @@ public sealed record ComposeAction(
     IReadOnlyList<IReadOnlyList<string>>? After = null,
     string? Restart = null);
 
+/// <summary>Where a compose top-level secret's value could be imported from (<c>file:</c>, <c>environment:</c> or <c>content:</c>).</summary>
+public sealed record SecretImportSource(string? FilePath = null, string? EnvVar = null, string? Content = null)
+{
+    public string Describe() => FilePath is not null ? Path.GetFileName(FilePath) : EnvVar is not null ? $"${EnvVar}" : "the compose file";
+}
+
+/// <summary>A secret the compose file needs: who uses it, whether it is already stored, and any value the file itself can supply.</summary>
+public sealed record SecretNeed(string Name, IReadOnlyList<string> Services, bool Exists, SecretImportSource? Import = null);
+
 public sealed record ComposePlan(
     string Project,
     IReadOnlyList<ComposeAction> Actions,
@@ -70,6 +79,9 @@ public sealed record ComposePlan(
 
     /// <summary>Referenced secrets that the store doesn't have; the stack can't run until they're added.</summary>
     public IReadOnlyList<string> MissingSecrets { get; init; } = [];
+
+    /// <summary>Every referenced secret with its users and stored state (a superset of <see cref="MissingSecrets"/>).</summary>
+    public IReadOnlyList<SecretNeed> SecretNeeds { get; init; } = [];
 
     public bool CanRun => Errors.Count == 0 && Actions.Count > 0 && MissingSecrets.Count == 0;
 }

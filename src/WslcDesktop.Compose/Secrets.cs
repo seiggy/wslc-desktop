@@ -46,6 +46,18 @@ public static partial class SecretTokens
     private static partial Regex TokenRegex();
 }
 
+/// <summary>Generates random values for password-like secrets.</summary>
+public static class SecretGenerator
+{
+    private const string Alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+
+    public static string Create(int length = 32)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(length, 8);
+        return System.Security.Cryptography.RandomNumberGenerator.GetString(Alphabet, length);
+    }
+}
+
 /// <summary>
 /// Replaces known secret values in text with their <c>${secret:NAME}</c> token. This is substring matching, so it is
 /// best-effort: a value that was transformed (split, encoded, truncated) or is shorter than <see cref="MinLength"/> is not caught.

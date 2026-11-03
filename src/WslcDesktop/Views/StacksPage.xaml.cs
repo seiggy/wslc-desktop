@@ -159,22 +159,24 @@ public sealed partial class StacksPage : Page
 
         var projectBox = new TextBox { Header = "Project name", MinWidth = 400 };
         var summary = new StackPanel { Spacing = 8 };
+        var secretsPanel = new Controls.SecretsNeededPanel(App.Host.Secrets) { EnvLookup = n => env.GetValueOrDefault(n) };
         var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
         var bar = new ProgressBar { IsIndeterminate = true, Visibility = Visibility.Collapsed };
         var log = new Controls.OutputView { Height = 160, Visibility = Visibility.Collapsed };
-        var panel = new StackPanel { Spacing = 12, MinWidth = 520, Children = { projectBox, summary, status, bar, log } };
+        var panel = new StackPanel { Spacing = 12, MinWidth = 440, Children = { projectBox, secretsPanel, summary, status, bar, log } };
 
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
             Title = $"Up: {Path.GetFileName(path)}",
-            Content = new ScrollViewer { Content = panel, MaxHeight = 560, Padding = new Thickness(0, 0, 16, 0) },
+            Content = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, MaxHeight = 560, Padding = new Thickness(0, 0, 16, 0) },
             PrimaryButtonText = "Up",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
         };
 
         ComposePlan? plan = null;
+        var running = false;
         void Replan()
         {
             var name = projectBox.Text.Trim();
@@ -199,31 +201,6 @@ public sealed partial class StacksPage : Page
                 summary.Children.Add(new TextBlock { Text = "• " + App.Host.Secrets.Redact(a.Description), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(8, 0, 0, 0) });
             }
 
-            foreach (var missing in plan.MissingSecrets)
-            {
-                var pw = new PasswordBox { Header = $"Value for secret '{missing}'", PasswordRevealMode = PasswordRevealMode.Peek, MinWidth = 260 };
-                var save = new Button { Content = "Save secret", VerticalAlignment = VerticalAlignment.Bottom };
-                var rowError = new TextBlock { Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorCriticalBrush"], TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
-                var captured = missing;
-                save.Click += (_, _) =>
-                {
-                    try
-                    {
-                        App.Host.Secrets.Save(captured, pw.Password, string.Empty);
-                        Replan();
-                    }
-                    catch (Exception ex)
-                    {
-                        rowError.Text = ex.Message;
-                        rowError.Visibility = Visibility.Visible;
-                    }
-                };
-                var row = new StackPanel { Spacing = 6, Margin = new Thickness(8, 4, 0, 4) };
-                row.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { pw, save } });
-                row.Children.Add(rowError);
-                summary.Children.Add(row);
-            }
-
             foreach (var w in plan.Warnings)
             {
                 summary.Children.Add(new InfoBar { Severity = InfoBarSeverity.Warning, IsOpen = true, IsClosable = false, Message = w });
@@ -234,17 +211,28 @@ public sealed partial class StacksPage : Page
                 summary.Children.Add(new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = true, IsClosable = false, Message = err });
             }
 
-            dialog.IsPrimaryButtonEnabled = plan.CanRun;
+            secretsPanel.SetNeeds(plan.SecretNeeds);
+            UpdatePrimary();
         }
 
+        void UpdatePrimary() =>
+            dialog.IsPrimaryButtonEnabled = plan is not null && !running && plan.Errors.Count == 0 && plan.Actions.Count > 0 && secretsPanel.IsSatisfied;
+
+        secretsPanel.StateChanged += UpdatePrimary;
         Replan();
         projectBox.Text = plan!.Project;
         projectBox.LostFocus += (_, _) => Replan();
-        var running = false;
 
         dialog.PrimaryButtonClick += async (_, args) =>
         {
             var deferral = args.GetDeferral();
+            if (!secretsPanel.Commit())
+            {
+                args.Cancel = true;
+                deferral.Complete();
+                return;
+            }
+
             Replan();
             if (plan is null || !plan.CanRun)
             {
@@ -254,7 +242,7 @@ public sealed partial class StacksPage : Page
             }
 
             running = true;
-            projectBox.IsEnabled = false;
+            projectBox.IsEnabled = secretsPanel.IsEnabled = false;
             dialog.IsPrimaryButtonEnabled = false;
             bar.Visibility = status.Visibility = log.Visibility = Visibility.Visible;
             status.Text = "Bringing the stack up…";
@@ -271,7 +259,7 @@ public sealed partial class StacksPage : Page
                 args.Cancel = true;
                 status.Text = "Failed: " + ex.Message;
                 bar.Visibility = Visibility.Collapsed;
-                projectBox.IsEnabled = true;
+                projectBox.IsEnabled = secretsPanel.IsEnabled = true;
                 dialog.IsPrimaryButtonEnabled = true;
                 running = false;
             }
