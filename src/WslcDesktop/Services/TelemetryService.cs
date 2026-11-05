@@ -7,7 +7,7 @@ namespace WslcDesktop.Services;
 /// Polls <c>wslc stats</c> for all running containers and keeps a rolling in-memory history per container,
 /// so charts have data even for the time before the user opened a container.
 /// </summary>
-public sealed class TelemetryService
+public sealed class TelemetryService(WslcCli cli)
 {
     public const int Capacity = 150;
     public static readonly TimeSpan Interval = TimeSpan.FromSeconds(2);
@@ -59,7 +59,7 @@ public sealed class TelemetryService
 
             try
             {
-                var snapshot = await WslcCli.GetStatsAsync(session, ct);
+                var snapshot = await cli.GetStatsAsync(session, ct);
                 lock (_gate)
                 {
                     foreach (var name in _history.Keys.Where(k => !snapshot.ContainsKey(k)).ToList())

@@ -30,7 +30,7 @@ public sealed class SdkSessionBackendTests : IAsyncLifetime
             _backend.Dispose();
             try
             {
-                await WslcCli.TerminateSessionAsync(_name);
+                await new WslcCli(WslcProcess.Default).TerminateSessionAsync(_name);
             }
             catch
             {

@@ -13,9 +13,9 @@ namespace WslcDesktop.Cli;
 /// The Microsoft.WSL.Containers API cannot enumerate containers or sessions, but wslc.exe can.
 /// Discovery goes through the CLI; every mutation still uses the API.
 /// </summary>
-public static class WslcCli
+public sealed class WslcCli(IWslcProcess process, Func<string, string>? redact = null)
 {
-    public static async Task<IReadOnlyList<ContainerRow>> ListContainersAsync(string session, CancellationToken ct = default)
+    public async Task<IReadOnlyList<ContainerRow>> ListContainersAsync(string session, CancellationToken ct = default)
     {
         return ParseContainers(await RunAsync(ct, "--session", session, "list", "--all", "--no-trunc", "--format", "json"));
     }
@@ -46,7 +46,7 @@ public static class WslcCli
         return rows;
     }
 
-    public static async Task<EnvironmentInfo> GetEnvironmentAsync(string appSession)
+    public async Task<EnvironmentInfo> GetEnvironmentAsync(string appSession)
     {
         var info = await RunAsync("info");
         string Version(string key) => info.Split('\n')
@@ -86,10 +86,10 @@ public static class WslcCli
         return new EnvironmentInfo(Version("WSL version"), Version("Kernel version"), Version("Session manager version"), items);
     }
 
-    public static Task TerminateSessionAsync(string session) =>
+    public Task TerminateSessionAsync(string session) =>
         RunAsync("--session", session, "system", "session", "terminate");
 
-    public static async Task<IReadOnlyList<SessionRow>> ListSessionsAsync()
+    public async Task<IReadOnlyList<SessionRow>> ListSessionsAsync()
     {
         var output = await RunAsync("system", "session", "list");
         var rows = new List<SessionRow>();
@@ -106,7 +106,7 @@ public static class WslcCli
     }
 
     /// <summary>Snapshot of resource usage for every running container in the session.</summary>
-    public static async Task<IReadOnlyDictionary<string, StatsSample>> GetStatsAsync(string session, CancellationToken ct = default)
+    public async Task<IReadOnlyDictionary<string, StatsSample>> GetStatsAsync(string session, CancellationToken ct = default)
     {
         var output = await RunAsync(ct, "--session", session, "stats", "--format", "json", "--no-trunc");
         var result = new Dictionary<string, StatsSample>();
@@ -161,7 +161,7 @@ public static class WslcCli
         return (ulong)(value * factor);
     }
 
-    public static async Task<IReadOnlyList<ImageSummary>> ListImagesAsync(string session)
+    public async Task<IReadOnlyList<ImageSummary>> ListImagesAsync(string session)
     {
         return ParseImages(await RunAsync("--session", session, "images", "--no-trunc", "--format", "json"));
     }
@@ -187,9 +187,9 @@ public static class WslcCli
         return rows;
     }
 
-    public static async Task<ImageDetail> InspectImageAsync(string session, string target)
+    public async Task<ImageDetail> InspectImageAsync(string session, string target)
     {
-        var output = SecretService.Default.Redact(await RunAsync("--session", session, "image", "inspect", target));
+        var output = (redact ?? SecretService.Default.Redact)(await RunAsync("--session", session, "image", "inspect", target));
         using var doc = JsonDocument.Parse(output);
         var root = doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0
             ? doc.RootElement[0]
@@ -224,14 +224,8 @@ public static class WslcCli
     private static string Str(JsonElement e, string name) =>
         e.ValueKind == JsonValueKind.Object && e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() ?? string.Empty : string.Empty;
 
-    public static Task<string> RunAsync(params string[] args) => RunAsync(CancellationToken.None, args);
+    private Task<string> RunAsync(params string[] args) => RunAsync(CancellationToken.None, args);
 
-    public static Task<string> RunAsync(CancellationToken ct, params string[] args) => RunAsync(null, ct, args);
-
-    /// <summary>Runs wslc with extra environment variables, used to hand secret values to <c>--env NAME</c> without putting them on the command line.</summary>
-    public static Task<string> RunWithEnvAsync(IReadOnlyDictionary<string, string> environment, IReadOnlyList<string> args) =>
-        RunAsync(environment, CancellationToken.None, [.. args]);
-
-    private static Task<string> RunAsync(IReadOnlyDictionary<string, string>? environment, CancellationToken ct, string[] args) =>
-        WslcProcess.Default.RunAsync(new WslcInvocation(args, environment), ct);
+    private Task<string> RunAsync(CancellationToken ct, params string[] args) =>
+        process.RunAsync(new WslcInvocation(args), ct);
 }

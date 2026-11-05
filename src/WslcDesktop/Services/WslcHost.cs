@@ -62,6 +62,7 @@ public sealed class WslcHost
 
     public WslcHost()
     {
+        Telemetry = new TelemetryService(Cli);
         _router = new BackendRouter(owned: null, CliBackend);
         Operations = new WslcOperations(_router, new HostEffects(this));
         Restart = new RestartEngine(new RestartPolicyStore(), new HostRestartActions(this), TimeProvider.System);
@@ -137,7 +138,7 @@ public sealed class WslcHost
     {
         try
         {
-            var sessions = await WslcCli.ListSessionsAsync();
+            var sessions = await Cli.ListSessionsAsync();
             return sessions.Any(s => string.Equals(s.Name, SessionName, StringComparison.OrdinalIgnoreCase));
         }
         catch (InvalidOperationException)
@@ -190,13 +191,13 @@ public sealed class WslcHost
             args =>
             {
                 TrackComposeCommand(args);
-                return WslcCli.RunAsync(["--session", SessionName, .. args]);
+                return WslcProcess.Default.RunAsync(new WslcInvocation(["--session", SessionName, .. args]));
             },
             line => log(SecretService.Default.Redact(line)),
             (args, env) =>
             {
                 TrackComposeCommand(args);
-                return WslcCli.RunWithEnvAsync(env, ["--session", SessionName, .. args]);
+                return WslcProcess.Default.RunAsync(new WslcInvocation(["--session", SessionName, .. args], env));
             },
             SecretService.Default.Get);
 
@@ -218,7 +219,9 @@ public sealed class WslcHost
         }
     }
 
-    public TelemetryService Telemetry { get; } = new();
+    public WslcCli Cli { get; } = new(WslcProcess.Default);
+
+    public TelemetryService Telemetry { get; }
 
     public static readonly TimeSpan SessionDisposeBudget = TimeSpan.FromSeconds(1);
 
@@ -264,8 +267,8 @@ public sealed class WslcHost
         TimeProvider.System,
         TimeSpan.FromSeconds(10));
 
-    private static async Task<IReadOnlyList<string>> ListSessionNamesAsync() =>
-        (await WslcCli.ListSessionsAsync()).Select(s => s.Name).ToList();
+    private async Task<IReadOnlyList<string>> ListSessionNamesAsync() =>
+        (await Cli.ListSessionsAsync()).Select(s => s.Name).ToList();
 
     private SessionCatalog<ContainerRow>? _containerCatalog;
 
@@ -290,17 +293,17 @@ public sealed class WslcHost
 
     public bool IsAppSession(string session) => string.Equals(session, SessionName, StringComparison.OrdinalIgnoreCase);
 
-    public Task<ImageDetail> InspectImageAsync(string session, string target) => WslcCli.InspectImageAsync(session, target);
+    public Task<ImageDetail> InspectImageAsync(string session, string target) => Cli.InspectImageAsync(session, target);
 
 
     // The API cannot enumerate containers; wslc.exe can.
-    public Task<IReadOnlyList<ContainerRow>> GetContainersAsync(CancellationToken ct = default) => WslcCli.ListContainersAsync(SessionName, ct);
+    public Task<IReadOnlyList<ContainerRow>> GetContainersAsync(CancellationToken ct = default) => Cli.ListContainersAsync(SessionName, ct);
 
-    public Task<IReadOnlyList<SessionRow>> GetSessionsAsync() => WslcCli.ListSessionsAsync();
+    public Task<IReadOnlyList<SessionRow>> GetSessionsAsync() => Cli.ListSessionsAsync();
 
-    public Task<EnvironmentInfo> GetEnvironmentAsync() => WslcCli.GetEnvironmentAsync(SessionName);
+    public Task<EnvironmentInfo> GetEnvironmentAsync() => Cli.GetEnvironmentAsync(SessionName);
 
-    public Task TerminateSessionAsync(string session) => WslcCli.TerminateSessionAsync(session);
+    public Task TerminateSessionAsync(string session) => Cli.TerminateSessionAsync(session);
 
     public string SessionId => SessionName;
 
