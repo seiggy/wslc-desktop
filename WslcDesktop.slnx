@@ -2,9 +2,12 @@
   <Folder Name="/src/">
     <Project Path="src/WslcDesktop/WslcDesktop.csproj" />
     <Project Path="src/WslcDesktop.Compose/WslcDesktop.Compose.csproj" />
+    <Project Path="src/WslcDesktop.Core/WslcDesktop.Core.csproj" />
+    <Project Path="src/WslcDesktop.Sdk/WslcDesktop.Sdk.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/WslcDesktop.Compose.Tests/WslcDesktop.Compose.Tests.csproj" />
     <Project Path="tests/WslcDesktop.Tests/WslcDesktop.Tests.csproj" />
+    <Project Path="tests/WslcDesktop.Sdk.Tests/WslcDesktop.Sdk.Tests.csproj" />
   </Folder>
 </Solution>

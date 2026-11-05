@@ -429,3 +429,5 @@ FodyWeavers.xsd
 #*.lscache
 tools/icons/node_modules/
 tools/icons/package-lock.json
+
+.idea/

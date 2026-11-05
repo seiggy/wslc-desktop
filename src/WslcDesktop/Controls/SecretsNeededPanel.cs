@@ -5,6 +5,8 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using WslcDesktop.Compose;
 using WslcDesktop.Services;
+using WslcDesktop.Compose.Secrets;
+using WslcDesktop.Secrets;
 
 namespace WslcDesktop.Controls;
 

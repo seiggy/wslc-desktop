@@ -1,16 +1,7 @@
-namespace WslcDesktop.Services;
+using WslcDesktop.Cli;
+using WslcDesktop.Containers;
 
-public sealed record StatsSample(
-    DateTimeOffset Time,
-    double CpuPercent,
-    double MemoryPercent,
-    ulong MemoryBytes,
-    ulong MemoryLimitBytes,
-    ulong NetRxBytes,
-    ulong NetTxBytes,
-    ulong BlockReadBytes,
-    ulong BlockWriteBytes,
-    int Pids);
+namespace WslcDesktop.Services;
 
 /// <summary>
 /// Polls <c>wslc stats</c> for all running containers and keeps a rolling in-memory history per container,

@@ -4,6 +4,9 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using WslcDesktop.Controls;
 using WslcDesktop.Services;
+using WslcDesktop.Resources;
+
+using WslcDesktop.Sessions;
 
 namespace WslcDesktop.Views;
 
@@ -39,7 +42,7 @@ public sealed partial class ResourceDetailPage : Page
     {
         try
         {
-            var json = await App.Host.InspectResourceAsync(_kind, _name, _session);
+            var json = await App.Host.Operations.Resources.InspectAsync(App.Host.Handle(_session), _kind, _name);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0
                 ? doc.RootElement[0]
@@ -107,7 +110,7 @@ public sealed partial class ResourceDetailPage : Page
 
         try
         {
-            var rows = await WslcResources.ListVolumesAsync(_session);
+            var rows = await App.Host.Operations.Resources.ListAsync(new SessionHandle(_session, App.Host.IsAppSession(_session)), ResourceKind.Volume);
             return rows.FirstOrDefault(r => r.Name == _name)?.UsedBy.ToList() ?? [];
         }
         catch

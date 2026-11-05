@@ -2,7 +2,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using WslcDesktop.Services;
+using WslcDesktop.ViewModels;
 
+using WslcDesktop.Containers;
 namespace WslcDesktop.Views;
 
 public sealed partial class StackDetailPage : Page
@@ -75,7 +77,7 @@ public sealed partial class StackDetailPage : Page
         {
             try
             {
-                await App.Host.StreamLogsAsync(container, 100, true, false, line => LogView.Append($"[{service}] {line}"), ct);
+                await App.Host.Operations.Containers.StreamLogsAsync(App.Host.AppSession, container, new LogOptions(100, true, false), line => LogView.Append($"[{service}] {line}"), ct);
             }
             catch
             {

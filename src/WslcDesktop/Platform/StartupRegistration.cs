@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using Windows.ApplicationModel;
 using WslcDesktop.Services;
+using WslcDesktop.Lifecycle.Startup;
 
 namespace WslcDesktop.Platform;
 

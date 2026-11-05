@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml;
 using Velopack;
 using WslcDesktop.Platform;
 using WslcDesktop.Services;
+using WslcDesktop.Lifecycle.Startup;
 
 namespace WslcDesktop;
 

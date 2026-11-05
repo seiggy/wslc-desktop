@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.WSL.Containers;
 using WslcDesktop.Views;
+using WslcDesktop.Resources;
 
 namespace WslcDesktop;
 
@@ -116,8 +117,8 @@ public sealed partial class MainWindow : Window
                 _ => typeof(ContainersPage),
             }, tag switch
             {
-                "volumes" => Services.ResourceKind.Volume,
-                "networks" => Services.ResourceKind.Network,
+                "volumes" => ResourceKind.Volume,
+                "networks" => ResourceKind.Network,
                 _ => null,
             });
         }

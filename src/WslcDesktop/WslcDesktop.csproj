@@ -11,6 +11,9 @@
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <Platforms>x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <!-- IDEs/solution builds default to AnyCPU, which WinUI self-contained and Win2D reject; fall back to x64. -->
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and ('$(Platform)' == '' or '$(Platform)' == 'AnyCPU')">win-x64</RuntimeIdentifier>
+    <PlatformTarget Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">x64</PlatformTarget>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
     <!-- Unpackaged by default; the release workflow passes -p:WindowsPackageType=MSIX to produce the .msix. -->
@@ -30,6 +33,8 @@
     <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.*" />
     <ProjectReference Include="..\WslcDesktop.Compose\WslcDesktop.Compose.csproj" />
+    <ProjectReference Include="..\WslcDesktop.Core\WslcDesktop.Core.csproj" />
+    <ProjectReference Include="..\WslcDesktop.Sdk\WslcDesktop.Sdk.csproj" />
   </ItemGroup>
 
   <ItemGroup>

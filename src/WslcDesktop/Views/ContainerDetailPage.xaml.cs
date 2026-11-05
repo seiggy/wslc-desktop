@@ -5,6 +5,11 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.System;
 using WslcDesktop.Services;
+using WslcDesktop.Cli;
+using WslcDesktop.Containers;
+using WslcDesktop.Containers.Inspection;
+using WslcDesktop.Restart;
+using WslcDesktop.ViewModels;
 
 namespace WslcDesktop.Views;
 
@@ -24,7 +29,7 @@ public sealed partial class ContainerDetailPage : Page
             .FirstOrDefault(e => string.Equals(e.Session, _session, StringComparison.OrdinalIgnoreCase) && e.Item.Name == _name)?.Item;
     private bool _ready;
     private CancellationTokenSource? _logCts;
-    private ShellProcess? _shell;
+    private IShellProcess? _shell;
 
     public ContainerDetailPage()
     {
@@ -146,7 +151,7 @@ public sealed partial class ContainerDetailPage : Page
     {
         try
         {
-            await App.Host.StartContainerAsync(_name, _session);
+            await App.Host.Operations.Containers.StartAsync(App.Host.Handle(_session), _name);
         }
         catch (Exception ex)
         {
@@ -172,7 +177,7 @@ public sealed partial class ContainerDetailPage : Page
         };
         if (await confirm.ShowAsync() == ContentDialogResult.Primary)
         {
-            await NetworkActionAsync("Couldn't disconnect", () => App.Host.DisconnectNetworkAsync(network, _name, _session));
+            await NetworkActionAsync("Couldn't disconnect", () => App.Host.Operations.Resources.DisconnectNetworkAsync(App.Host.Handle(_session), network, _name));
         }
     }
 
@@ -181,7 +186,7 @@ public sealed partial class ContainerDetailPage : Page
         IReadOnlyList<string> all;
         try
         {
-            all = await App.Host.GetNetworkNamesAsync(_session);
+            all = await App.Host.Operations.Resources.NetworkNamesAsync(App.Host.Handle(_session));
         }
         catch (Exception ex)
         {
@@ -190,7 +195,7 @@ public sealed partial class ContainerDetailPage : Page
             return;
         }
 
-        var connected = (await App.Host.InspectContainerAsync(_name, _session)) is { } json
+        var connected = (await App.Host.Operations.Containers.InspectAsync(App.Host.Handle(_session), _name)) is { } json
             ? ContainerDetail.Parse(json).Networks.Select(n => n.Name).ToHashSet()
             : [];
         var choices = all.Where(n => !connected.Contains(n)).ToList();
@@ -213,7 +218,7 @@ public sealed partial class ContainerDetailPage : Page
         };
         if (await dialog.ShowAsync() == ContentDialogResult.Primary && network.SelectedItem is string chosen)
         {
-            await NetworkActionAsync("Couldn't connect", () => App.Host.ConnectNetworkAsync(chosen, _name, alias.Text.Trim(), _session));
+            await NetworkActionAsync("Couldn't connect", () => App.Host.Operations.Resources.ConnectNetworkAsync(App.Host.Handle(_session), chosen, _name, alias.Text.Trim()));
         }
     }
 
@@ -236,7 +241,7 @@ public sealed partial class ContainerDetailPage : Page
         InspectError.IsOpen = false;
         try
         {
-            var json = await App.Host.InspectContainerAsync(_name, _session);
+            var json = await App.Host.Operations.Containers.InspectAsync(App.Host.Handle(_session), _name);
             var d = ContainerDetail.Parse(json);
             InspectPanel.Children.Clear();
 
@@ -352,7 +357,7 @@ public sealed partial class ContainerDetailPage : Page
             string? error = null;
             try
             {
-                await App.Host.StreamLogsAsync(_name, tail, follow, timestamps, LogView.Append, cts.Token, _session);
+                await App.Host.Operations.Containers.StreamLogsAsync(App.Host.Handle(_session), _name, new LogOptions(tail, follow, timestamps), LogView.Append, cts.Token);
             }
             catch (OperationCanceledException)
             {
@@ -466,15 +471,15 @@ public sealed partial class ContainerDetailPage : Page
         LogBackend("basic piped shell active");
         try
         {
-            ShellProcess? started = null;
-            started = App.Host.StartShell(_name, shell, line => ShellView.Append(s_ansi.Replace(line, string.Empty)), code => DispatcherQueue.TryEnqueue(() =>
+            IShellProcess? started = null;
+            started = App.Host.Operations.Containers.StartShell(App.Host.Handle(_session), _name, shell, line => ShellView.Append(s_ansi.Replace(line, string.Empty)), code => DispatcherQueue.TryEnqueue(() =>
             {
                 if (ReferenceEquals(_shell, started))
                 {
                     ShellView.Append($"[shell exited with code {code}]");
                     StopShell();
                 }
-            }), _session);
+            }));
             _shell = started;
         }
         catch (Exception ex)

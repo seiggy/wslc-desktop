@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using WslcDesktop.Services;
+using WslcDesktop.Lifecycle;
 
 namespace WslcDesktop.Platform;
 

@@ -3,6 +3,8 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.WSL.Containers;
 using WslcDesktop.Services;
+using WslcDesktop.Images;
+using WslcDesktop.ViewModels;
 
 namespace WslcDesktop.Views;
 
@@ -134,7 +136,7 @@ public sealed partial class ImagesPage : Page
         PullBar.IsIndeterminate = true;
         try
         {
-            var progress = new Progress<ImageProgress>(p =>
+            var progress = new Progress<PullProgress>(p =>
             {
                 PullText.Text = $"{p.Status} {p.Id}";
                 if (p.TotalBytes > 0)
@@ -144,7 +146,7 @@ public sealed partial class ImagesPage : Page
                     PullBar.Value = p.CurrentBytes;
                 }
             });
-            await App.Host.PullImageAsync(uri, progress);
+            await App.Host.Operations.Images.PullAsync(App.Host.AppSession, uri, progress);
             App.Host.ImageCatalog.Invalidate(App.Host.SessionId);
             PullBox.Text = string.Empty;
         }
@@ -238,9 +240,25 @@ public sealed partial class ImagesPage : Page
             return;
         }
 
+        var confirm = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = item.IsThisApp ? $"Delete image \"{item.DisplayName}\"?" : $"Delete image \"{item.DisplayName}\" from {item.Session}?",
+            Content = item.UsedBy == "Unused"
+                ? "The image is removed from this session. This can't be undone."
+                : $"The image is in use ({item.UsedBy}). Deleting it can fail until those containers are removed.",
+            PrimaryButtonText = "Delete",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await confirm.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
         try
         {
-            await App.Host.DeleteImageAsync(item.Session, item.Target);
+            await App.Host.Operations.Images.DeleteAsync(App.Host.Handle(item.Session), item.Target);
         }
         catch (Exception ex)
         {

@@ -2,6 +2,8 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using WslcDesktop.Services;
+using WslcDesktop.Containers.Creation;
+using WslcDesktop.Images;
 using static WslcDesktop.Controls.InspectUi;
 
 namespace WslcDesktop.Views;

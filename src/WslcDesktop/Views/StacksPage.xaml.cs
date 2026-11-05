@@ -2,6 +2,11 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WslcDesktop.Compose;
 using WslcDesktop.Services;
+using WslcDesktop.Compose.Execution;
+using WslcDesktop.Compose.Parsing;
+using WslcDesktop.Compose.Planning;
+using WslcDesktop.Restart;
+using WslcDesktop.ViewModels;
 
 namespace WslcDesktop.Views;
 

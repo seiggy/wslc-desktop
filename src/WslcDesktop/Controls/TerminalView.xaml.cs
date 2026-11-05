@@ -13,6 +13,8 @@ using Windows.System;
 using Windows.UI;
 using WslcDesktop.Platform;
 using WslcDesktop.Services;
+using WslcDesktop.Lifecycle;
+using WslcDesktop.Terminal;
 
 namespace WslcDesktop.Controls;
 

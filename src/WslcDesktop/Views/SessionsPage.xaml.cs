@@ -1,11 +1,12 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using WslcDesktop.ViewModels;
 
 namespace WslcDesktop.Views;
 
 public sealed partial class SessionsPage : Page
 {
-    private readonly System.Collections.ObjectModel.ObservableCollection<Services.SessionItem> _items = [];
+    private readonly System.Collections.ObjectModel.ObservableCollection<SessionItem> _items = [];
 
     private static void SetText(TextBlock box, string value)
     {
@@ -57,7 +58,7 @@ public sealed partial class SessionsPage : Page
                 var item = _items.FirstOrDefault(i => i.Id == env.Sessions[n].Id);
                 if (item is null)
                 {
-                    _items.Insert(Math.Min(n, _items.Count), new Services.SessionItem(env.Sessions[n]));
+                    _items.Insert(Math.Min(n, _items.Count), new SessionItem(env.Sessions[n]));
                 }
                 else
                 {

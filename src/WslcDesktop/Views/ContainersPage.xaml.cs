@@ -2,6 +2,15 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WslcDesktop.Compose;
 using WslcDesktop.Services;
+using WslcDesktop.Compose.Secrets;
+using WslcDesktop.Compose.Secrets.Injection;
+using WslcDesktop.Containers;
+using WslcDesktop.Containers.Creation;
+using WslcDesktop.Restart;
+using WslcDesktop.Sessions;
+using WslcDesktop.ViewModels;
+
+using WslcDesktop.Images;
 
 namespace WslcDesktop.Views;
 
@@ -141,17 +150,17 @@ public sealed partial class ContainersPage : Page
     internal static async Task<string?> ShowNewContainerDialogAsync(XamlRoot xamlRoot, string? prefillImage, bool prefillInAppSession = true)
     {
         string? created = null;
-        IReadOnlyList<ImageRow> images = [];
+        IReadOnlyList<ImageSummary> images = [];
         try
         {
-            images = await App.Host.GetImagesAsync();
+            images = await App.Host.Operations.Images.ListAsync(App.Host.AppSession);
         }
         catch
         {
             // Without a local image list the user can still type an image to pull.
         }
 
-        var imageNames = images.Select(i => i.Name).ToList();
+        var imageNames = images.Where(i => i.IsTagged).Select(i => i.DisplayName).ToList();
         var image = new ComboBox
         {
             Header = "Image",
@@ -221,7 +230,7 @@ public sealed partial class ContainersPage : Page
         var networkNames = new List<string> { "Default (bridge)" };
         try
         {
-            networkNames.AddRange((await App.Host.GetNetworkNamesAsync()).Where(n => n != "bridge"));
+            networkNames.AddRange((await App.Host.Operations.Resources.NetworkNamesAsync(App.Host.AppSession)).Where(n => n != "bridge"));
         }
         catch
         {
@@ -324,7 +333,7 @@ public sealed partial class ContainersPage : Page
                 if ((imageName != prefillImage || !prefillInAppSession) && !HasImage(imageNames, imageName))
                 {
                     status.Text = $"Pulling {imageName}…";
-                    var progress = new Progress<Microsoft.WSL.Containers.ImageProgress>(p =>
+                    var progress = new Progress<PullProgress>(p =>
                     {
                         status.Text = $"Pulling {imageName}: {p.Status}";
                         if (p.TotalBytes > 0)
@@ -334,7 +343,7 @@ public sealed partial class ContainersPage : Page
                             bar.Value = p.CurrentBytes;
                         }
                     });
-                    await App.Host.PullImageAsync(imageName, progress);
+                    await App.Host.Operations.Images.PullAsync(App.Host.AppSession, imageName, progress);
                     bar.IsIndeterminate = true;
                 }
 
@@ -352,7 +361,7 @@ public sealed partial class ContainersPage : Page
                 }
 
                 status.Text = "Creating container…";
-                await App.Host.CreateContainerAsync(new NewContainerSpec(
+                await App.Host.Operations.Containers.CreateAsync(App.Host.AppSession, new NewContainerSpec(
                     containerName, imageName, commandLine, Lines(ports.Text), Lines(mounts.Text), envLines,
                     network.SelectedIndex > 0 ? (string)network.SelectedItem : string.Empty));
                 if (restart.SelectedIndex > 0)
@@ -363,7 +372,7 @@ public sealed partial class ContainersPage : Page
                 if (startAfter.IsChecked == true)
                 {
                     status.Text = "Starting container…";
-                    await App.Host.StartContainerAsync(containerName);
+                    await App.Host.Operations.Containers.StartAsync(App.Host.AppSession, containerName);
                 }
 
                 created = containerName;
@@ -416,10 +425,10 @@ public sealed partial class ContainersPage : Page
         { var item = (ContainerItem)e.ClickedItem; Frame.Navigate(typeof(ContainerDetailPage), new ContainerRef(item.Session, item.Name)); }
 
     private async void Start_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't start the container", () => App.Host.StartContainerAsync(ItemOf(sender).Name, ItemOf(sender).Session));
+        await ActAsync("Couldn't start the container", () => App.Host.Operations.Containers.StartAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
 
     private async void Stop_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't stop the container", () => App.Host.StopContainerAsync(ItemOf(sender).Name, ItemOf(sender).Session));
+        await ActAsync("Couldn't stop the container", () => App.Host.Operations.Containers.StopAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
     {
@@ -439,7 +448,7 @@ public sealed partial class ContainersPage : Page
             return;
         }
 
-        await ActAsync("Couldn't delete the container", () => App.Host.DeleteContainerAsync(name, target.Session));
+        await ActAsync("Couldn't delete the container", () => App.Host.Operations.Containers.DeleteAsync(App.Host.Handle(target.Session), name));
     }
 
     private static ContainerItem ItemOf(object sender) => (ContainerItem)((FrameworkElement)sender).Tag;

@@ -2,6 +2,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using WslcDesktop.Services;
+using WslcDesktop.Resources;
+using WslcDesktop.Sessions;
+using WslcDesktop.ViewModels;
 
 namespace WslcDesktop.Views;
 
@@ -225,11 +228,11 @@ public sealed partial class ResourcesPage : Page
                         bytes = parsed;
                     }
 
-                    await App.Host.CreateVolumeAsync(n, d, bytes, target);
+                    await App.Host.Operations.Resources.CreateVolumeAsync(App.Host.Handle(target), n, d, bytes);
                 }
                 else
                 {
-                    await App.Host.CreateNetworkAsync(n, d, subnet.Text.Trim(), gateway.Text.Trim(), isInternal.IsChecked == true, target);
+                    await App.Host.Operations.Resources.CreateNetworkAsync(App.Host.Handle(target), n, d, subnet.Text.Trim(), gateway.Text.Trim(), isInternal.IsChecked == true);
                 }
             }
             catch (Exception ex)
@@ -272,7 +275,7 @@ public sealed partial class ResourcesPage : Page
             return;
         }
 
-        await ActAsync($"Couldn't prune {Noun}s", () => App.Host.PruneResourcesAsync(_kind, PruneSession));
+        await ActAsync($"Couldn't prune {Noun}s", () => App.Host.Operations.Resources.PruneAsync(App.Host.Handle(PruneSession), _kind));
     }
 
     private async void Remove_Click(object sender, RoutedEventArgs e)
@@ -295,7 +298,7 @@ public sealed partial class ResourcesPage : Page
             return;
         }
 
-        await ActAsync($"Couldn't remove {name}", () => App.Host.RemoveResourceAsync(_kind, name, target.Session));
+        await ActAsync($"Couldn't remove {name}", () => App.Host.Operations.Resources.RemoveAsync(App.Host.Handle(target.Session), _kind, name));
     }
 
     private async Task ActAsync(string failureTitle, Func<Task> action)

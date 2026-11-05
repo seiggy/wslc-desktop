@@ -2,7 +2,7 @@
     x:Class="WslcDesktop.Views.ContainersPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:svc="using:WslcDesktop.Services">
+    xmlns:svc="using:WslcDesktop.ViewModels">
 
     <Grid Padding="24" RowSpacing="12">
         <Grid.RowDefinitions>

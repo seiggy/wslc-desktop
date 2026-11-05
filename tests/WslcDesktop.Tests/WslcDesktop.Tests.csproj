@@ -12,32 +12,9 @@
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
-
-  <!-- The app is WinUI; the UI-free logic is compiled in directly so it can be tested on plain net10.0. -->
-  <ItemGroup>
-    <Compile Include="..\..\src\WslcDesktop\Services\AppSettings.cs" Link="Linked\AppSettings.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\AccentPalette.cs" Link="Linked\AccentPalette.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\TrayPolicy.cs" Link="Linked\TrayPolicy.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\UpdatePolicy.cs" Link="Linked\UpdatePolicy.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\SecretStore.cs" Link="Linked\SecretStore.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\SecretService.cs" Link="Linked\SecretService.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\RestartPolicy.cs" Link="Linked\RestartPolicy.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\RestartDisplay.cs" Link="Linked\RestartDisplay.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\StartupPolicy.cs" Link="Linked\StartupPolicy.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\VolumeSize.cs" Link="Linked\VolumeSize.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\RunImage.cs" Link="Linked\RunImage.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\ImageModels.cs" Link="Linked\ImageModels.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\ImageCatalog.cs" Link="Linked\ImageCatalog.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\SessionCatalog.cs" Link="Linked\SessionCatalog.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\ContainerListing.cs" Link="Linked\ContainerListing.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\TerminalProtocol.cs" Link="Linked\TerminalProtocol.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\ConPtySession.cs" Link="Linked\ConPtySession.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\VtScreen.cs" Link="Linked\VtScreen.cs" />
-    <Compile Include="..\..\src\WslcDesktop\Services\VtInput.cs" Link="Linked\VtInput.cs" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\WslcDesktop.Compose\WslcDesktop.Compose.csproj" />
+    <ProjectReference Include="..\..\src\WslcDesktop.Core\WslcDesktop.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

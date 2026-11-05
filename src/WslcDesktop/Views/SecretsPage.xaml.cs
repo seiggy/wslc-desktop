@@ -3,6 +3,9 @@ using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
 using WslcDesktop.Compose;
 using WslcDesktop.Services;
+using WslcDesktop.Compose.Secrets.Injection;
+using WslcDesktop.Secrets;
+using WslcDesktop.ViewModels;
 
 namespace WslcDesktop.Views;
 

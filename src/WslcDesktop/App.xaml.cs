@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using WslcDesktop.Services;
+using WslcDesktop.Lifecycle.Startup;
 
 namespace WslcDesktop;
 
