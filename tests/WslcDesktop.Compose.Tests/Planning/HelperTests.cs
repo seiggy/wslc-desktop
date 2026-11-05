@@ -1,3 +1,4 @@
+using WslcDesktop.Compose.Planning.Resources;
 
 using WslcDesktop.Compose.Execution;
 using WslcDesktop.Compose.Parsing;
@@ -51,14 +52,14 @@ public class HelperTests
     [InlineData(@"C:/src:/app:ro", "C:/src", "/app", true)]
     [InlineData("/anon", "/anon", null, false)]
     public void Splits_volume_specs(string text, string source, string? target, bool ro) =>
-        Assert.Equal((source, target, ro), ComposePlanner.SplitVolume(text));
+        Assert.Equal((source, target, ro), VolumeSpec.SplitVolume(text));
 
     [Theory]
     [InlineData("echo hi", new[] { "echo", "hi" })]
     [InlineData("sh -c \"echo a b\"", new[] { "sh", "-c", "echo a b" })]
     [InlineData("a 'b c' d", new[] { "a", "b c", "d" })]
     public void Shell_splits(string text, string[] expected) =>
-        Assert.Equal(expected, ComposePlanner.ShellSplit(text));
+        Assert.Equal(expected, ComposeValues.ShellSplit(text));
 
     [Theory]
     [InlineData("10s", 10)]
@@ -67,7 +68,7 @@ public class HelperTests
     [InlineData("1h", 3600)]
     [InlineData("bogus", null)]
     public void Parses_durations(string text, int? seconds) =>
-        Assert.Equal(seconds, ComposePlanner.ParseDurationSeconds(text));
+        Assert.Equal(seconds, ComposeUnits.ParseDurationSeconds(text));
 
     [Fact]
     public void Parses_stack_labels_out_of_wslc_label_string()

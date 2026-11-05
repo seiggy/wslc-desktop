@@ -1,3 +1,4 @@
+using WslcDesktop.Compose.Planning.Services;
 
 using WslcDesktop.Compose.Execution;
 using WslcDesktop.Compose.Planning;

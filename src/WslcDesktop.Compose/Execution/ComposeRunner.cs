@@ -1,3 +1,4 @@
+using WslcDesktop.Compose.Planning.Services;
 using System.Text.Json;
 using WslcDesktop.Compose.Planning;
 using WslcDesktop.Compose.Secrets.Injection;

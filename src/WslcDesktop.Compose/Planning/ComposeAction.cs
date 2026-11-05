@@ -1,3 +1,4 @@
+using WslcDesktop.Compose.Planning.Services;
 namespace WslcDesktop.Compose.Planning;
 
 /// <summary>One planned wslc invocation. <see cref="Args"/> excludes the --session option.</summary>
