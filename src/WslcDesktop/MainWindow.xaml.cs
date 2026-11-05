@@ -1,7 +1,13 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.WSL.Containers;
-using WslcDesktop.Views;
+using WslcDesktop.Views.Containers;
+using WslcDesktop.Views.Stacks;
+using WslcDesktop.Views.Images;
+using WslcDesktop.Views.Resources;
+using WslcDesktop.Views.Secrets;
+using WslcDesktop.Views.Sessions;
+using WslcDesktop.Views.Settings;
 using WslcDesktop.Resources;
 
 namespace WslcDesktop;
