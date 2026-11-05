@@ -147,7 +147,7 @@ jobs:
 
       - name: Validate Store identity and bundle unsigned packages
         shell: pwsh
-        run: ./tools/packaging/Bundle-Release.ps1 -Version 1.0.0 -Directory artifacts
+        run: ./tools/packaging/Bundle-Store.ps1 -Version 1.0.0 -Directory artifacts
 
       - uses: actions/upload-artifact@v4
         with:

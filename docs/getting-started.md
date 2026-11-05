@@ -14,7 +14,7 @@ Run `wslc --help` in a terminal. If it prints the command list, the app can find
 
 Download `WslcDesktopManager-win-x64-Setup.exe` (or `-arm64`) from the [Releases page](https://github.com/seiggy/wslc-desktop/releases) and run it. It installs per user and updates from **Settings → Updates**. The installer is unsigned until a certificate is available, so Windows SmartScreen may warn: choose **More info → Run anyway**. Prefer no installer? Extract the portable zip and run `WslcDesktop.exe` (no auto-update). WSLc is still required, and app settings and data remain under `%LOCALAPPDATA%`. No release yet? [Build from source](/contributing).
 
-The MSIX packages and app bundle on GitHub are unsigned Microsoft Store submission files, not sideload installers. Microsoft signs the packages after certification; install through the Microsoft Store once the listing is live, or use the installer.
+Update packages (`.nupkg`) and feed indexes on the Releases page are used by the installed app, not manual installers. Microsoft Store submission packages are built in a separate workflow and are not attached to releases. Microsoft signs Store packages after certification; install through the Microsoft Store once the listing is live, or use the installer.
 
 ## First run
 

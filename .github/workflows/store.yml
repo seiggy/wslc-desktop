@@ -1,0 +1,89 @@
+name: Store packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Store version to build, e.g. 1.2.3 (package version becomes 1.2.3.0)'
+        required: true
+        type: string
+
+concurrency:
+  group: store-${{ inputs.version }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  VERSION: ${{ inputs.version }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 11.0.x
+          dotnet-quality: preview
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.*.props', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Build unsigned Store MSIX (${{ matrix.arch }})
+        shell: pwsh
+        run: >
+          ./tools/packaging/Build-Release.ps1
+          -Arch ${{ matrix.arch }}
+          -Version $env:VERSION
+          -OutDir artifacts
+          -PackageType Store
+          -NuGetConfig nuget.config
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-msix-${{ matrix.arch }}
+          path: artifacts/*.msix
+          if-no-files-found: error
+
+  bundle:
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: store-msix-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Validate Store identity and bundle unsigned packages
+        shell: pwsh
+        run: ./tools/packaging/Bundle-Store.ps1 -Version $env:VERSION -Directory artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-submission
+          path: artifacts/*
+          if-no-files-found: error
+
+      - name: Download instructions
+        shell: pwsh
+        run: |
+          "### Store submission ready" >> $env:GITHUB_STEP_SUMMARY
+          "Download **store-submission** from this run's **Artifacts** section and extract it. Upload the appxbundle to Partner Center." >> $env:GITHUB_STEP_SUMMARY
+          "These unsigned packages are not installers and are never attached to a GitHub Release." >> $env:GITHUB_STEP_SUMMARY
