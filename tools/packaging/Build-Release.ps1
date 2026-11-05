@@ -69,7 +69,8 @@ try {
     [xml]$xml = $original
     $xml.Package.Identity.Version = $msixVersion
     $xml.Save($manifest)
-    dotnet build $project @common -p:WindowsPackageType=MSIX -p:GenerateAppxPackageOnBuild=true `
+    # Embedded symbols avoid the MSIX SDK's standalone PDB tool lookup.
+    dotnet build $project @common -p:DebugType=embedded -p:WindowsPackageType=MSIX -p:GenerateAppxPackageOnBuild=true `
         -p:AppxBundle=Never -p:AppxPackageSigningEnabled=false -p:AppxSymbolPackageEnabled=false "-p:AppxPackageDir=$pkgDir\"
     if ($LASTEXITCODE) { throw 'msix build failed' }
 }
