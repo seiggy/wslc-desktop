@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WslcDesktop.Controls;
@@ -12,22 +13,21 @@ public sealed class BehaviorTab : SettingsTab
     public BehaviorTab(StatusReporter report) : base(report)
     {
         var settings = App.Host.Settings;
-        var card = InspectUi.Card("Startup and tray", out var rows);
+        var card = InspectUi.Card(UiStrings.Get("StartupAndTray"), out var rows);
         rows.Spacing = 12;
-        rows.Children.Add(InspectUi.Description("How WSLc Desktop Manager behaves on your desktop. Changes apply immediately."));
+        rows.Children.Add(InspectUi.Description(UiStrings.Get("HowWSLcDesktopManagerBehavesOnYourDesktopChanges")));
 
         AddStartupPreference(rows);
         AddPreference(
             rows,
-            "Minimize to tray",
-            "Minimizing hides the window to the notification area and removes it from the taskbar. Containers keep running; "
-                + "click the tray icon to bring the window back.",
+            UiStrings.Get("MinimizeToTray"),
+            UiStrings.Get("MinimizingHidesTheWindowToTheNotificationAreaAnd"),
             settings.MinimizeToTray,
             on => settings.MinimizeToTray = on);
         AddPreference(
             rows,
-            "Close button minimizes to tray",
-            "The close button (X) hides the window to the tray instead of quitting. Use Exit in the tray menu to quit the app.",
+            UiStrings.Get("CloseButtonMinimizesToTray"),
+            UiStrings.Get("TheCloseButtonXHidesTheWindowToThe"),
             settings.CloseMinimizesToTray,
             on => settings.CloseMinimizesToTray = on);
         Children.Add(card);
@@ -36,11 +36,11 @@ public sealed class BehaviorTab : SettingsTab
     // Start with Windows reads and writes the OS (Run key or StartupTask), so it always reflects what Windows will do.
     private void AddStartupPreference(StackPanel rows)
     {
-        var toggle = new ToggleSwitch { Header = "Start with Windows", IsEnabled = false };
+        var toggle = new ToggleSwitch { Header = UiStrings.Get("StartWithWindows"), IsEnabled = false };
         var help = Help(string.Empty);
         var windowsSettings = new HyperlinkButton
         {
-            Content = "Open Windows startup settings",
+            Content = UiStrings.Get("OpenWindowsStartupSettings"),
             NavigateUri = new Uri("ms-settings:startupapps"),
             Padding = new Thickness(0),
             Visibility = Visibility.Collapsed,
@@ -85,7 +85,7 @@ public sealed class BehaviorTab : SettingsTab
             }
             catch (Exception ex)
             {
-                Report("Couldn't save app settings", ex.Message, InfoBarSeverity.Error);
+                Report(UiStrings.Get("CouldnTSaveAppSettings"), ex.Message, InfoBarSeverity.Error);
             }
         };
         rows.Children.Add(new StackPanel { Spacing = 4, Children = { toggle, Help(help) } });

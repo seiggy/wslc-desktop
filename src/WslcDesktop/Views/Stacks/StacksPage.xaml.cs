@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WslcDesktop.Compose;
@@ -63,30 +64,30 @@ public sealed partial class StacksPage : Page
     private static string NameOf(object sender) => (string)((FrameworkElement)sender).Tag;
 
     private async void Start_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't start the stack", c => c.StartAsync(NameOf(sender)));
+        await ActAsync(UiStrings.Get("CouldnTStartTheStack"), c => c.StartAsync(NameOf(sender)));
 
     private async void Stop_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't stop the stack", c => c.StopAsync(NameOf(sender)));
+        await ActAsync(UiStrings.Get("CouldnTStopTheStack"), c => c.StopAsync(NameOf(sender)));
 
     private async void Down_Click(object sender, RoutedEventArgs e)
     {
         var name = NameOf(sender);
-        var volumes = new CheckBox { Content = "Also remove the stack's volumes (deletes data)" };
+        var volumes = new CheckBox { Content = UiStrings.Get("AlsoRemoveTheStackSVolumesDeletesData") };
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Take down \"{name}\"?",
+            Title = UiStrings.Format("TakeDown", name),
             Content = new StackPanel
             {
                 Spacing = 12,
                 Children =
                 {
-                    new TextBlock { Text = "All containers of this stack are stopped and removed, and its networks are deleted. This can't be undone.", TextWrapping = TextWrapping.Wrap },
+                    new TextBlock { Text = UiStrings.Get("AllContainersOfThisStackAreStoppedAndRemoved"), TextWrapping = TextWrapping.Wrap },
                     volumes,
                 },
             },
-            PrimaryButtonText = "Down",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = UiStrings.Get("ActionDown"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await confirm.ShowAsync() != ContentDialogResult.Primary)
@@ -95,7 +96,7 @@ public sealed partial class StacksPage : Page
         }
 
         var removeVolumes = volumes.IsChecked == true;
-        await ActAsync("Couldn't take the stack down", c => c.DownAsync(name, removeVolumes));
+        await ActAsync(UiStrings.Get("CouldnTTakeTheStackDown"), c => c.DownAsync(name, removeVolumes));
     }
 
     private async Task ActAsync(string failureTitle, Func<ComposeRunner, Task> action)
@@ -156,13 +157,13 @@ public sealed partial class StacksPage : Page
         }
         catch (Exception ex)
         {
-            ErrorBar.Title = "Couldn't read the compose file";
+            ErrorBar.Title = UiStrings.Get("CouldnTReadTheComposeFile");
             ErrorBar.Message = ex.Message;
             ErrorBar.IsOpen = true;
             return;
         }
 
-        var projectBox = new TextBox { Header = "Project name", MinWidth = 400 };
+        var projectBox = new TextBox { Header = UiStrings.Get("ProjectName"), MinWidth = 400 };
         var summary = new StackPanel { Spacing = 8 };
         var secretsPanel = new Controls.SecretsNeededPanel(App.Host.Secrets) { EnvLookup = n => env.GetValueOrDefault(n) };
         var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
@@ -173,10 +174,10 @@ public sealed partial class StacksPage : Page
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Up: {Path.GetFileName(path)}",
+            Title = UiStrings.Format("Up", Path.GetFileName(path)),
             Content = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, MaxHeight = 560, Padding = new Thickness(0, 0, 16, 0) },
-            PrimaryButtonText = "Up",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = UiStrings.Get("ActionUp"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
 
@@ -200,7 +201,7 @@ public sealed partial class StacksPage : Page
 
             plan = ComposePlanner.Plan(yaml, new ComposeOptions { ProjectName = name.Length > 0 ? name : null, Directory = directory, Env = env, SecretExists = stored.Contains });
             summary.Children.Clear();
-            summary.Children.Add(new TextBlock { Text = $"Planned actions ({plan.Actions.Count})", Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"] });
+            summary.Children.Add(new TextBlock { Text = UiStrings.Format("PlannedActions", plan.Actions.Count), Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"] });
             foreach (var a in plan.Actions)
             {
                 summary.Children.Add(new TextBlock { Text = "• " + App.Host.Secrets.Redact(a.Description), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(8, 0, 0, 0) });
@@ -250,7 +251,7 @@ public sealed partial class StacksPage : Page
             projectBox.IsEnabled = secretsPanel.IsEnabled = false;
             dialog.IsPrimaryButtonEnabled = false;
             bar.Visibility = status.Visibility = log.Visibility = Visibility.Visible;
-            status.Text = "Bringing the stack up…";
+            status.Text = UiStrings.Get("BringingTheStackUp");
             try
             {
                 await App.Host.CreateComposeRunner(log.Append).UpAsync(plan);
@@ -262,7 +263,7 @@ public sealed partial class StacksPage : Page
             catch (Exception ex)
             {
                 args.Cancel = true;
-                status.Text = "Failed: " + ex.Message;
+                status.Text = UiStrings.Format("StackOperationFailed", ex.Message);
                 bar.Visibility = Visibility.Collapsed;
                 projectBox.IsEnabled = secretsPanel.IsEnabled = true;
                 dialog.IsPrimaryButtonEnabled = true;

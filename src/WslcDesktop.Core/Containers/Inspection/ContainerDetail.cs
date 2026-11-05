@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Text.Json;
 using WslcDesktop.Common;
 
@@ -56,7 +57,7 @@ public sealed record ContainerDetail(
                 }
                 else
                 {
-                    ports.Add($"{p.Name} (not published)");
+                    ports.Add(UiStrings.Format("NotPublished", p.Name));
                 }
             }
         }
@@ -90,7 +91,7 @@ public sealed record ContainerDetail(
             exit,
             health.ValueKind == JsonValueKind.Object ? Str(health, "Status") : string.Empty,
             memory > 0 ? SizeFormat.Format((ulong)memory) : string.Empty,
-            nanoCpus > 0 ? $"{nanoCpus / 1e9:0.##} CPUs" : string.Empty,
+            nanoCpus > 0 ? UiStrings.Format("CPUs", nanoCpus / 1e9) : string.Empty,
             Str(host, "NetworkMode"),
             ports,
             networks,

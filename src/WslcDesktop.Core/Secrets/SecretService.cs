@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 
 using WslcDesktop.Compose.Secrets.Injection;
 
@@ -26,12 +27,12 @@ public sealed class SecretService(ISecretStore store, TimeSpan? redactorLifetime
     {
         if (!SecretTokens.IsValidName(name))
         {
-            throw new ArgumentException($"Names use letters, digits, '.', '_' and '-' (up to {SecretTokens.MaxNameLength} characters) and start with a letter or digit.", nameof(name));
+            throw new ArgumentException(UiStrings.Format("NamesUseLettersDigitsAndUpToCharactersAnd", SecretTokens.MaxNameLength), nameof(name));
         }
 
         if (value.Length == 0)
         {
-            throw new ArgumentException("The value can't be empty.", nameof(value));
+            throw new ArgumentException(UiStrings.Get("TheValueCanTBeEmpty"), nameof(value));
         }
 
         store.Set(name, value, label.Trim());

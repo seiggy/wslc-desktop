@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WslcDesktop.Controls;
@@ -14,16 +15,16 @@ public sealed class UpdatesTab : SettingsTab
     public UpdatesTab(StatusReporter report) : base(report)
     {
         var updates = App.Updates;
-        var card = InspectUi.Card("Updates", out var rows);
+        var card = InspectUi.Card(UiStrings.Get("Updates"), out var rows);
         rows.Spacing = 12;
 
-        var version = InspectUi.Description($"Installed version: {updates.CurrentVersion ?? "unknown"}");
+        var version = InspectUi.Description(UiStrings.Format("InstalledVersion", updates.CurrentVersion ?? "unknown"));
         var title = new TextBlock { Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"] };
         var message = InspectUi.Description(string.Empty);
         var progress = new ProgressBar { Minimum = 0, Maximum = 100 };
-        var check = new Button { Content = "Check for updates" };
-        var download = new Button { Content = "Download update", Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
-        var restart = new Button { Content = "Restart to update", Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
+        var check = new Button { Content = UiStrings.Get("CheckForUpdates") };
+        var download = new Button { Content = UiStrings.Get("DownloadUpdate"), Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
+        var restart = new Button { Content = UiStrings.Get("RestartToUpdate"), Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
         check.Click += async (_, _) => await updates.CheckAsync();
         download.Click += async (_, _) => await updates.DownloadAsync();
         restart.Click += (_, _) => updates.ApplyAndRestart();

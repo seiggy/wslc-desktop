@@ -36,6 +36,8 @@ public sealed class ImageItem(SessionImage row) : INotifyPropertyChanged
 
     public string UsedBy => _s.UsedBy;
 
+    public bool IsUnused => _s.Containers == 0;
+
     public string Size => _s.Size;
 
     public string CreatedSince => _s.CreatedSince;

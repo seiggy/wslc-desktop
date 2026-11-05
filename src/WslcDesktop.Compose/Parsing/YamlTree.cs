@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
@@ -15,7 +16,7 @@ public static class YamlTree
         }
         catch (YamlException e)
         {
-            throw new ComposeException($"The compose file isn't valid YAML: {e.Message}");
+            throw new ComposeException(UiStrings.Format("TheComposeFileIsnTValidYAML", e.Message));
         }
 
         if (stream.Documents.Count == 0)
@@ -24,7 +25,7 @@ public static class YamlTree
         }
 
         return Convert(stream.Documents[0].RootNode) as Dictionary<string, object?>
-            ?? throw new ComposeException("The compose file must contain a mapping at the top level.");
+            ?? throw new ComposeException(UiStrings.Get("TheComposeFileMustContainAMappingAtThe"));
     }
 
     private static object? Convert(YamlNode node)

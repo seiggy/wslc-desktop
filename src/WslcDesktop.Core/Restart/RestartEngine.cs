@@ -19,7 +19,7 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
     public event Action? Changed;
 
     public RestartPolicy GetPolicy(string name) =>
-        store.Snapshot().TryGetValue(name, out var e) ? RestartPolicy.Parse(e.Policy) : RestartPolicy.None;
+        store.TryGet(name, out var e) ? RestartPolicy.Parse(e.Policy) : RestartPolicy.None;
 
     public RestartInfo GetInfo(string name)
     {
@@ -64,7 +64,7 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
     /// <summary>The user stopped the container from this app: never restart it because of that stop.</summary>
     public void NotifyUserStopped(string name)
     {
-        if (store.Snapshot().TryGetValue(name, out var e) && !e.UserStopped)
+        if (store.TryGet(name, out var e) && !e.UserStopped)
         {
             store.Set(name, e with { UserStopped = true });
         }
@@ -80,7 +80,7 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
     /// <summary>The user started the container: a fresh run, with attempts and crash-loop state cleared.</summary>
     public void NotifyUserStarted(string name)
     {
-        if (store.Snapshot().TryGetValue(name, out var e) && e.UserStopped)
+        if (store.TryGet(name, out var e) && e.UserStopped)
         {
             store.Set(name, e with { UserStopped = false });
         }
@@ -142,9 +142,12 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
                 changed |= Evaluate(name, policy, obs, userStopped, first, now, due);
             }
 
-            foreach (var name in _absent.Keys.Where(n => !store.Snapshot().ContainsKey(n)).ToList())
+            foreach (var name in _absent.Keys.ToList())
             {
-                _absent.Remove(name);
+                if (!store.TryGet(name, out _))
+                {
+                    _absent.Remove(name);
+                }
             }
 
             foreach (var name in due)

@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -12,15 +13,15 @@ public static class TerminalCard
 {
     public static Border Create(AppSettings settings, StatusReporter report)
     {
-        var card = InspectUi.Card("Terminal", out var rows);
+        var card = InspectUi.Card(UiStrings.Get("Terminal"), out var rows);
         rows.Spacing = 12;
-        rows.Children.Add(InspectUi.Description("Font for the Shell tab's terminal. Changes apply immediately to open terminals and are saved for the next launch."));
+        rows.Children.Add(InspectUi.Description(UiStrings.Get("FontForTheShellTabSTerminalChangesApply")));
 
         var fonts = TerminalProtocol.AvailableFonts(InstalledFontNames(), settings.TerminalFontFamily);
-        var font = new ComboBox { Header = "Font", ItemsSource = fonts, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var font = new ComboBox { Header = UiStrings.Get("Font"), ItemsSource = fonts, HorizontalAlignment = HorizontalAlignment.Stretch };
         var size = new NumberBox
         {
-            Header = "Size",
+            Header = UiStrings.Get("LabelSize"),
             Minimum = TerminalProtocol.MinFontSize,
             Maximum = TerminalProtocol.MaxFontSize,
             SmallChange = 1,
@@ -28,8 +29,8 @@ public static class TerminalCard
             HorizontalAlignment = HorizontalAlignment.Left,
             Width = 160,
         };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(font, "Terminal font");
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(size, "Terminal font size");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(font, UiStrings.Get("TerminalFont"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(size, UiStrings.Get("TerminalFontSize"));
 
         var preview = new TextBlock
         {
@@ -43,7 +44,7 @@ public static class TerminalCard
             CornerRadius = new CornerRadius(4),
             Child = preview,
         };
-        var reset = new Button { Content = "Reset to defaults", HorizontalAlignment = HorizontalAlignment.Left };
+        var reset = new Button { Content = UiStrings.Get("ResetToDefaults"), HorizontalAlignment = HorizontalAlignment.Left };
 
         var syncing = false;
 
@@ -73,7 +74,7 @@ public static class TerminalCard
             }
             catch (Exception ex)
             {
-                report("Couldn't save terminal settings", ex.Message, InfoBarSeverity.Error);
+                report(UiStrings.Get("CouldnTSaveTerminalSettings"), ex.Message, InfoBarSeverity.Error);
             }
 
             Show();

@@ -47,6 +47,14 @@ public sealed class TelemetryService(WslcCli cli)
         }
     }
 
+    public StatsSample? GetLatest(string container)
+    {
+        lock (_gate)
+        {
+            return _history.TryGetValue(container, out var list) && list.Count > 0 ? list[^1] : null;
+        }
+    }
+
     private async Task LoopAsync(string session, CancellationToken ct)
     {
         using var timer = new PeriodicTimer(Interval);

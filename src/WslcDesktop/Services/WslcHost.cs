@@ -191,13 +191,13 @@ public sealed class WslcHost
             args =>
             {
                 TrackComposeCommand(args);
-                return WslcProcess.Default.RunAsync(new WslcInvocation(["--session", SessionName, .. args]));
+                return WslcProcess.Default.RunAsync(new WslcInvocation((string[])["--session", SessionName, .. args]));
             },
             line => log(SecretService.Default.Redact(line)),
             (args, env) =>
             {
                 TrackComposeCommand(args);
-                return WslcProcess.Default.RunAsync(new WslcInvocation(["--session", SessionName, .. args], env));
+                return WslcProcess.Default.RunAsync(new WslcInvocation((string[])["--session", SessionName, .. args], env));
             },
             SecretService.Default.Get);
 
@@ -318,7 +318,7 @@ public sealed class WslcHost
 
     public SessionHandle Handle(string? session) => new(session ?? SessionName, IsAppSession(session ?? SessionName));
 
-    private static ISessionBackend CliBackend(string session) => new WslcCliBackend(WslcProcess.Default, session);
+    private static ISessionBackend CliBackend(string session) => new WslcCliBackend(WslcProcess.Default, session, SecretService.Default.Get);
 
     private BackendRouter _router;
 

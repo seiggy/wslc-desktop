@@ -2,6 +2,7 @@
 using WslcDesktop.Restart;
 using WslcDesktop.Restart.Monitoring;
 using WslcDesktop.Restart.Persistence;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WslcDesktop.Tests.Restart;
 
@@ -20,7 +21,15 @@ public class RestartEngineTests
     {
         public Dictionary<string, RestartEntry> Data { get; } = [];
 
-        public IReadOnlyDictionary<string, RestartEntry> Snapshot() => new Dictionary<string, RestartEntry>(Data);
+        public int SnapshotCalls { get; private set; }
+
+        public IReadOnlyDictionary<string, RestartEntry> Snapshot()
+        {
+            SnapshotCalls++;
+            return new Dictionary<string, RestartEntry>(Data);
+        }
+
+        public bool TryGet(string name, [NotNullWhen(true)] out RestartEntry? entry) => Data.TryGetValue(name, out entry);
 
         public void Set(string name, RestartEntry? entry)
         {
@@ -185,6 +194,17 @@ public class RestartEngineTests
         Assert.Equal(TimeSpan.FromSeconds(1), e.Backoff(1));
         Assert.Equal(TimeSpan.FromSeconds(8), e.Backoff(4));
         Assert.Equal(TimeSpan.FromSeconds(60), e.Backoff(20));
+    }
+
+    [Fact]
+    public void PolicyLookupDoesNotCopyTheStore()
+    {
+        Policy("always");
+        var e = Engine();
+        var snapshots = _store.SnapshotCalls;
+
+        Assert.Equal(new RestartPolicy(RestartMode.Always), e.GetPolicy("c"));
+        Assert.Equal(snapshots, _store.SnapshotCalls);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -11,9 +12,9 @@ public static class ThemeCard
 {
     public static Border Create(AppSettings settings, StatusReporter report)
     {
-        var card = InspectUi.Card("Theme and color", out var rows);
+        var card = InspectUi.Card(UiStrings.Get("ThemeAndColor"), out var rows);
         rows.Spacing = 12;
-        rows.Children.Add(InspectUi.Description("Changes apply immediately and are saved for the next launch."));
+        rows.Children.Add(InspectUi.Description(UiStrings.Get("ChangesApplyImmediatelyAndAreSavedForTheNext")));
 
         bool Save()
         {
@@ -25,12 +26,12 @@ public static class ThemeCard
             }
             catch (Exception ex)
             {
-                report("Couldn't save appearance", ex.Message, InfoBarSeverity.Error);
+                report(UiStrings.Get("CouldnTSaveAppearance"), ex.Message, InfoBarSeverity.Error);
                 return false;
             }
         }
 
-        var theme = new ComboBox { Header = "Theme", HorizontalAlignment = HorizontalAlignment.Stretch };
+        var theme = new ComboBox { Header = UiStrings.Get("Theme"), HorizontalAlignment = HorizontalAlignment.Stretch };
         foreach (var label in AppearanceChoices.ThemeLabels)
         {
             theme.Items.Add(label);
@@ -49,7 +50,7 @@ public static class ThemeCard
         };
         rows.Children.Add(theme);
 
-        var custom = new ToggleSwitch { Header = "Use custom accent color", IsOn = settings.AccentColor is not null };
+        var custom = new ToggleSwitch { Header = UiStrings.Get("UseCustomAccentColor"), IsOn = settings.AccentColor is not null };
         var picker = new ColorPicker
         {
             IsAlphaEnabled = false,
@@ -59,8 +60,8 @@ public static class ThemeCard
             IsHexInputVisible = true,
             Color = InitialColor(settings),
         };
-        var choose = new Button { Content = "Choose accent color", IsEnabled = custom.IsOn };
-        var apply = new Button { Content = "Apply color", Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
+        var choose = new Button { Content = UiStrings.Get("ChooseAccentColor"), IsEnabled = custom.IsOn };
+        var apply = new Button { Content = UiStrings.Get("ApplyColor"), Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
         var flyout = new Flyout { Content = new StackPanel { Spacing = 12, Children = { picker, apply } } };
         choose.Flyout = flyout;
 
@@ -86,7 +87,7 @@ public static class ThemeCard
         };
 
         rows.Children.Add(custom);
-        rows.Children.Add(InspectUi.Description("Off follows the Windows accent. Custom colors are adjusted for readable light and dark controls."));
+        rows.Children.Add(InspectUi.Description(UiStrings.Get("OffFollowsTheWindowsAccentCustomColorsAreAdjusted")));
         rows.Children.Add(choose);
         return card;
     }

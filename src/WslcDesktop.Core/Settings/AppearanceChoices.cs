@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 namespace WslcDesktop.Settings;
 
 /// <summary>How the saved theme and accent colour are presented in the Appearance settings.</summary>
@@ -5,7 +6,7 @@ public static class AppearanceChoices
 {
     private static readonly string[] Themes = ["System", "Light", "Dark"];
 
-    public static IReadOnlyList<string> ThemeLabels { get; } = ["Use Windows setting", "Light", "Dark"];
+    public static IReadOnlyList<string> ThemeLabels => [UiStrings.Get("UseWindowsSetting"), UiStrings.Get("Light"), UiStrings.Get("Dark")];
 
     public static int ThemeIndex(string theme)
     {

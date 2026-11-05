@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Compose.Planning.Services;
 using System.Text.Json;
 using WslcDesktop.Compose.Planning;
@@ -21,7 +22,7 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
 
         if (secrets is null || execEnv is null)
         {
-            throw new InvalidOperationException("This stack uses secrets, but no secret store is available.");
+            throw new InvalidOperationException(UiStrings.Get("ThisStackUsesSecretsButNoSecretStoreIs"));
         }
 
         using var prepared = SecretInjection.Prepare(args, secrets);
@@ -32,7 +33,7 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
     {
         if (!plan.CanRun)
         {
-            throw new InvalidOperationException("The plan has errors and can't be run.");
+            throw new InvalidOperationException(UiStrings.Get("ThePlanHasErrorsAndCanTBeRun"));
         }
 
         var networks = await ListNamesAsync("network", "list");
@@ -54,7 +55,7 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
                     await CreateIfMissingAsync(action, volumes, "volume");
                     break;
                 case ActionKind.Build:
-                    log($"Building {action.Target}…");
+                    log(UiStrings.Format("Building", action.Target));
                     await exec(action.Args);
                     break;
                 case ActionKind.RunService:
@@ -63,18 +64,18 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
             }
         }
 
-        log($"Stack '{plan.Project}' is up.");
+        log(UiStrings.Format("StackIsUp", plan.Project));
     }
 
     private async Task CreateIfMissingAsync(ComposeAction action, HashSet<string> known, string noun)
     {
         if (known.Contains(action.Target))
         {
-            log($"{noun} {action.Target} already exists.");
+            log(UiStrings.Format(noun == "network" ? "ComposeNetworkExists" : "ComposeVolumeExists", action.Target));
             return;
         }
 
-        log($"Creating {noun} {action.Target}…");
+        log(UiStrings.Format(noun == "network" ? "CreateComposeNetwork" : "CreateComposeVolume", action.Target));
         await exec(action.Args);
         known.Add(action.Target);
     }
@@ -93,21 +94,21 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
             if (current.Project != plan.Project)
             {
                 throw new InvalidOperationException(
-                    $"A container named '{action.Target}' already exists and doesn't belong to stack '{plan.Project}'.");
+                    UiStrings.Format("AContainerNamedAlreadyExistsAndDoesnTBelong", action.Target, plan.Project));
             }
 
             if (ContainerState.IsRunning(current.State))
             {
-                log($"{action.Service} is already running.");
+                log(UiStrings.Format("IsAlreadyRunning", action.Service));
                 return;
             }
 
-            log($"Starting existing {action.Service}…");
+            log(UiStrings.Format("StartingExisting", action.Service));
             await exec(["start", action.Target]);
             return;
         }
 
-        log($"Starting {action.Service}…");
+        log(UiStrings.Format("Starting", action.Service));
         await ExecRunAsync(action.Args);
         foreach (var extra in action.After ?? [])
         {
@@ -122,7 +123,7 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
             return;
         }
 
-        log($"Waiting for {wait.Service} to be {(wait.Condition == "service_healthy" ? "healthy" : "completed")}…");
+        log(UiStrings.Format(wait.Condition == "service_healthy" ? "WaitingServiceHealthy" : "WaitingServiceCompleted", wait.Service));
         var deadline = DateTime.UtcNow + WaitTimeout;
         while (true)
         {
@@ -137,7 +138,7 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
 
                 if (health == "unhealthy" || status is "exited" or "dead")
                 {
-                    throw new InvalidOperationException($"Service '{wait.Service}' is unhealthy; dependent services were not started.");
+                    throw new InvalidOperationException(UiStrings.Format("ServiceIsUnhealthyDependentServicesWereNotStarted", wait.Service));
                 }
             }
             else if (status is "exited" or "dead")
@@ -147,12 +148,12 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
                     return;
                 }
 
-                throw new InvalidOperationException($"Service '{wait.Service}' exited with code {exit}; dependent services were not started.");
+                throw new InvalidOperationException(UiStrings.Format("ServiceExitedWithCodeDependentServicesWereNotStarted", wait.Service, exit));
             }
 
             if (DateTime.UtcNow > deadline)
             {
-                throw new TimeoutException($"Timed out waiting for service '{wait.Service}'.");
+                throw new TimeoutException(UiStrings.Format("TimedOutWaitingForService", wait.Service));
             }
 
             await Task.Delay(PollInterval, ct);
@@ -178,7 +179,7 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
         var names = (await ListAsync()).Where(c => c.Project == project && !ContainerState.IsRunning(c.State)).Select(c => c.Name).ToList();
         if (names.Count > 0)
         {
-            log($"Starting {names.Count} container(s)…");
+            log(UiStrings.Format("StartingContainerS", names.Count));
             await exec(["start", .. names]);
         }
     }
@@ -188,7 +189,7 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
         var names = (await ListAsync()).Where(c => c.Project == project && ContainerState.IsRunning(c.State)).Select(c => c.Name).ToList();
         if (names.Count > 0)
         {
-            log($"Stopping {names.Count} container(s)…");
+            log(UiStrings.Format("StoppingContainerS", names.Count));
             await exec(["stop", .. names]);
         }
     }
@@ -221,33 +222,33 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
             }
             catch (Exception e) when (e is InvalidOperationException or JsonException)
             {
-                log($"Couldn't inspect {c.Name}: {e.Message}");
+                log(UiStrings.Format("CouldnTInspect", c.Name, e.Message));
             }
         }
 
         var names = containers.Select(c => c.Name).ToList();
         if (names.Count > 0)
         {
-            log($"Stopping {names.Count} container(s)…");
+            log(UiStrings.Format("StoppingContainerS", names.Count));
             await exec(["stop", .. names]);
-            log("Removing containers…");
+            log(UiStrings.Get("RemovingContainers"));
             await exec(["rm", "--force", .. names]);
         }
 
         foreach (var n in networks)
         {
-            await TryAsync($"Removing network {n}…", ["network", "remove", n]);
+            await TryAsync(UiStrings.Format("RemovingNetwork", n), ["network", "remove", n]);
         }
 
         if (removeVolumes)
         {
             foreach (var v in volumes)
             {
-                await TryAsync($"Removing volume {v}…", ["volume", "remove", v]);
+                await TryAsync(UiStrings.Format("RemovingVolume", v), ["volume", "remove", v]);
             }
         }
 
-        log($"Stack '{project}' is down.");
+        log(UiStrings.Format("StackIsDown", project));
     }
 
     private async Task TryAsync(string message, string[] args)
@@ -259,7 +260,7 @@ public sealed class ComposeRunner(WslcExec exec, Action<string> log, WslcExecEnv
         }
         catch (InvalidOperationException e)
         {
-            log($"  skipped: {e.Message}");
+            log(UiStrings.Format("Skipped", e.Message));
         }
     }
 

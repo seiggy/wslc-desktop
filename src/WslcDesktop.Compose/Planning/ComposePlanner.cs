@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Compose.Planning.Services;
 using WslcDesktop.Compose.Planning.Resources;
 using System.Globalization;
@@ -83,7 +84,7 @@ public static partial class ComposePlanner
                 }
                 else
                 {
-                    errors.Add($"{action.Description}: secrets can only be used in environment variable values.");
+                    errors.Add(UiStrings.Format("SecretsCanOnlyBeUsedInEnvironmentVariableValues2", action.Description));
                 }
             }
         }
@@ -108,25 +109,25 @@ public static partial class ComposePlanner
             : root.GetValueOrDefault("name") as string
               ?? Path.GetFileName(options.Directory.TrimEnd('\\', '/'));
         var name = NormalizeProjectName(raw ?? string.Empty);
-        return name.Length > 0 ? name : throw new ComposeException("Couldn't derive a project name; set a name: or choose one.");
+        return name.Length > 0 ? name : throw new ComposeException(UiStrings.Get("CouldnTDeriveAProjectNameSetAName"));
     }
 
     private static void Build(
         Dictionary<string, object?> root, string project, ComposeOptions options,
         List<ComposeAction> actions, List<string> warnings, List<string> errors, Dictionary<string, SecretImportSource> imports)
     {
+        var context = new PlanContext(project, options, Map(root.GetValueOrDefault("services")) ?? [], warnings, errors);
         foreach (var key in root.Keys.Where(k => k is not ("version" or "name" or "services" or "networks" or "volumes" or "secrets") && !k.StartsWith("x-", StringComparison.Ordinal)))
         {
-            warnings.Add(key switch
+            context.Warnings.Add(key switch
             {
-                "configs" => $"Top-level '{key}' isn't supported by WSLc and will be ignored.",
-                "include" => "'include' isn't supported; included compose files are not loaded.",
-                _ => $"Top-level '{key}' isn't supported by WSLc and will be ignored.",
+                "configs" => UiStrings.Format("TopLevelIsnTSupportedByWSLcAndWill", key),
+                "include" => UiStrings.Get("IncludeIsnTSupportedIncludedComposeFilesAreNot"),
+                _ => UiStrings.Format("TopLevelIsnTSupportedByWSLcAndWill", key),
             });
         }
 
         // A top-level secret without file/environment/content is a reference to a stored secret (by "name:", else its key).
-        var secretMap = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var (key, value) in Map(root.GetValueOrDefault("secrets")) ?? [])
         {
             var def = Map(value) ?? [];
@@ -139,11 +140,11 @@ public static partial class ComposePlanner
             var id = hasSource ? key : def.GetValueOrDefault("name") as string ?? key;
             if (!SecretTokens.IsValidName(id))
             {
-                errors.Add($"Secret '{key}' maps to '{id}', which isn't a valid stored secret name.");
+                context.Errors.Add(UiStrings.Format("SecretMapsToWhichIsnTAValidStored", key, id));
                 continue;
             }
 
-            secretMap[key] = id;
+            context.Secrets[key] = id;
             if (hasSource)
             {
                 imports[id] = new SecretImportSource(
@@ -153,46 +154,38 @@ public static partial class ComposePlanner
             }
         }
 
-        var services = Map(root.GetValueOrDefault("services")) ?? [];
-        if (services.Count == 0)
+        if (context.Services.Count == 0)
         {
-            throw new ComposeException("The compose file defines no services.");
+            throw new ComposeException(UiStrings.Get("TheComposeFileDefinesNoServices"));
         }
 
         var topNetworks = Map(root.GetValueOrDefault("networks")) ?? [];
         var topVolumes = Map(root.GetValueOrDefault("volumes")) ?? [];
 
-        var networkRefs = new Dictionary<string, NetworkRef>(StringComparer.Ordinal);
         foreach (var (key, value) in topNetworks)
         {
             var def = Map(value) ?? [];
             var external = IsTrue(def.GetValueOrDefault("external"));
             var named = def.GetValueOrDefault("name") as string;
-            networkRefs[key] = new NetworkRef(key, external ? named ?? key : named ?? $"{project}_{key}", external);
+            context.Networks[key] = new NetworkRef(key, external ? named ?? key : named ?? $"{project}_{key}", external);
         }
 
-        var volumeRefs = new Dictionary<string, VolumeRef>(StringComparer.Ordinal);
         foreach (var (key, value) in topVolumes)
         {
             var def = Map(value) ?? [];
             var external = IsTrue(def.GetValueOrDefault("external"));
             var named = def.GetValueOrDefault("name") as string;
-            volumeRefs[key] = new VolumeRef(external ? named ?? key : named ?? $"{project}_{key}", external);
+            context.Volumes[key] = new VolumeRef(external ? named ?? key : named ?? $"{project}_{key}", external);
         }
 
-        var usedNetworks = new HashSet<string>(StringComparer.Ordinal);
         var runActions = new Dictionary<string, ComposeAction>(StringComparer.Ordinal);
         var buildActions = new List<ComposeAction>();
         var deps = new Dictionary<string, List<string>>(StringComparer.Ordinal);
-        var healthchecked = services
-            .Where(s => Map(s.Value)?.GetValueOrDefault("healthcheck") is not null)
-            .Select(s => s.Key)
-            .ToHashSet(StringComparer.Ordinal);
 
-        foreach (var (name, value) in services)
+        foreach (var (name, value) in context.Services)
         {
-            var svc = Map(value) ?? throw new ComposeException($"Service '{name}' must be a mapping.");
-            var (run, build) = PlanService(project, name, svc, services, options, networkRefs, volumeRefs, usedNetworks, healthchecked, secretMap, warnings, errors);
+            var svc = Map(value) ?? throw new ComposeException(UiStrings.Format("ServiceMustBeAMapping", name));
+            var (run, build) = PlanService(context, name, svc);
             runActions[name] = run;
             if (build is not null)
             {
@@ -202,30 +195,30 @@ public static partial class ComposePlanner
             deps[name] = run.Waits?.Select(w => w.Service).ToList() ?? [];
         }
 
-        foreach (var net in usedNetworks.Order(StringComparer.Ordinal))
+        foreach (var net in context.UsedNetworks.Order(StringComparer.Ordinal))
         {
-            if (networkRefs.TryGetValue(net, out var r))
+            if (context.Networks.TryGetValue(net, out var r))
             {
                 if (r.External)
                 {
                     continue;
                 }
 
-                actions.Add(CreateNetwork(project, r, Map(topNetworks.GetValueOrDefault(net)) ?? [], warnings));
+                actions.Add(CreateNetwork(context, r, Map(topNetworks.GetValueOrDefault(net)) ?? []));
             }
             else if (net == "default")
             {
-                actions.Add(CreateNetwork(project, new NetworkRef("default", $"{project}_default", false), [], warnings));
+                actions.Add(CreateNetwork(context, new NetworkRef("default", $"{project}_default", false), []));
             }
         }
 
-        foreach (var (key, r) in volumeRefs.Where(v => !v.Value.External))
+        foreach (var (key, r) in context.Volumes.Where(v => !v.Value.External))
         {
-            actions.Add(CreateVolume(project, r, Map(topVolumes.GetValueOrDefault(key)) ?? [], warnings));
+            actions.Add(CreateVolume(context, r, Map(topVolumes.GetValueOrDefault(key)) ?? []));
         }
 
         actions.AddRange(buildActions);
-        foreach (var name in TopologicalOrder(services.Keys.ToList(), deps, errors))
+        foreach (var name in TopologicalOrder(context.Services.Keys.ToList(), deps, context.Errors))
         {
             actions.Add(runActions[name]);
         }

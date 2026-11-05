@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Settings;
 
 namespace WslcDesktop.Lifecycle;
@@ -24,15 +25,15 @@ public static class TrayPolicy
 
     public static string Tooltip(int? running, int? total) => running switch
     {
-        null => "WSLc Desktop Manager",
-        0 => "WSLc Desktop Manager — no containers running",
-        1 => "WSLc Desktop Manager — 1 container running",
-        _ => $"WSLc Desktop Manager — {running} containers running",
+        null => UiStrings.Get("AppTitle"),
+        0 => UiStrings.Get("WSLcDesktopManagerNoContainersRunning"),
+        1 => UiStrings.Get("WSLcDesktopManagerContainerRunning"),
+        _ => UiStrings.Format("WSLcDesktopManagerContainersRunning", running),
     };
 
     public static string StatusLine(int? running, int? total) => running is null
-        ? "Status unavailable"
-        : $"{running} of {total ?? running} containers running";
+        ? UiStrings.Get("StatusUnavailable")
+        : UiStrings.Format("OfContainersRunning", running, total ?? running);
 
     // Hidden windows poll slowly: the tray only needs a running count.
     public static TimeSpan PollInterval(bool windowHidden, TimeSpan visible) =>

@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Diagnostics;
 using System.Text.Json;
 using WslcDesktop.Common;
@@ -193,7 +194,7 @@ public sealed class WslcCli(IWslcProcess process, Func<string, string>? redact =
         using var doc = JsonDocument.Parse(output);
         var root = doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0
             ? doc.RootElement[0]
-            : throw new InvalidOperationException($"Image '{target}' was not found.");
+            : throw new InvalidOperationException(UiStrings.Format("ImageWasNotFound", target));
 
         var config = root.TryGetProperty("Config", out var c) ? c : default;
         var layers = root.TryGetProperty("RootFS", out var fs) ? Strings(fs, "Layers") : [];

@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
@@ -70,7 +71,7 @@ public sealed partial class SecretsPage : Page
         }
         catch (Exception e)
         {
-            ErrorBar.Title = "Couldn't read secrets";
+            ErrorBar.Title = UiStrings.Get("CouldnTReadSecrets");
             ErrorBar.Message = e.Message;
             ErrorBar.IsOpen = true;
         }
@@ -117,7 +118,7 @@ public sealed partial class SecretsPage : Page
         }
         catch (Exception ex)
         {
-            ErrorBar.Title = "Couldn't read the secret";
+            ErrorBar.Title = UiStrings.Get("CouldnTReadTheSecret");
             ErrorBar.Message = ex.Message;
             ErrorBar.IsOpen = true;
             return;
@@ -155,11 +156,10 @@ public sealed partial class SecretsPage : Page
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Delete \"{name}\"?",
-            Content = "The value is removed from Windows Credential Manager. Compose files and containers that reference "
-                + $"{SecretTokens.Format(name)} will fail to start until it's added again. This can't be undone.",
-            PrimaryButtonText = "Delete",
-            CloseButtonText = "Cancel",
+            Title = UiStrings.Format("Delete", name),
+            Content = UiStrings.Format("TheValueIsRemovedFromWindowsCredentialManagerCompose", SecretTokens.Format(name)),
+            PrimaryButtonText = UiStrings.Get("ActionDelete"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await confirm.ShowAsync() != ContentDialogResult.Primary)
@@ -173,7 +173,7 @@ public sealed partial class SecretsPage : Page
         }
         catch (Exception ex)
         {
-            ErrorBar.Title = "Couldn't delete the secret";
+            ErrorBar.Title = UiStrings.Get("CouldnTDeleteTheSecret");
             ErrorBar.Message = ex.Message;
             ErrorBar.IsOpen = true;
         }
@@ -193,11 +193,11 @@ public static class SecretDialogs
         var secrets = App.Host.Secrets;
         var editing = existing is not null;
         var current = editing ? secrets.List().FirstOrDefault(s => s.Name == existing) : null;
-        var name = new TextBox { Header = "Name", PlaceholderText = "db-password", Text = existing ?? string.Empty, IsEnabled = !editing, MaxLength = SecretTokens.MaxNameLength };
-        var label = new TextBox { Header = "Label (optional)", PlaceholderText = "Where it's used, e.g. shop stack database", Text = current?.Label ?? string.Empty, MaxLength = 200 };
+        var name = new TextBox { Header = UiStrings.Get("LabelName"), PlaceholderText = "db-password", Text = existing ?? string.Empty, IsEnabled = !editing, MaxLength = SecretTokens.MaxNameLength };
+        var label = new TextBox { Header = UiStrings.Get("LabelOptional"), PlaceholderText = UiStrings.Get("WhereItSUsedEGShopStackDatabase"), Text = current?.Label ?? string.Empty, MaxLength = 200 };
         var value = new PasswordBox
         {
-            Header = editing ? "New value (leave blank to keep the current one)" : "Value",
+            Header = editing ? UiStrings.Get("NewValueLeaveBlankToKeepTheCurrentOne") : UiStrings.Get("LabelValue"),
             PasswordRevealMode = PasswordRevealMode.Peek,
         };
         var hint = new TextBlock
@@ -211,10 +211,10 @@ public static class SecretDialogs
         var dialog = new ContentDialog
         {
             XamlRoot = root,
-            Title = editing ? $"Edit \"{existing}\"" : "Add secret",
+            Title = editing ? UiStrings.Format("Edit", existing) : UiStrings.Get("AddSecret"),
             Content = panel,
-            PrimaryButtonText = "Save",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = UiStrings.Get("ActionSave"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Primary,
             IsPrimaryButtonEnabled = false,
         };
@@ -224,8 +224,8 @@ public static class SecretDialogs
             var n = name.Text.Trim();
             var valid = SecretTokens.IsValidName(n);
             hint.Text = valid
-                ? $"Use it as {SecretTokens.Format(n)}"
-                : "Names use letters, digits, '.', '_' and '-', and start with a letter or digit.";
+                ? UiStrings.Format("UseItAs", SecretTokens.Format(n))
+                : UiStrings.Get("NamesUseLettersDigitsAndAndStartWithA");
             dialog.IsPrimaryButtonEnabled = valid && (editing || value.Password.Length > 0);
         }
 
@@ -241,10 +241,10 @@ public static class SecretDialogs
             {
                 if (!editing && secrets.Exists(n))
                 {
-                    throw new InvalidOperationException($"A secret named '{n}' already exists. Edit it instead.");
+                    throw new InvalidOperationException(UiStrings.Format("ASecretNamedAlreadyExistsEditItInstead", n));
                 }
 
-                var newValue = value.Password.Length > 0 ? value.Password : secrets.Get(n) ?? throw new InvalidOperationException("Enter a value.");
+                var newValue = value.Password.Length > 0 ? value.Password : secrets.Get(n) ?? throw new InvalidOperationException(UiStrings.Get("EnterAValue"));
                 secrets.Save(n, newValue, label.Text);
                 saved = n;
             }

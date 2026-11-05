@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Views.Shared;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -19,7 +20,6 @@ public sealed partial class ResourcesPage : Page
     private readonly SessionFilterController _sessionFilter;
     private SessionSnapshot<ResourceRow>? _snapshot;
 
-    private string Noun => _kind == ResourceKind.Volume ? "volume" : "network";
 
     public ResourcesPage()
     {
@@ -39,9 +39,9 @@ public sealed partial class ResourcesPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         _kind = e.Parameter is ResourceKind k ? k : ResourceKind.Volume;
-        TitleText.Text = _kind == ResourceKind.Volume ? "Volumes" : "Networks";
-        NewButton.Content = $"New {Noun}";
-        Col3Header.Text = _kind == ResourceKind.Volume ? "Scope" : "Access";
+        TitleText.Text = _kind == ResourceKind.Volume ? UiStrings.Get("Volumes") : UiStrings.Get("Networks");
+        NewButton.Content = UiStrings.Get(_kind == ResourceKind.Volume ? "NewVolume" : "NewNetwork");
+        Col3Header.Text = _kind == ResourceKind.Volume ? UiStrings.Get("LabelScope") : UiStrings.Get("LabelAccess");
     }
 
     private async Task RefreshAsync(bool force = false)
@@ -64,7 +64,7 @@ public sealed partial class ResourcesPage : Page
         }
         catch (Exception e)
         {
-            ErrorBar.Title = $"Couldn't list {Noun}s";
+            ErrorBar.Title = UiStrings.Get(_kind == ResourceKind.Volume ? "CouldNotListVolumes" : "CouldNotListNetworks");
             ErrorBar.Message = e.Message;
             ErrorBar.IsOpen = true;
         }
@@ -119,9 +119,9 @@ public sealed partial class ResourcesPage : Page
         SessionErrorBar.IsOpen = failed.Length > 0;
         EmptyText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         EmptyText.Text = _sessionFilter.Filter is not null
-            ? $"No {Noun}s in session \"{_sessionFilter.Filter}\"."
-            : _kind == ResourceKind.Volume ? "No volumes yet. Create one to persist container data." : "No networks.";
-        PruneButton.Content = _sessionFilter.Filter is null || App.Host.IsAppSession(_sessionFilter.Filter) ? "Prune unused" : $"Prune unused in {_sessionFilter.Filter}";
+            ? UiStrings.Format(_kind == ResourceKind.Volume ? "NoVolumesInSession" : "NoNetworksInSession", _sessionFilter.Filter)
+            : _kind == ResourceKind.Volume ? UiStrings.Get("NoVolumesYetCreateOneToPersistContainerData") : UiStrings.Get("NoNetworks");
+        PruneButton.Content = _sessionFilter.Filter is null || App.Host.IsAppSession(_sessionFilter.Filter) ? UiStrings.Get("PruneUnused") : UiStrings.Format("PruneUnusedIn", _sessionFilter.Filter);
     }
 
     private string PruneSession => _sessionFilter.Filter ?? App.Host.SessionId;
@@ -131,22 +131,22 @@ public sealed partial class ResourcesPage : Page
 
     private async void New_Click(object sender, RoutedEventArgs e)
     {
-        var sessions = _snapshot?.Sessions ?? [App.Host.SessionId];
+        var sessions = _snapshot?.Sessions ?? new[] { App.Host.SessionId };
         var sessionPicker = new ComboBox
         {
-            Header = "Session",
-            ItemsSource = sessions.Select(s => App.Host.IsAppSession(s) ? $"{s} (this app)" : s).ToList(),
+            Header = UiStrings.Get("LabelSession"),
+            ItemsSource = sessions.Select(s => App.Host.IsAppSession(s) ? UiStrings.Format("ThisApp2", s) : s).ToList(),
             SelectedIndex = Math.Max(0, sessions.ToList().FindIndex(s => string.Equals(s, _sessionFilter.Filter ?? App.Host.SessionId, StringComparison.OrdinalIgnoreCase))),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             IsEnabled = sessions.Count > 1,
         };
-        var name = new TextBox { Header = "Name", PlaceholderText = _kind == ResourceKind.Volume ? "my-data" : "my-network" };
-        var driver = new ComboBox { Header = "Driver", HorizontalAlignment = HorizontalAlignment.Stretch };
-        var subnet = new TextBox { Header = "Subnet (optional)", PlaceholderText = "10.10.0.0/24" };
-        var gateway = new TextBox { Header = "Gateway (optional)", PlaceholderText = "10.10.0.1" };
+        var name = new TextBox { Header = UiStrings.Get("LabelName"), PlaceholderText = _kind == ResourceKind.Volume ? "my-data" : "my-network" };
+        var driver = new ComboBox { Header = UiStrings.Get("LabelDriver"), HorizontalAlignment = HorizontalAlignment.Stretch };
+        var subnet = new TextBox { Header = UiStrings.Get("SubnetOptional"), PlaceholderText = "10.10.0.0/24" };
+        var gateway = new TextBox { Header = UiStrings.Get("GatewayOptional"), PlaceholderText = "10.10.0.1" };
         var size = new NumberBox
         {
-            Header = "Size",
+            Header = UiStrings.Get("LabelSize"),
             Value = VolumeSize.DefaultGb,
             Minimum = 0,
             Maximum = 1024 * 1024,
@@ -154,7 +154,7 @@ public sealed partial class ResourcesPage : Page
             SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Hidden,
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
-        var unit = new ComboBox { Header = "Unit", ItemsSource = VolumeSize.UnitLabels, SelectedIndex = 1, MinWidth = 90 };
+        var unit = new ComboBox { Header = UiStrings.Get("LabelUnit"), ItemsSource = VolumeSize.UnitLabels, SelectedIndex = 1, MinWidth = 90 };
         var sizeRow = new Grid { ColumnSpacing = 8, Visibility = Visibility.Collapsed };
         sizeRow.ColumnDefinitions.Add(new ColumnDefinition());
         sizeRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -163,13 +163,13 @@ public sealed partial class ResourcesPage : Page
         sizeRow.Children.Add(unit);
         var sizeNote = new TextBlock
         {
-            Text = "A VHD volume is a virtual disk with a fixed maximum size (3 MB to 64 TB). It only uses host disk space as data is written.",
+            Text = UiStrings.Get("AVHDVolumeIsAVirtualDiskWithA"),
             TextWrapping = TextWrapping.Wrap,
             Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
             Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
             Visibility = Visibility.Collapsed,
         };
-        var isInternal = new CheckBox { Content = "Internal (no external access)" };
+        var isInternal = new CheckBox { Content = UiStrings.Get("InternalNoExternalAccess") };
         var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
         var panel = new StackPanel { Spacing = 12, MinWidth = 380 };
         panel.Children.Add(sessionPicker);
@@ -199,10 +199,10 @@ public sealed partial class ResourcesPage : Page
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"New {Noun}",
+            Title = UiStrings.Get(_kind == ResourceKind.Volume ? "NewVolume" : "NewNetwork"),
             Content = panel,
-            PrimaryButtonText = "Create",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = UiStrings.Get("ActionCreate"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Primary,
             IsPrimaryButtonEnabled = false,
         };
@@ -261,14 +261,13 @@ public sealed partial class ResourcesPage : Page
 
     private async void Prune_Click(object sender, RoutedEventArgs e)
     {
-        var what = _kind == ResourceKind.Volume ? "volumes that no container uses" : "networks that no container uses";
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Prune unused {Noun}s in {PruneSession}?",
-            Content = $"This removes all {what} in session \"{PruneSession}\". This can't be undone.",
-            PrimaryButtonText = "Prune",
-            CloseButtonText = "Cancel",
+            Title = UiStrings.Format(_kind == ResourceKind.Volume ? "PruneVolumesTitle" : "PruneNetworksTitle", PruneSession),
+            Content = UiStrings.Format(_kind == ResourceKind.Volume ? "PruneVolumesMessage" : "PruneNetworksMessage", PruneSession),
+            PrimaryButtonText = UiStrings.Get("ActionPrune"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await confirm.ShowAsync() != ContentDialogResult.Primary)
@@ -276,7 +275,7 @@ public sealed partial class ResourcesPage : Page
             return;
         }
 
-        await ActAsync($"Couldn't prune {Noun}s", () => App.Host.Operations.Resources.PruneAsync(App.Host.Handle(PruneSession), _kind));
+        await ActAsync(UiStrings.Get(_kind == ResourceKind.Volume ? "CouldNotPruneVolumes" : "CouldNotPruneNetworks"), () => App.Host.Operations.Resources.PruneAsync(App.Host.Handle(PruneSession), _kind));
     }
 
     private async void Remove_Click(object sender, RoutedEventArgs e)
@@ -286,12 +285,14 @@ public sealed partial class ResourcesPage : Page
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = target.IsThisApp ? $"Remove {Noun} \"{name}\"?" : $"Remove {Noun} \"{name}\" from {target.Session}?",
+            Title = target.IsThisApp
+                ? UiStrings.Format(_kind == ResourceKind.Volume ? "RemoveVolumeTitle" : "RemoveNetworkTitle", name)
+                : UiStrings.Format(_kind == ResourceKind.Volume ? "RemoveVolumeFromSessionTitle" : "RemoveNetworkFromSessionTitle", name, target.Session),
             Content = _kind == ResourceKind.Volume
-                ? "The volume and all the data in it will be deleted. This can't be undone."
-                : "The network will be removed. Containers must be disconnected first.",
-            PrimaryButtonText = "Remove",
-            CloseButtonText = "Cancel",
+                ? UiStrings.Get("TheVolumeAndAllTheDataInItWill")
+                : UiStrings.Get("TheNetworkWillBeRemovedContainersMustBeDisconnected"),
+            PrimaryButtonText = UiStrings.Get("ActionRemove"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await confirm.ShowAsync() != ContentDialogResult.Primary)
@@ -299,7 +300,7 @@ public sealed partial class ResourcesPage : Page
             return;
         }
 
-        await ActAsync($"Couldn't remove {name}", () => App.Host.Operations.Resources.RemoveAsync(App.Host.Handle(target.Session), _kind, name));
+        await ActAsync(UiStrings.Format("CouldnTRemove", name), () => App.Host.Operations.Resources.RemoveAsync(App.Host.Handle(target.Session), _kind, name));
     }
 
     private async Task ActAsync(string failureTitle, Func<Task> action)
@@ -310,7 +311,7 @@ public sealed partial class ResourcesPage : Page
         }
         catch (Exception ex)
         {
-            await new ContentDialog { XamlRoot = XamlRoot, Title = failureTitle, Content = ex.Message, CloseButtonText = "Close" }.ShowAsync();
+            await new ContentDialog { XamlRoot = XamlRoot, Title = failureTitle, Content = ex.Message, CloseButtonText = UiStrings.Get("ActionClose") }.ShowAsync();
         }
 
         await RefreshAsync(true);

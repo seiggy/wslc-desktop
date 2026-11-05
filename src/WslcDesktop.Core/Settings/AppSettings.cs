@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Text.Json;
 using WslcDesktop.Terminal;
 
@@ -46,7 +47,7 @@ public sealed class AppSettings
     {
         if (double.IsNaN(cpuCount) || double.IsNaN(memoryMb))
         {
-            problem = "CPU count and memory must be numbers.";
+            problem = UiStrings.Get("CPUCountAndMemoryMustBeNumbers");
             return false;
         }
 

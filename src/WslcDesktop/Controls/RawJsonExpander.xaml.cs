@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.ApplicationModel.DataTransfer;
@@ -30,8 +31,8 @@ public sealed partial class RawJsonExpander : UserControl
         var package = new DataPackage();
         package.SetText(_json);
         Clipboard.SetContent(package);
-        CopyButton.Content = "Copied";
+        CopyButton.Content = UiStrings.Get("Copied");
         await Task.Delay(1500);
-        CopyButton.Content = "Copy JSON";
+        CopyButton.Content = UiStrings.Get("ActionCopyJson");
     }
 }

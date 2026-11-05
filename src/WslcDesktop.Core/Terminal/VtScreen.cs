@@ -21,6 +21,7 @@ public sealed class VtScreen
     private VtCell[][] _alt;
     private VtCell[][] _grid;
     private State _state;
+    private int _scrollbackStart;
     private char _csiPrefix;
     private char _intermediate;
     private char _highSurrogate;
@@ -40,7 +41,7 @@ public sealed class VtScreen
     {
         Columns = Math.Max(1, columns);
         Rows = Math.Max(1, rows);
-        _scrollbackLimit = scrollbackLimit;
+        _scrollbackLimit = Math.Max(0, scrollbackLimit);
         _main = NewGrid(Columns, Rows);
         _alt = NewGrid(Columns, Rows);
         _grid = _main;
@@ -88,7 +89,7 @@ public sealed class VtScreen
     {
         if (absolute < _scrollback.Count)
         {
-            return _scrollback[Math.Max(0, absolute)];
+            return _scrollback[(_scrollbackStart + Math.Max(0, absolute)) % _scrollback.Count];
         }
 
         return _grid[Math.Clamp(absolute - _scrollback.Count, 0, Rows - 1)];
@@ -217,11 +218,19 @@ public sealed class VtScreen
 
     private void PushScrollback(VtCell[] line)
     {
-        _scrollback.Add(line);
-        if (_scrollback.Count > _scrollbackLimit)
+        if (_scrollbackLimit == 0)
         {
-            _scrollback.RemoveRange(0, _scrollback.Count - _scrollbackLimit);
+            return;
         }
+
+        if (_scrollback.Count < _scrollbackLimit)
+        {
+            _scrollback.Add(line);
+            return;
+        }
+
+        _scrollback[_scrollbackStart] = line;
+        _scrollbackStart = (_scrollbackStart + 1) % _scrollback.Count;
     }
 
     private void Process(char c)
@@ -461,16 +470,74 @@ public sealed class VtScreen
     private void ParseArgs()
     {
         _args.Clear();
-        var text = _param.ToString();
-        if (text.Length == 0)
+        if (_param.Length == 0)
         {
             return;
         }
 
-        foreach (var part in text.Split(';', ':'))
+        ulong magnitude = 0;
+        var negative = false;
+        var signAllowed = true;
+        var valid = true;
+        var digits = 0;
+
+        foreach (var chunk in _param.GetChunks())
         {
-            _args.Add(int.TryParse(part, out var value) ? Math.Min(value, 65535) : -1);
+            foreach (var c in chunk.Span)
+            {
+                if (c is ';' or ':')
+                {
+                    AddCsiArg(_args, ref magnitude, ref negative, ref signAllowed, ref valid, ref digits);
+                    continue;
+                }
+
+                if (signAllowed && c is '+' or '-')
+                {
+                    negative = c == '-';
+                    signAllowed = false;
+                    continue;
+                }
+
+                signAllowed = false;
+                if (c is < '0' or > '9')
+                {
+                    valid = false;
+                    continue;
+                }
+
+                digits++;
+                var digit = (uint)(c - '0');
+                var limit = negative ? 2_147_483_648UL : int.MaxValue;
+                if (magnitude > (limit - digit) / 10)
+                {
+                    valid = false;
+                    continue;
+                }
+
+                magnitude = magnitude * 10 + digit;
+            }
         }
+
+        AddCsiArg(_args, ref magnitude, ref negative, ref signAllowed, ref valid, ref digits);
+    }
+
+    private static void AddCsiArg(
+        List<int> args,
+        ref ulong magnitude,
+        ref bool negative,
+        ref bool signAllowed,
+        ref bool valid,
+        ref int digits)
+    {
+        var value = valid && digits > 0
+            ? (int)(negative ? -(long)magnitude : (long)magnitude)
+            : -1;
+        args.Add(Math.Min(value, 65535));
+        magnitude = 0;
+        negative = false;
+        signAllowed = true;
+        valid = true;
+        digits = 0;
     }
 
     private int Arg(int index, int fallback)
@@ -1020,6 +1087,7 @@ public sealed class VtScreen
                 break;
             case 3:
                 _scrollback.Clear();
+                _scrollbackStart = 0;
                 break;
         }
     }

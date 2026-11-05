@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -50,13 +51,13 @@ public sealed class ConPtySession : IDisposable
     {
         if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763))
         {
-            throw new InvalidOperationException("The Windows pseudoconsole (ConPTY) requires Windows 10 version 1809 or later.");
+            throw new InvalidOperationException(UiStrings.Get("TheWindowsPseudoconsoleConPTYRequiresWindowsVersionOrLater"));
         }
 
         if (!CreatePipe(out var inputRead, out var inputWrite, nint.Zero, 0)
             || !CreatePipe(out var outputRead, out var outputWrite, nint.Zero, 0))
         {
-            throw new InvalidOperationException("Couldn't create the terminal pipes: " + Marshal.GetLastPInvokeErrorMessage());
+            throw new InvalidOperationException(UiStrings.Format("TerminalPipesFailure", Marshal.GetLastPInvokeErrorMessage()));
         }
 
         nint console = nint.Zero;
@@ -67,7 +68,7 @@ public sealed class ConPtySession : IDisposable
         {
             inputWrite.Dispose();
             outputRead.Dispose();
-            throw new InvalidOperationException($"CreatePseudoConsole failed (0x{hr:X8}).");
+            throw new InvalidOperationException(UiStrings.Format("CreatePseudoConsoleFailedX", hr));
         }
 
         var session = new ConPtySession(
@@ -174,12 +175,12 @@ public sealed class ConPtySession : IDisposable
         _attributeList = Marshal.AllocHGlobal(size);
         if (!InitializeProcThreadAttributeList(_attributeList, 1, 0, ref size))
         {
-            throw new InvalidOperationException("Couldn't initialize the process attribute list.");
+            throw new InvalidOperationException(UiStrings.Get("CouldnTInitializeTheProcessAttributeList"));
         }
 
         if (!UpdateProcThreadAttribute(_attributeList, 0, ProcThreadAttributePseudoConsole, _console, (nint)nint.Size, nint.Zero, nint.Zero))
         {
-            throw new InvalidOperationException("Couldn't attach the pseudoconsole to the process.");
+            throw new InvalidOperationException(UiStrings.Get("CouldnTAttachThePseudoconsoleToTheProcess"));
         }
 
         var startup = new StartupInfoEx
@@ -217,8 +218,8 @@ public sealed class ConPtySession : IDisposable
         {
             var error = Marshal.GetLastPInvokeError();
             throw error == 2 || error == 3
-                ? new InvalidOperationException("The command wasn't found on PATH.")
-                : new InvalidOperationException("Couldn't start the process: " + Marshal.GetPInvokeErrorMessage(error));
+                ? new InvalidOperationException(UiStrings.Get("TheCommandWasnTFoundOnPATH"))
+                : new InvalidOperationException(UiStrings.Format("TerminalProcessFailure", Marshal.GetPInvokeErrorMessage(error)));
         }
 
         CloseHandle(info.hThread);

@@ -1,6 +1,7 @@
 using WslcDesktop.Backends;
 using WslcDesktop.Containers;
 using WslcDesktop.Containers.Creation;
+using WslcDesktop.Compose.Secrets;
 
 namespace WslcDesktop.Tests.Backends;
 
@@ -8,7 +9,7 @@ public class WslcCliBackendContainerTests
 {
     private readonly FakeWslcProcess _process = new();
 
-    private WslcCliBackend Backend(string session = "lab") => new(_process, session);
+    private WslcCliBackend Backend(string session = "lab") => new(_process, session, _ => null);
 
     [Fact]
     public async Task Start_runs_start_with_the_container_name()
@@ -118,5 +119,60 @@ public class WslcCliBackendContainerTests
         Assert.Equal(["--session", "lab", "create", "--name", "job", "--env", "TOKEN", "alpine", "sh"], _process.LastArgs);
         Assert.Equal("s3cret", _process.Calls[^1].Environment!["TOKEN"]);
         Assert.DoesNotContain("s3cret", _process.LastArgs);
+    }
+
+    [Fact]
+    public async Task Creating_with_a_stored_secret_resolves_it_without_putting_the_value_on_the_command_line()
+    {
+        var backend = new WslcCliBackend(_process, "lab", name => name == "api-token" ? "fake-token-value" : null);
+        var spec = new NewContainerSpec("web", "nginx", [], [], [], ["TOKEN=prefix-${secret:api-token}"], "");
+
+        await backend.CreateContainerAsync(spec);
+
+        Assert.Equal(["--session", "lab", "create", "--name", "web", "--env", "TOKEN", "nginx"], _process.LastArgs);
+        Assert.Equal("prefix-fake-token-value", _process.Calls[^1].Environment!["TOKEN"]);
+        Assert.DoesNotContain(_process.LastArgs, arg => arg.Contains("fake-token-value", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Creating_with_a_missing_secret_fails_before_starting_a_process()
+    {
+        var spec = new NewContainerSpec("web", "nginx", [], [], [], ["TOKEN=${secret:missing-token}"], "");
+
+        var error = await Assert.ThrowsAsync<SecretUnavailableException>(() => Backend().CreateContainerAsync(spec));
+
+        Assert.Contains("missing-token", error.Message);
+        Assert.Empty(_process.Calls);
+    }
+
+    [Fact]
+    public async Task Creating_when_secret_lookup_fails_preserves_the_failure_without_starting_a_process()
+    {
+        var failure = new InvalidOperationException("Fake secret lookup failed.");
+        var backend = new WslcCliBackend(_process, "lab", _ => throw failure);
+        var spec = new NewContainerSpec("web", "nginx", [], [], [], ["TOKEN=${secret:api-token}"], "");
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => backend.CreateContainerAsync(spec));
+
+        Assert.Same(failure, error);
+        Assert.Empty(_process.Calls);
+    }
+
+    [Fact]
+    public async Task Creating_with_a_process_critical_secret_cleans_up_its_env_file_when_the_process_fails()
+    {
+        var failure = new InvalidOperationException("Fake process failed.");
+        _process.FailWith = failure;
+        var backend = new WslcCliBackend(_process, "lab", _ => "fake-path-value");
+        var spec = new NewContainerSpec("web", "nginx", [], [], [], ["PATH=${secret:path-value}"], "");
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => backend.CreateContainerAsync(spec));
+
+        Assert.Same(failure, error);
+        Assert.Contains("--env-file", _process.LastArgs);
+        var envFile = _process.LastArgs[_process.LastArgs.ToList().IndexOf("--env-file") + 1];
+        Assert.False(File.Exists(envFile));
+        Assert.Empty(_process.Calls[^1].Environment!);
+        Assert.DoesNotContain(_process.LastArgs, arg => arg.Contains("fake-path-value", StringComparison.Ordinal));
     }
 }

@@ -3,6 +3,7 @@
     <Project Path="src/WslcDesktop/WslcDesktop.csproj" />
     <Project Path="src/WslcDesktop.Compose/WslcDesktop.Compose.csproj" />
     <Project Path="src/WslcDesktop.Core/WslcDesktop.Core.csproj" />
+    <Project Path="src/WslcDesktop.Localization/WslcDesktop.Localization.csproj" />
     <Project Path="src/WslcDesktop.Sdk/WslcDesktop.Sdk.csproj" />
   </Folder>
   <Folder Name="/tests/">

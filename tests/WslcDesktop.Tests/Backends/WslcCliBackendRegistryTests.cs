@@ -6,7 +6,7 @@ public class WslcCliBackendRegistryTests
 {
     private readonly FakeWslcProcess _process = new();
 
-    private WslcCliBackend Backend() => new(_process, "lab");
+    private WslcCliBackend Backend() => new(_process, "lab", _ => null);
 
     [Fact]
     public async Task Login_sends_the_password_on_stdin_never_in_arguments()

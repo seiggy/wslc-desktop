@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Backends;
 using WslcDesktop.Sessions;
 
@@ -14,7 +15,7 @@ public sealed class RegistryAccounts(RegistryOperations registry, SessionHandle 
 
     /// <summary>Returns why the details can't be used, or null when they can.</summary>
     public static string? Validate(string user, string password) =>
-        user.Trim().Length == 0 || password.Length == 0 ? "Enter a username and a password or access token." : null;
+        user.Trim().Length == 0 || password.Length == 0 ? UiStrings.Get("EnterAUsernameAndAPasswordOrAccessToken") : null;
 
     public async Task SignInAsync(string server, string user, string password)
     {

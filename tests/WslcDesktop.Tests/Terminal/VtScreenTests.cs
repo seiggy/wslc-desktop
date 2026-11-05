@@ -127,4 +127,25 @@ public class VtScreenTests
         s.Feed("1mR");
         Assert.Equal(1, s.GetLine(s.TotalLines - s.Rows)[0].Fg);
     }
+
+    [Fact]
+    public void EmptyCsiParametersKeepTheirDefaultMeaning()
+    {
+        var s = new VtScreen(10, 3);
+        s.Feed("\u001b[;2H");
+
+        Assert.Equal((1, 0), (s.CursorX, s.CursorY));
+    }
+
+    [Fact]
+    public void ScrollbackLimitRetainsTheNewestLinesInOrder()
+    {
+        var s = new VtScreen(10, 2, scrollbackLimit: 3);
+        s.Feed("1\r\n2\r\n3\r\n4\r\n5\r\n6");
+
+        Assert.Equal(3, s.ScrollbackCount);
+        Assert.Equal("2", string.Concat(s.GetLine(0).Select(c => (char)c.Cp)).TrimEnd());
+        Assert.Equal("5", string.Concat(s.GetLine(s.TotalLines - s.Rows).Select(c => (char)c.Cp)).TrimEnd());
+        Assert.Equal("6", string.Concat(s.GetLine(s.TotalLines - 1).Select(c => (char)c.Cp)).TrimEnd());
+    }
 }

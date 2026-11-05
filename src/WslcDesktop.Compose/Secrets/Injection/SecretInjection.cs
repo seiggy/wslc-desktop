@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -33,21 +34,21 @@ public static partial class SecretInjection
                 var eq = entry.IndexOf('=');
                 if (eq <= 0)
                 {
-                    throw new InvalidOperationException("A secret can only be used as the value of KEY=VALUE.");
+                    throw new InvalidOperationException(UiStrings.Get("ASecretCanOnlyBeUsedAsTheValue"));
                 }
 
                 var key = entry[..eq];
                 var value = SecretTokens.Resolve(entry[(eq + 1)..], lookup);
                 if (!EnvName().IsMatch(key))
                 {
-                    throw new InvalidOperationException($"'{key}' isn't a valid environment variable name.");
+                    throw new InvalidOperationException(UiStrings.Format("IsnTAValidEnvironmentVariableName", key));
                 }
 
                 if (ProcessCritical.Contains(key) || key.StartsWith("WSL", StringComparison.OrdinalIgnoreCase) || env.ContainsKey(key))
                 {
                     if (value.Contains('\n') || value.Contains('\r'))
                     {
-                        throw new InvalidOperationException($"The value for {key} spans several lines, which isn't supported for this variable name.");
+                        throw new InvalidOperationException(UiStrings.Format("TheValueForSpansSeveralLinesWhichIsnT", key));
                     }
 
                     fileLines.Add($"{key}={value}");
@@ -60,7 +61,7 @@ public static partial class SecretInjection
             }
             else if (SecretTokens.Contains(arg))
             {
-                throw new InvalidOperationException("Secrets can only be used in environment variable values.");
+                throw new InvalidOperationException(UiStrings.Get("SecretsCanOnlyBeUsedInEnvironmentVariableValues"));
             }
             else
             {

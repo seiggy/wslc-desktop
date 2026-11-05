@@ -140,7 +140,6 @@ public class PlannerTests
     [InlineData("deploy: { replicas: 3 }", "deploy")]
     [InlineData("profiles: [debug]", "profiles")]
     [InlineData("configs: [c]", "configs")]
-    [InlineData("configs: [c]", "configs")]
     [InlineData("extends: { service: other }", "extends")]
     [InlineData("privileged: true", "privileged")]
     public void Unsupported_fields_warn(string field, string key)

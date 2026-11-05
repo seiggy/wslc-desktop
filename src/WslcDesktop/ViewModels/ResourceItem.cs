@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.ComponentModel;
 using Microsoft.UI.Xaml;
 using WslcDesktop.Resources;
@@ -32,7 +33,7 @@ public sealed class ResourceItem(SessionEntry<ResourceRow> entry) : INotifyPrope
 
     public string UsedByText => _r.UsedBy.Count switch
     {
-        0 => "Unused",
+        0 => UiStrings.Get("Unused"),
         1 => _r.UsedBy[0],
         _ => string.Join(", ", _r.UsedBy),
     };

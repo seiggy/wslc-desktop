@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Diagnostics;
 using System.Text;
 using WslcDesktop.Lifecycle;
@@ -6,8 +7,11 @@ using WslcDesktop.Secrets;
 namespace WslcDesktop.Cli;
 
 /// <summary>Runs the real wslc.exe.</summary>
-public sealed class WslcProcess : IWslcProcess
+/// <param name="executable">Executable path or command name; defaults to wslc on PATH.</param>
+public sealed class WslcProcess(string executable = "wslc") : IWslcProcess
 {
+    private readonly string _executable = executable ?? throw new ArgumentNullException(nameof(executable));
+
     public static WslcProcess Default { get; } = new();
 
     public async Task StreamAsync(WslcInvocation invocation, Action<string> onLine, CancellationToken ct = default)
@@ -19,7 +23,7 @@ public sealed class WslcProcess : IWslcProcess
         }
         catch (System.ComponentModel.Win32Exception)
         {
-            throw new InvalidOperationException("wslc.exe wasn't found on PATH.");
+            throw new InvalidOperationException(UiStrings.Get("WslcExeWasnTFoundOnPATH"));
         }
 
         using (process)
@@ -56,9 +60,9 @@ public sealed class WslcProcess : IWslcProcess
         return new ShellProcess(info, onOutput, onExit);
     }
 
-    private static ProcessStartInfo CreateStartInfo(WslcInvocation invocation)
+    private ProcessStartInfo CreateStartInfo(WslcInvocation invocation)
     {
-        var info = new ProcessStartInfo("wslc")
+        var info = new ProcessStartInfo(_executable)
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -82,7 +86,7 @@ public sealed class WslcProcess : IWslcProcess
 
     public async Task<string> RunAsync(WslcInvocation invocation, CancellationToken ct = default)
     {
-        var info = new ProcessStartInfo("wslc")
+        var info = new ProcessStartInfo(_executable)
         {
             RedirectStandardInput = invocation.StandardInput is not null,
             RedirectStandardOutput = true,
@@ -107,20 +111,54 @@ public sealed class WslcProcess : IWslcProcess
         try
         {
             using var process = ChildProcessTracker.Start(info);
-            if (invocation.StandardInput is not null)
-            {
-                await process.StandardInput.WriteAsync(invocation.StandardInput);
-                process.StandardInput.Close();
-            }
-
+            using var registration = linked.Token.Register(() => ChildProcessTracker.Kill(process));
             var stdout = process.StandardOutput.ReadToEndAsync(linked.Token);
             var stderr = process.StandardError.ReadToEndAsync(linked.Token);
-            using var registration = linked.Token.Register(() => ChildProcessTracker.Kill(process));
-            await process.WaitForExitAsync(linked.Token);
+            var completion = Task.WhenAll(stdout, stderr, process.WaitForExitAsync());
+            try
+            {
+                if (invocation.StandardInput is not null)
+                {
+                    await process.StandardInput.WriteAsync(invocation.StandardInput.AsMemory(), linked.Token).ConfigureAwait(false);
+                    await process.StandardInput.FlushAsync(linked.Token).ConfigureAwait(false);
+                    process.StandardInput.Close();
+                }
+
+                await completion.ConfigureAwait(false);
+                linked.Token.ThrowIfCancellationRequested();
+            }
+            catch (Exception error)
+            {
+                ChildProcessTracker.Kill(process);
+                try
+                {
+                    await completion.ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (linked.IsCancellationRequested)
+                {
+                    // Cancelled drains are expected; the original failure is rethrown below.
+                }
+                catch (Exception cleanupError)
+                {
+                    if (!ReferenceEquals(error, cleanupError))
+                    {
+                        error.Data["ProcessCleanupException"] = cleanupError;
+                    }
+                }
+
+                // Killing a process can break its stdin pipe before the write observes cancellation.
+                if (linked.IsCancellationRequested && error is IOException)
+                {
+                    throw new OperationCanceledException(UiStrings.Get("WslcWasCancelled"), error, linked.Token);
+                }
+
+                throw;
+            }
+
             if (process.ExitCode != 0)
             {
-                var err = (await stderr).Trim();
-                var outText = (await stdout).Trim();
+                var err = (await stderr.ConfigureAwait(false)).Trim();
+                var outText = (await stdout.ConfigureAwait(false)).Trim();
                 var text = err.Length > 0 ? err : outText;
                 if (!string.IsNullOrEmpty(invocation.StandardInput))
                 {
@@ -134,18 +172,18 @@ public sealed class WslcProcess : IWslcProcess
                         .Where(l => l.Length > 0
                             && !l.StartsWith("If this error", StringComparison.Ordinal)
                             && !l.StartsWith("https://github.com/microsoft/WSL", StringComparison.Ordinal)));
-                throw new InvalidOperationException(message.Length > 0 ? SecretService.Default.Redact(message) : $"wslc exited with {process.ExitCode}.");
+                throw new InvalidOperationException(message.Length > 0 ? SecretService.Default.Redact(message) : UiStrings.Format("WslcExitedWith", process.ExitCode));
             }
 
-            return await stdout;
+            return await stdout.ConfigureAwait(false);
         }
         catch (System.ComponentModel.Win32Exception)
         {
-            throw new InvalidOperationException("wslc.exe wasn't found on PATH. It's needed to list containers and sessions.");
+            throw new InvalidOperationException(UiStrings.Get("WslcExeWasnTFoundOnPATHItS"));
         }
         catch (OperationCanceledException) when (timeout?.IsCancellationRequested == true && !ct.IsCancellationRequested)
         {
-            throw new InvalidOperationException("wslc didn't respond in time.");
+            throw new InvalidOperationException(UiStrings.Get("WslcDidnTRespondInTime"));
         }
     }
 }

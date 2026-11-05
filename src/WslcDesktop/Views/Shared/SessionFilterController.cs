@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml.Controls;
 
 namespace WslcDesktop.Views.Shared;
@@ -8,7 +9,7 @@ namespace WslcDesktop.Views.Shared;
 /// </summary>
 public sealed class SessionFilterController
 {
-    public const string AllSessions = "All sessions";
+    public static string AllSessions => UiStrings.Get("AllSessions");
 
     private readonly ComboBox _box;
     private IReadOnlyList<string> _sessions = [];
@@ -38,7 +39,7 @@ public sealed class SessionFilterController
     {
         _sessions = sessions;
         var wanted = new List<string> { AllSessions };
-        wanted.AddRange(sessions.Select(s => App.Host.IsAppSession(s) ? $"{s} (this app)" : s));
+        wanted.AddRange(sessions.Select(s => App.Host.IsAppSession(s) ? UiStrings.Format("ThisApp2", s) : s));
         var current = _box.Items.Cast<string>().ToList();
         _updating = true;
         try

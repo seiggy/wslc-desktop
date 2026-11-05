@@ -6,7 +6,7 @@ public class WslcCliBackendImageTests
 {
     private readonly FakeWslcProcess _process = new();
 
-    private WslcCliBackend Backend(string session = "other") => new(_process, session);
+    private WslcCliBackend Backend(string session = "other") => new(_process, session, _ => null);
 
     [Fact]
     public async Task Deleting_an_image_runs_rmi_in_the_backends_session()

@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
@@ -12,7 +13,7 @@ public static class ChildProcessTracker
 
     public static Process Start(ProcessStartInfo info)
     {
-        var process = Process.Start(info) ?? throw new InvalidOperationException("Couldn't start wslc.exe.");
+        var process = Process.Start(info) ?? throw new InvalidOperationException(UiStrings.Get("CouldnTStartWslcExe"));
         Track(process);
         return process;
     }

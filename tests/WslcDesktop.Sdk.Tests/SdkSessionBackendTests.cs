@@ -17,7 +17,7 @@ public sealed class SdkSessionBackendTests : IAsyncLifetime
     {
         if (Enabled)
         {
-            _backend = SdkSessionBackend.Create(_name, Path.Combine(Path.GetTempPath(), _name), new WslcCliBackend(WslcProcess.Default, _name));
+            _backend = SdkSessionBackend.Create(_name, Path.Combine(Path.GetTempPath(), _name), new WslcCliBackend(WslcProcess.Default, _name, _ => null));
         }
 
         return Task.CompletedTask;

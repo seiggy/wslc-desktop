@@ -21,8 +21,24 @@ public sealed class SdkSessionBackend(Session session, ISessionBackend fallback)
     {
         Directory.CreateDirectory(dataDirectory);
         var s = new Session(new SessionSettings(name, dataDirectory));
-        s.Start();
-        return new SdkSessionBackend(s, fallback);
+        try
+        {
+            s.Start();
+            return new SdkSessionBackend(s, fallback);
+        }
+        catch (Exception startupError)
+        {
+            try
+            {
+                s.Dispose();
+            }
+            catch (Exception cleanupError)
+            {
+                startupError.Data["SessionDisposeException"] = cleanupError;
+            }
+
+            throw;
+        }
     }
 
     public void Dispose() => session.Dispose();

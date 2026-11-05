@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WslcDesktop.ViewModels;
@@ -71,9 +72,9 @@ public sealed partial class SessionsPage : Page
             await new ContentDialog
             {
                 XamlRoot = XamlRoot,
-                Title = "Couldn't load the environment",
+                Title = UiStrings.Get("CouldnTLoadTheEnvironment"),
                 Content = e.Message,
-                CloseButtonText = "Close",
+                CloseButtonText = UiStrings.Get("ActionClose"),
             }.ShowAsync();
         }
         catch
@@ -97,10 +98,10 @@ public sealed partial class SessionsPage : Page
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Terminate session \"{s.Name}\"?",
-            Content = "All containers running in this session will be stopped. This can't be undone.",
-            PrimaryButtonText = "Terminate",
-            CloseButtonText = "Cancel",
+            Title = UiStrings.Format("TerminateSession2", s.Name),
+            Content = UiStrings.Get("AllContainersRunningInThisSessionWillBeStopped"),
+            PrimaryButtonText = UiStrings.Get("Terminate"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await confirm.ShowAsync() != ContentDialogResult.Primary)
@@ -114,7 +115,7 @@ public sealed partial class SessionsPage : Page
         }
         catch (Exception ex)
         {
-            await new ContentDialog { XamlRoot = XamlRoot, Title = "Couldn't terminate the session", Content = ex.Message, CloseButtonText = "Close" }.ShowAsync();
+            await new ContentDialog { XamlRoot = XamlRoot, Title = UiStrings.Get("CouldnTTerminateTheSession"), Content = ex.Message, CloseButtonText = UiStrings.Get("ActionClose") }.ShowAsync();
         }
 
         await RefreshAsync(true);

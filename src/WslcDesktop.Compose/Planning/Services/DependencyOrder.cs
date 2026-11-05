@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 
 namespace WslcDesktop.Compose.Planning.Services;
 
@@ -40,7 +41,7 @@ public static partial class DependencyOrder
 
         if (cyclic)
         {
-            errors.Add("The services' depends_on entries form a cycle.");
+            errors.Add(UiStrings.Get("TheServicesDependsOnEntriesFormACycle"));
         }
 
         return order;

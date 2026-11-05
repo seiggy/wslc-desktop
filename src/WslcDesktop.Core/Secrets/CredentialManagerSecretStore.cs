@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -20,7 +21,7 @@ public sealed class CredentialManagerSecretStore : ISecretStore
         if (!CredEnumerate(TargetPrefix + "*", 0, out var count, out var array))
         {
             var error = Marshal.GetLastWin32Error();
-            return error == ErrorNotFound ? [] : throw new InvalidOperationException($"Couldn't list secrets (Windows error {error}).");
+            return error == ErrorNotFound ? [] : throw new InvalidOperationException(UiStrings.Format("CouldnTListSecretsWindowsError", error));
         }
 
         try
@@ -50,7 +51,7 @@ public sealed class CredentialManagerSecretStore : ISecretStore
         if (!CredRead(TargetPrefix + name, TypeGeneric, 0, out var ptr))
         {
             var error = Marshal.GetLastWin32Error();
-            return error == ErrorNotFound ? null : throw new InvalidOperationException($"Couldn't read the secret '{name}' (Windows error {error}).");
+            return error == ErrorNotFound ? null : throw new InvalidOperationException(UiStrings.Format("CouldnTReadTheSecretWindowsError", name, error));
         }
 
         try
@@ -83,7 +84,7 @@ public sealed class CredentialManagerSecretStore : ISecretStore
         if (bytes.Length > MaxValueBytes)
         {
             Array.Clear(bytes);
-            throw new InvalidOperationException($"Secret values can be at most {MaxValueBytes:N0} bytes (UTF-8).");
+            throw new InvalidOperationException(UiStrings.Format("SecretValuesCanBeAtMostBytesUTF", MaxValueBytes));
         }
 
         var blob = Marshal.AllocHGlobal(Math.Max(bytes.Length, 1));
@@ -105,7 +106,7 @@ public sealed class CredentialManagerSecretStore : ISecretStore
             };
             if (!CredWrite(ref cred, 0))
             {
-                throw new InvalidOperationException($"Couldn't save the secret '{name}' (Windows error {Marshal.GetLastWin32Error()}).");
+                throw new InvalidOperationException(UiStrings.Format("CouldnTSaveTheSecretWindowsError", name, Marshal.GetLastWin32Error()));
             }
         }
         finally
@@ -131,7 +132,7 @@ public sealed class CredentialManagerSecretStore : ISecretStore
         }
 
         var error = Marshal.GetLastWin32Error();
-        return error == ErrorNotFound ? false : throw new InvalidOperationException($"Couldn't delete the secret '{name}' (Windows error {error}).");
+        return error == ErrorNotFound ? false : throw new InvalidOperationException(UiStrings.Format("CouldnTDeleteTheSecretWindowsError", name, error));
     }
 
     [StructLayout(LayoutKind.Sequential)]

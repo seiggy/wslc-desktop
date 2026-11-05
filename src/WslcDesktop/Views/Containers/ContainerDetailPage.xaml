@@ -2,6 +2,7 @@
     x:Class="WslcDesktop.Views.Containers.ContainerDetailPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:localization="using:WslcDesktop.Localization"
     xmlns:controls="using:WslcDesktop.Controls">
 
     <Page.Resources>
@@ -23,7 +24,7 @@
         <StackPanel Orientation="Horizontal" Spacing="12">
             <Button
                 x:Name="BackButton"
-                AutomationProperties.Name="Back to containers"
+                AutomationProperties.Name="{localization:Localized Key=BackToContainers}"
                 Click="Back_Click"
                 Content="&#xE72B;"
                 FontFamily="{StaticResource SymbolThemeFontFamily}" />
@@ -35,16 +36,16 @@
                 VerticalAlignment="Center" />
             <ComboBox
                 x:Name="RestartPicker"
-                AutomationProperties.Name="Restart policy"
+                AutomationProperties.Name="{localization:Localized Key=RestartPolicy}"
                 MinWidth="150"
                 SelectionChanged="RestartPicker_Changed"
                 VerticalAlignment="Center" />
             <NumberBox
                 x:Name="RestartRetries"
-                AutomationProperties.Name="Maximum restarts"
+                AutomationProperties.Name="{localization:Localized Key=MaximumRestarts}"
                 Maximum="100"
                 Minimum="0"
-                PlaceholderText="Max restarts"
+                PlaceholderText="{localization:Localized Key=MaxRestarts}"
                 SpinButtonPlacementMode="Compact"
                 ValueChanged="RestartPicker_Changed"
                 Visibility="Collapsed"
@@ -59,43 +60,43 @@
         </StackPanel>
 
         <Pivot Grid.Row="1" x:Name="DetailPivot" SelectionChanged="DetailPivot_SelectionChanged">
-            <PivotItem Header="Logs">
+            <PivotItem Header="{localization:Localized Key=LabelLogs}">
                 <Grid RowSpacing="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" Spacing="16">
-                        <ToggleSwitch x:Name="FollowToggle" Header="Follow" IsOn="True" Toggled="LogOptions_Changed" />
-                        <ToggleSwitch x:Name="TimestampToggle" Header="Timestamps" Toggled="LogOptions_Changed" />
+                        <ToggleSwitch x:Name="FollowToggle" Header="{localization:Localized Key=Follow}" IsOn="True" Toggled="LogOptions_Changed" />
+                        <ToggleSwitch x:Name="TimestampToggle" Header="{localization:Localized Key=Timestamps}" Toggled="LogOptions_Changed" />
                         <NumberBox
                             x:Name="TailBox"
-                            Header="Last lines"
+                            Header="{localization:Localized Key=LastLines}"
                             Maximum="100000"
                             Minimum="0"
                             SpinButtonPlacementMode="Compact"
                             Value="200"
                             ValueChanged="TailBox_ValueChanged"
                             VerticalAlignment="Bottom" />
-                        <Button Click="ClearLogs_Click" Content="Clear" VerticalAlignment="Bottom" />
+                        <Button Click="ClearLogs_Click" Content="{localization:Localized Key=ActionClear}" VerticalAlignment="Bottom" />
                         <TextBlock x:Name="LogStatus" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Bottom" />
                     </StackPanel>
                     <controls:OutputView x:Name="LogView" Grid.Row="1" />
                 </Grid>
             </PivotItem>
 
-            <PivotItem Header="Shell" x:Name="ShellTabItem">
+            <PivotItem Header="{localization:Localized Key=LabelShell}" x:Name="ShellTabItem">
                 <Grid>
                     <InfoBar
                         x:Name="ShellStoppedNotice"
                         IsClosable="False"
                         IsOpen="False"
-                        Message="Start the container to open a shell."
+                        Message="{localization:Localized Key=StartTheContainerToOpenAShell}"
                         Severity="Informational"
-                        Title="This container is stopped"
+                        Title="{localization:Localized Key=ThisContainerIsStopped}"
                         VerticalAlignment="Top">
                         <InfoBar.ActionButton>
-                            <Button Click="StartContainer_Click" Content="Start container" />
+                            <Button Click="StartContainer_Click" Content="{localization:Localized Key=StartContainer}" />
                         </InfoBar.ActionButton>
                     </InfoBar>
                 <Grid x:Name="ShellPanel" RowSpacing="12">
@@ -105,12 +106,12 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <ComboBox x:Name="ShellPicker" Header="Shell" SelectedIndex="0" Width="140">
+                        <ComboBox x:Name="ShellPicker" Header="{localization:Localized Key=LabelShell}" SelectedIndex="0" Width="140">
                             <x:String>sh</x:String>
                             <x:String>bash</x:String>
                             <x:String>ash</x:String>
                         </ComboBox>
-                        <Button x:Name="ShellToggle" Click="ShellToggle_Click" Content="Start shell" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Bottom" />
+                        <Button x:Name="ShellToggle" Click="ShellToggle_Click" Content="{localization:Localized Key=StartShell}" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Bottom" />
                         <TextBlock x:Name="ShellStatus" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Bottom" />
                     </StackPanel>
                     <controls:TerminalView x:Name="Terminal" Grid.Row="1" Visibility="Collapsed" />
@@ -118,16 +119,16 @@
                     <TextBox
                         x:Name="ShellInput"
                         Grid.Row="2"
-                        AutomationProperties.Name="Shell command"
+                        AutomationProperties.Name="{localization:Localized Key=ShellCommand}"
                         FontFamily="Cascadia Mono, Consolas"
                         IsEnabled="False"
                         KeyDown="ShellInput_KeyDown"
-                        PlaceholderText="Type a command and press Enter" />
+                        PlaceholderText="{localization:Localized Key=TypeACommandAndPressEnter}" />
                 </Grid>
                 </Grid>
             </PivotItem>
 
-            <PivotItem Header="Telemetry">
+            <PivotItem Header="{localization:Localized Key=LabelTelemetry}">
                 <ScrollViewer>
                     <Grid ColumnSpacing="16" RowSpacing="16">
                         <Grid.ColumnDefinitions>
@@ -145,12 +146,12 @@
                             Grid.ColumnSpan="2"
                             IsClosable="False"
                             IsOpen="True"
-                            Message="Waiting for the first sample. Telemetry is only available while the container is running."
+                            Message="{localization:Localized Key=WaitingForTheFirstSampleTelemetryIsOnlyAvailable}"
                             Severity="Informational" />
 
                         <Border Grid.Row="1" Style="{StaticResource ChartCard}">
                             <StackPanel Spacing="8">
-                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="CPU" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{localization:Localized Key=LabelCpu}" />
                                 <TextBlock x:Name="CpuValue" Style="{StaticResource TitleTextBlockStyle}" Text="–" />
                                 <Grid x:Name="CpuHost" Height="80" SizeChanged="Chart_SizeChanged">
                                     <Polyline x:Name="CpuLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
@@ -160,7 +161,7 @@
 
                         <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource ChartCard}">
                             <StackPanel Spacing="8">
-                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Memory" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{localization:Localized Key=LabelMemory}" />
                                 <TextBlock x:Name="MemValue" Style="{StaticResource TitleTextBlockStyle}" Text="–" />
                                 <Grid x:Name="MemHost" Height="80" SizeChanged="Chart_SizeChanged">
                                     <Polyline x:Name="MemLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
@@ -170,36 +171,36 @@
 
                         <Border Grid.Row="2" Style="{StaticResource ChartCard}">
                             <StackPanel Spacing="8">
-                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Network" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{localization:Localized Key=Network}" />
                                 <TextBlock x:Name="NetValue" Style="{StaticResource BodyTextBlockStyle}" Text="–" />
                                 <Grid x:Name="NetHost" Height="80" SizeChanged="Chart_SizeChanged">
                                     <Polyline x:Name="NetRxLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
                                     <Polyline x:Name="NetTxLine" Stroke="{ThemeResource SystemFillColorCautionBrush}" StrokeThickness="2" />
                                 </Grid>
-                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Receive (accent), transmit (amber), per second" />
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{localization:Localized Key=ReceiveAccentTransmitAmberPerSecond}" />
                             </StackPanel>
                         </Border>
 
                         <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource ChartCard}">
                             <StackPanel Spacing="8">
-                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Disk I/O" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{localization:Localized Key=DiskIO}" />
                                 <TextBlock x:Name="BlockValue" Style="{StaticResource BodyTextBlockStyle}" Text="–" />
                                 <Grid x:Name="BlockHost" Height="80" SizeChanged="Chart_SizeChanged">
                                     <Polyline x:Name="BlockReadLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2" />
                                     <Polyline x:Name="BlockWriteLine" Stroke="{ThemeResource SystemFillColorCautionBrush}" StrokeThickness="2" />
                                 </Grid>
-                                <TextBlock x:Name="PidsValue" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Read (accent), write (amber), per second" />
+                                <TextBlock x:Name="PidsValue" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{localization:Localized Key=ReadAccentWriteAmberPerSecond}" />
                             </StackPanel>
                         </Border>
                     </Grid>
                 </ScrollViewer>
             </PivotItem>
 
-            <PivotItem Header="Inspect">
+            <PivotItem Header="{localization:Localized Key=LabelInspect}">
                 <ScrollViewer>
                     <StackPanel Spacing="16" Padding="0,0,16,16">
-                        <Button Click="Inspect_Click" Content="Reload" />
-                        <InfoBar x:Name="InspectError" IsClosable="False" IsOpen="False" Severity="Error" Title="Couldn't inspect the container" />
+                        <Button Click="Inspect_Click" Content="{localization:Localized Key=ActionReload}" />
+                        <InfoBar x:Name="InspectError" IsClosable="False" IsOpen="False" Severity="Error" Title="{localization:Localized Key=CouldnTInspectTheContainer}" />
                         <StackPanel x:Name="InspectPanel" Spacing="16" />
                         <controls:RawJsonExpander x:Name="InspectRaw" />
                     </StackPanel>

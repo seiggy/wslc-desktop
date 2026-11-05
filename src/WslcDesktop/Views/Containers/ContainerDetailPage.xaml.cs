@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Views.Stacks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -134,7 +135,7 @@ public sealed partial class ContainerDetailPage : Page
         ShellStoppedNotice.IsOpen = !running && HasLoaded;
         if (!running && _shell is not null)
         {
-            ShellView.Append("[container stopped]");
+            ShellView.Append(UiStrings.Get("ContainerStopped"));
             StopShell();
         }
 
@@ -170,15 +171,15 @@ public sealed partial class ContainerDetailPage : Page
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Disconnect from \"{network}\"?",
-            Content = $"{_name} will lose access to this network.",
-            PrimaryButtonText = "Disconnect",
-            CloseButtonText = "Cancel",
+            Title = UiStrings.Format("DisconnectFrom", network),
+            Content = UiStrings.Format("WillLoseAccessToThisNetwork", _name),
+            PrimaryButtonText = UiStrings.Get("ActionDisconnect"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await confirm.ShowAsync() == ContentDialogResult.Primary)
         {
-            await NetworkActionAsync("Couldn't disconnect", () => App.Host.Operations.Resources.DisconnectNetworkAsync(App.Host.Handle(_session), network, _name));
+            await NetworkActionAsync(UiStrings.Get("CouldnTDisconnect"), () => App.Host.Operations.Resources.DisconnectNetworkAsync(App.Host.Handle(_session), network, _name));
         }
     }
 
@@ -202,24 +203,24 @@ public sealed partial class ContainerDetailPage : Page
         var choices = all.Where(n => !connected.Contains(n)).ToList();
         if (choices.Count == 0)
         {
-            await new ContentDialog { XamlRoot = XamlRoot, Title = "No networks available", Content = "This container is already connected to every network.", CloseButtonText = "Close" }.ShowAsync();
+            await new ContentDialog { XamlRoot = XamlRoot, Title = UiStrings.Get("NoNetworksAvailable"), Content = UiStrings.Get("ThisContainerIsAlreadyConnectedToEveryNetwork"), CloseButtonText = UiStrings.Get("ActionClose") }.ShowAsync();
             return;
         }
 
-        var network = new ComboBox { Header = "Network", ItemsSource = choices, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
-        var alias = new TextBox { Header = "Alias (optional)" };
+        var network = new ComboBox { Header = UiStrings.Get("Network"), ItemsSource = choices, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var alias = new TextBox { Header = UiStrings.Get("AliasOptional") };
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Connect {_name} to a network",
+            Title = UiStrings.Format("ConnectToANetwork", _name),
             Content = new StackPanel { Spacing = 12, MinWidth = 360, Children = { network, alias } },
-            PrimaryButtonText = "Connect",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = UiStrings.Get("ActionConnect"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
         if (await dialog.ShowAsync() == ContentDialogResult.Primary && network.SelectedItem is string chosen)
         {
-            await NetworkActionAsync("Couldn't connect", () => App.Host.Operations.Resources.ConnectNetworkAsync(App.Host.Handle(_session), chosen, _name, alias.Text.Trim()));
+            await NetworkActionAsync(UiStrings.Get("CouldnTConnect"), () => App.Host.Operations.Resources.ConnectNetworkAsync(App.Host.Handle(_session), chosen, _name, alias.Text.Trim()));
         }
     }
 
@@ -231,7 +232,7 @@ public sealed partial class ContainerDetailPage : Page
         }
         catch (Exception ex)
         {
-            await new ContentDialog { XamlRoot = XamlRoot, Title = failureTitle, Content = ex.Message, CloseButtonText = "Close" }.ShowAsync();
+            await new ContentDialog { XamlRoot = XamlRoot, Title = failureTitle, Content = ex.Message, CloseButtonText = UiStrings.Get("ActionClose") }.ShowAsync();
         }
 
         await LoadInspectAsync();
@@ -246,61 +247,61 @@ public sealed partial class ContainerDetailPage : Page
             var d = ContainerDetail.Parse(json);
             InspectPanel.Children.Clear();
 
-            var card = Controls.InspectUi.Card("Overview", out var rows);
-            Controls.InspectUi.AddRow(rows, "Name", d.Name);
-            Controls.InspectUi.AddRow(rows, "ID", d.Id, true);
-            Controls.InspectUi.AddRow(rows, "Image", d.Image);
-            Controls.InspectUi.AddRow(rows, "Image ID", d.ImageId, true);
-            Controls.InspectUi.AddRow(rows, "Status", d.Status);
-            Controls.InspectUi.AddRow(rows, "Health", d.Health);
-            Controls.InspectUi.AddRow(rows, "Created", Controls.InspectUi.FormatDate(d.Created));
-            Controls.InspectUi.AddRow(rows, "Started", Controls.InspectUi.FormatDate(d.Started));
+            var card = Controls.InspectUi.Card(UiStrings.Get("Overview"), out var rows);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelName"), d.Name);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelId"), d.Id, true);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelImage"), d.Image);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelImageId"), d.ImageId, true);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelStatus"), d.Status);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelHealth"), d.Health);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelCreated"), Controls.InspectUi.FormatDate(d.Created));
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelStarted"), Controls.InspectUi.FormatDate(d.Started));
             var running = string.Equals(d.Status, "running", StringComparison.OrdinalIgnoreCase);
             if (!running)
             {
-                Controls.InspectUi.AddRow(rows, "Finished", Controls.InspectUi.FormatDate(d.Finished));
-                Controls.InspectUi.AddRow(rows, "Exit code", d.ExitCode);
+                Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelFinished"), Controls.InspectUi.FormatDate(d.Finished));
+                Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelExitCode"), d.ExitCode);
             }
-            Controls.InspectUi.AddRow(rows, "Memory limit", d.MemoryLimit.Length > 0 ? d.MemoryLimit : "Unlimited");
-            Controls.InspectUi.AddRow(rows, "CPU limit", d.CpuLimit.Length > 0 ? d.CpuLimit : "Unlimited");
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelMemoryLimit"), d.MemoryLimit.Length > 0 ? d.MemoryLimit : UiStrings.Get("Unlimited"));
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelCpuLimit"), d.CpuLimit.Length > 0 ? d.CpuLimit : UiStrings.Get("Unlimited"));
             InspectPanel.Children.Add(card);
 
-            card = Controls.InspectUi.Card("Ports and networking", out rows);
-            Controls.InspectUi.AddRow(rows, "Network mode", d.NetworkMode);
-            Controls.InspectUi.AddRow(rows, "Ports", d.Ports.Count > 0 ? string.Join('\n', d.Ports) : "None");
+            card = Controls.InspectUi.Card(UiStrings.Get("PortsAndNetworking"), out rows);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelNetworkMode"), d.NetworkMode);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelPorts"), d.Ports.Count > 0 ? string.Join('\n', d.Ports) : UiStrings.Get("None"));
             foreach (var n in d.Networks)
             {
                 var row = new Grid { ColumnSpacing = 16 };
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                row.Children.Add(Controls.InspectUi.Secondary($"Network {n.Name}"));
-                var info = Controls.InspectUi.Mono(string.Join('\n', new[] { n.IpAddress, n.Gateway.Length > 0 ? $"Gateway {n.Gateway}" : "", n.Mac }.Where(s => s.Length > 0)));
+                row.Children.Add(Controls.InspectUi.Secondary(UiStrings.Format("Network2", n.Name)));
+                var info = Controls.InspectUi.Mono(string.Join('\n', new[] { n.IpAddress, n.Gateway.Length > 0 ? UiStrings.Format("Gateway", n.Gateway) : "", n.Mac }.Where(s => s.Length > 0)));
                 Grid.SetColumn(info, 1);
                 row.Children.Add(info);
-                var disconnect = new Button { Content = "Disconnect", Tag = n.Name, VerticalAlignment = VerticalAlignment.Top };
+                var disconnect = new Button { Content = UiStrings.Get("ActionDisconnect"), Tag = n.Name, VerticalAlignment = VerticalAlignment.Top };
                 disconnect.Click += Disconnect_Click;
                 Grid.SetColumn(disconnect, 2);
                 row.Children.Add(disconnect);
                 rows.Children.Add(row);
             }
 
-            var connect = new Button { Content = "Connect to network…" };
+            var connect = new Button { Content = UiStrings.Get("ConnectToNetwork") };
             connect.Click += Connect_Click;
             rows.Children.Add(connect);
             InspectPanel.Children.Add(card);
 
-            card = Controls.InspectUi.Card("Mounts", out rows);
-            Controls.InspectUi.AddRow(rows, "Mounts", d.Mounts.Count > 0 ? string.Join('\n', d.Mounts) : "None");
+            card = Controls.InspectUi.Card(UiStrings.Get("LabelMounts"), out rows);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelMounts"), d.Mounts.Count > 0 ? string.Join('\n', d.Mounts) : UiStrings.Get("None"));
             InspectPanel.Children.Add(card);
 
-            card = Controls.InspectUi.Card("Configuration", out rows);
-            Controls.InspectUi.AddRow(rows, "Entrypoint", string.Join(' ', d.Entrypoint));
-            Controls.InspectUi.AddRow(rows, "Command", string.Join(' ', d.Cmd));
-            Controls.InspectUi.AddRow(rows, "Working dir", d.WorkingDir);
-            Controls.InspectUi.AddRow(rows, "User", d.User);
-            Controls.InspectUi.AddRow(rows, "Environment", d.Env.Count > 0 ? string.Join('\n', d.Env) : "None", true);
-            Controls.InspectUi.AddRow(rows, "Labels", d.Labels.Count > 0 ? string.Join('\n', d.Labels) : "None", true);
+            card = Controls.InspectUi.Card(UiStrings.Get("Configuration"), out rows);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelEntrypoint"), string.Join(' ', d.Entrypoint));
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelCommand"), string.Join(' ', d.Cmd));
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelWorkingDir"), d.WorkingDir);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelUser"), d.User);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelEnvironment"), d.Env.Count > 0 ? string.Join('\n', d.Env) : UiStrings.Get("None"), true);
+            Controls.InspectUi.AddRow(rows, UiStrings.Get("LabelLabels"), d.Labels.Count > 0 ? string.Join('\n', d.Labels) : UiStrings.Get("None"), true);
             InspectPanel.Children.Add(card);
 
             InspectRaw.SetJson(json);
@@ -316,7 +317,7 @@ public sealed partial class ContainerDetailPage : Page
     {
         (_session, _name) = e.Parameter is ContainerRef r ? (r.Session, r.Name) : (App.Host.SessionId, (string)e.Parameter);
         TitleText.Text = _name;
-        SessionText.Text = IsAppSession ? string.Empty : $"Session: {_session}";
+        SessionText.Text = IsAppSession ? string.Empty : UiStrings.Format("Session", _session);
         if (!IsAppSession)
         {
             RestartPicker.Visibility = RestartRetries.Visibility = RestartStatus.Visibility = Visibility.Collapsed;
@@ -351,7 +352,7 @@ public sealed partial class ContainerDetailPage : Page
         var tail = double.IsNaN(TailBox.Value) ? 200 : (int)TailBox.Value;
         var follow = FollowToggle.IsOn;
         var timestamps = TimestampToggle.IsOn;
-        LogStatus.Text = follow ? "Streaming…" : "Loading…";
+        LogStatus.Text = follow ? UiStrings.Get("Streaming") : UiStrings.Get("Loading");
 
         _ = Task.Run(async () =>
         {
@@ -371,7 +372,7 @@ public sealed partial class ContainerDetailPage : Page
             if (!cts.IsCancellationRequested)
             {
                 DispatcherQueue.TryEnqueue(() =>
-                    LogStatus.Text = error ?? (follow ? "Stream ended (container stopped?)" : "Done"));
+                    LogStatus.Text = error ?? (follow ? UiStrings.Get("StreamEndedContainerStopped") : UiStrings.Get("Done")));
             }
         });
     }
@@ -427,7 +428,7 @@ public sealed partial class ContainerDetailPage : Page
             {
                 if (_terminalActive)
                 {
-                    Terminal.Notice($"[shell exited with code {code}]");
+                    Terminal.Notice(UiStrings.Format("ShellExitedWithCode", code));
                     StopShell(keepOutput: true);
                 }
             }));
@@ -438,14 +439,14 @@ public sealed partial class ContainerDetailPage : Page
             Terminal.Visibility = Visibility.Collapsed;
             ShellView.Visibility = Visibility.Visible;
             ShellInput.Visibility = Visibility.Visible;
-            ShellStatus.Text = $"Terminal unavailable ({ex.GetType().Name}: {ex.Message}); using the basic shell.";
+            ShellStatus.Text = UiStrings.Format("TerminalUnavailableUsingTheBasicShell", ex.GetType().Name, ex.Message);
             LogBackend($"fallback: {ex}");
             return false;
         }
 
         _terminalActive = true;
-        ShellToggle.Content = "End shell";
-        ShellStatus.Text = $"Connected to {_name}";
+        ShellToggle.Content = UiStrings.Get("EndShell");
+        ShellStatus.Text = UiStrings.Format("ConnectedTo", _name);
         LogBackend("native terminal active");
         return true;
     }
@@ -477,7 +478,7 @@ public sealed partial class ContainerDetailPage : Page
             {
                 if (ReferenceEquals(_shell, started))
                 {
-                    ShellView.Append($"[shell exited with code {code}]");
+                    ShellView.Append(UiStrings.Format("ShellExitedWithCode", code));
                     StopShell();
                 }
             }));
@@ -489,8 +490,8 @@ public sealed partial class ContainerDetailPage : Page
             return;
         }
 
-        ShellToggle.Content = "End shell";
-        ShellStatus.Text = $"Connected to {_name} (basic shell, no TTY: full-screen programs aren't supported)";
+        ShellToggle.Content = UiStrings.Get("EndShell");
+        ShellStatus.Text = UiStrings.Format("ConnectedToBasicShellNoTTYFullScreenPrograms", _name);
         ShellInput.IsEnabled = true;
         ShellInput.Focus(FocusState.Programmatic);
     }
@@ -505,7 +506,7 @@ public sealed partial class ContainerDetailPage : Page
             _terminalActive = false;
         }
 
-        ShellToggle.Content = "Start shell";
+        ShellToggle.Content = UiStrings.Get("StartShell");
         ShellInput.IsEnabled = false;
         ShellStatus.Text = string.Empty;
     }
@@ -538,7 +539,7 @@ public sealed partial class ContainerDetailPage : Page
         if (!IsAppSession)
         {
             TelemetryNotice.IsOpen = true;
-            TelemetryNotice.Message = $"Telemetry is only collected for containers in this app's session (\"{App.Host.SessionId}\").";
+            TelemetryNotice.Message = UiStrings.Format("TelemetryIsOnlyCollectedForContainersInThisApp", App.Host.SessionId);
             return;
         }
 
@@ -547,15 +548,15 @@ public sealed partial class ContainerDetailPage : Page
         {
             TelemetryNotice.IsOpen = true;
             TelemetryNotice.Message = App.Host.Telemetry.LastError ?? (IsRunning
-                ? "Waiting for the first sample."
-                : "This container is stopped. Telemetry is captured while it runs.");
+                ? UiStrings.Get("WaitingForTheFirstSample")
+                : UiStrings.Get("ThisContainerIsStoppedTelemetryIsCapturedWhileIt"));
             return;
         }
 
         TelemetryNotice.IsOpen = false;
         var last = history[^1];
         CpuValue.Text = $"{last.CpuPercent:0.##}%";
-        MemValue.Text = $"{WslcHost.FormatSize(last.MemoryBytes)} of {WslcHost.FormatSize(last.MemoryLimitBytes)} ({last.MemoryPercent:0.##}%)";
+        MemValue.Text = UiStrings.Format("Of", WslcHost.FormatSize(last.MemoryBytes), WslcHost.FormatSize(last.MemoryLimitBytes), last.MemoryPercent);
 
         var cpu = history.Select(s => s.CpuPercent).ToList();
         Plot(CpuHost, CpuLine, cpu, Math.Max(10, cpu.Max()));
@@ -566,15 +567,15 @@ public sealed partial class ContainerDetailPage : Page
         var netMax = Math.Max(1024, Math.Max(rx.Max(), tx.Max()));
         Plot(NetHost, NetRxLine, rx, netMax);
         Plot(NetHost, NetTxLine, tx, netMax);
-        NetValue.Text = $"↓ {WslcHost.FormatSize((ulong)rx[^1])}/s  ↑ {WslcHost.FormatSize((ulong)tx[^1])}/s · total ↓ {WslcHost.FormatSize(last.NetRxBytes)}  ↑ {WslcHost.FormatSize(last.NetTxBytes)}";
+        NetValue.Text = UiStrings.Format("SSTotal", WslcHost.FormatSize((ulong)rx[^1]), WslcHost.FormatSize((ulong)tx[^1]), WslcHost.FormatSize(last.NetRxBytes), WslcHost.FormatSize(last.NetTxBytes));
 
         var rd = Rates(history, s => s.BlockReadBytes);
         var wr = Rates(history, s => s.BlockWriteBytes);
         var blockMax = Math.Max(1024, Math.Max(rd.Max(), wr.Max()));
         Plot(BlockHost, BlockReadLine, rd, blockMax);
         Plot(BlockHost, BlockWriteLine, wr, blockMax);
-        BlockValue.Text = $"read {WslcHost.FormatSize((ulong)rd[^1])}/s  write {WslcHost.FormatSize((ulong)wr[^1])}/s · total read {WslcHost.FormatSize(last.BlockReadBytes)}  write {WslcHost.FormatSize(last.BlockWriteBytes)}";
-        PidsValue.Text = $"{last.Pids} processes · read (blue), write (amber), per second";
+        BlockValue.Text = UiStrings.Format("ReadSWriteSTotalReadWrite", WslcHost.FormatSize((ulong)rd[^1]), WslcHost.FormatSize((ulong)wr[^1]), WslcHost.FormatSize(last.BlockReadBytes), WslcHost.FormatSize(last.BlockWriteBytes));
+        PidsValue.Text = UiStrings.Format("ProcessesReadBlueWriteAmberPerSecond", last.Pids);
     }
 
     private static List<double> Rates(IReadOnlyList<StatsSample> history, Func<StatsSample, ulong> pick)

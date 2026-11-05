@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace WslcDesktop.Restart.Persistence;
@@ -23,6 +24,14 @@ public sealed class RestartPolicyStore : IRestartStore
         lock (_lock)
         {
             return new Dictionary<string, RestartEntry>(_entries, StringComparer.Ordinal);
+        }
+    }
+
+    public bool TryGet(string name, [NotNullWhen(true)] out RestartEntry? entry)
+    {
+        lock (_lock)
+        {
+            return _entries.TryGetValue(name, out entry);
         }
     }
 

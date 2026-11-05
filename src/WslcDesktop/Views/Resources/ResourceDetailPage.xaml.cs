@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -34,7 +35,7 @@ public sealed partial class ResourceDetailPage : Page
         var target = e.Parameter is ResourceRef r ? r : LegacyRef(((ResourceKind, string))e.Parameter);
         (_kind, _session, _name) = (target.Kind, target.Session, target.Name);
         TitleText.Text = _name;
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(BackButton, _kind == ResourceKind.Volume ? "Back to volumes" : "Back to networks");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(BackButton, _kind == ResourceKind.Volume ? UiStrings.Get("BackToVolumes") : UiStrings.Get("BackToNetworks"));
         await LoadAsync();
     }
 
@@ -49,42 +50,43 @@ public sealed partial class ResourceDetailPage : Page
                 : doc.RootElement;
 
             Cards.Children.Clear();
-            var card = InspectUi.Card("Overview", out var rows);
-            InspectUi.AddRow(rows, "Name", Str(root, "Name"));
-            InspectUi.AddRow(rows, "Session", App.Host.IsAppSession(_session) ? $"{_session} (this app)" : _session);
-            InspectUi.AddRow(rows, "ID", Str(root, "Id"), true);
-            InspectUi.AddRow(rows, "Driver", Str(root, "Driver"));
-            InspectUi.AddRow(rows, "Scope", Str(root, "Scope"));
-            InspectUi.AddRow(rows, "Created", InspectUi.FormatDate(Str(root, "CreatedAt").Length > 0 ? Str(root, "CreatedAt") : Str(root, "Created")));
+            var card = InspectUi.Card(UiStrings.Get("Overview"), out var rows);
+            InspectUi.AddRow(rows, UiStrings.Get("LabelName"), Str(root, "Name"));
+            InspectUi.AddRow(rows, UiStrings.Get("LabelSession"), App.Host.IsAppSession(_session) ? UiStrings.Format("ThisApp2", _session) : _session);
+            InspectUi.AddRow(rows, UiStrings.Get("LabelId"), Str(root, "Id"), true);
+            InspectUi.AddRow(rows, UiStrings.Get("LabelDriver"), Str(root, "Driver"));
+            InspectUi.AddRow(rows, UiStrings.Get("LabelScope"), Str(root, "Scope"));
+            InspectUi.AddRow(rows, UiStrings.Get("LabelCreated"), InspectUi.FormatDate(Str(root, "CreatedAt").Length > 0 ? Str(root, "CreatedAt") : Str(root, "Created")));
             if (_kind == ResourceKind.Volume)
             {
-                InspectUi.AddRow(rows, "Mountpoint", Str(root, "Mountpoint"), true);
+                InspectUi.AddRow(rows, UiStrings.Get("LabelMountpoint"), Str(root, "Mountpoint"), true);
             }
             else
             {
-                InspectUi.AddRow(rows, "Access", Bool(root, "Internal") ? "Internal (no external access)" : "External");
-                InspectUi.AddRow(rows, "IPv4", Bool(root, "EnableIPv4") ? "Enabled" : "Disabled");
-                InspectUi.AddRow(rows, "IPv6", Bool(root, "EnableIPv6") ? "Enabled" : "Disabled");
+                InspectUi.AddRow(rows, UiStrings.Get("LabelAccess"), Bool(root, "Internal") ? UiStrings.Get("InternalNoExternalAccess") : UiStrings.Get("External"));
+                InspectUi.AddRow(rows, UiStrings.Get("LabelIpv4"), Bool(root, "EnableIPv4") ? UiStrings.Get("Enabled") : UiStrings.Get("Disabled"));
+                InspectUi.AddRow(rows, UiStrings.Get("LabelIpv6"), Bool(root, "EnableIPv6") ? UiStrings.Get("Enabled") : UiStrings.Get("Disabled"));
                 if (root.TryGetProperty("IPAM", out var ipam) && ipam.TryGetProperty("Config", out var cfg) && cfg.ValueKind == JsonValueKind.Array)
                 {
-                    InspectUi.AddRow(rows, "Subnets", string.Join('\n', cfg.EnumerateArray().Select(c =>
-                        Str(c, "Subnet") + (Str(c, "Gateway").Length > 0 ? $" · gateway {Str(c, "Gateway")}" : string.Empty))), true);
+                    InspectUi.AddRow(rows, UiStrings.Get("LabelSubnets"), string.Join('\n', cfg.EnumerateArray().Select(c =>
+                        Str(c, "Subnet") + (Str(c, "Gateway").Length > 0 ? UiStrings.Format("Gateway2", Str(c, "Gateway")) : string.Empty))), true);
                 }
             }
 
             Cards.Children.Add(card);
 
-            card = InspectUi.Card("Used by", out rows);
+            card = InspectUi.Card(UiStrings.Get("LabelUsedBy"), out rows);
             var users = await UsersAsync(root);
-            InspectUi.AddRow(rows, "Containers", users.Count > 0 ? string.Join('\n', users) : "No containers use this " + (_kind == ResourceKind.Volume ? "volume" : "network"));
+            InspectUi.AddRow(rows, UiStrings.Get("LabelContainers"), users.Count > 0 ? string.Join('\n', users)
+                : UiStrings.Get(_kind == ResourceKind.Volume ? "NoContainersUseVolume" : "NoContainersUseNetwork"));
             Cards.Children.Add(card);
 
-            card = InspectUi.Card("Metadata", out rows);
-            InspectUi.AddRow(rows, "Labels", Pairs(root, "Labels"), true);
-            InspectUi.AddRow(rows, "Options", Pairs(root, "Options"), true);
+            card = InspectUi.Card(UiStrings.Get("LabelMetadata"), out rows);
+            InspectUi.AddRow(rows, UiStrings.Get("LabelLabels"), Pairs(root, "Labels"), true);
+            InspectUi.AddRow(rows, UiStrings.Get("LabelOptions"), Pairs(root, "Options"), true);
             if (rows.Children.Count == 0)
             {
-                InspectUi.AddRow(rows, "Labels", "None");
+                InspectUi.AddRow(rows, UiStrings.Get("LabelLabels"), UiStrings.Get("None"));
             }
 
             Cards.Children.Add(card);
@@ -93,7 +95,7 @@ public sealed partial class ResourceDetailPage : Page
         }
         catch (Exception ex)
         {
-            ErrorBar.Title = $"Couldn't inspect {_name}";
+            ErrorBar.Title = UiStrings.Format("CouldnTInspect2", _name);
             ErrorBar.Message = ex.Message;
             ErrorBar.IsOpen = true;
         }

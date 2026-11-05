@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using WslcDesktop.Services;
@@ -26,7 +27,7 @@ internal sealed class TrayIcon : IDisposable
     private nint _hwnd;
     private nint _icon;
     private bool _added;
-    private string _tooltip = "WSLc Desktop Manager";
+    private string _tooltip = UiStrings.Get("AppTitle");
 
     public TrayIcon(string assetDir)
     {
@@ -240,10 +241,10 @@ internal sealed class TrayIcon : IDisposable
 
         try
         {
-            AppendMenu(menu, 0, IdOpen, "Open WSLc Desktop Manager");
-            AppendMenu(menu, 0x3 /* MF_GRAYED */, 0, StatusProvider?.Invoke() ?? "Status unavailable");
+            AppendMenu(menu, 0, IdOpen, UiStrings.Get("OpenWSLcDesktopManager"));
+            AppendMenu(menu, 0x3 /* MF_GRAYED */, 0, StatusProvider?.Invoke() ?? UiStrings.Get("StatusUnavailable"));
             AppendMenu(menu, 0x800 /* MF_SEPARATOR */, 0, null);
-            AppendMenu(menu, 0, IdExit, "Exit");
+            AppendMenu(menu, 0, IdExit, UiStrings.Get("ActionExit"));
             SetMenuDefaultItem(menu, IdOpen, 0);
 
             // The owner must be foreground or the menu won't dismiss when the user clicks elsewhere.

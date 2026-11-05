@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Compose.Planning.Resources;
 using WslcDesktop.Compose.Planning;
 using System.Globalization;
@@ -25,25 +26,23 @@ internal static partial class ServicePlanner
         "tmpfs", "dns", "dns_search", "pull_policy", "secrets",
     ];
 
-    internal static readonly Dictionary<string, string> UnsupportedServiceKeys = new(StringComparer.Ordinal)
+    internal static Dictionary<string, string> UnsupportedServiceKeys => new(StringComparer.Ordinal)
     {
-        ["deploy"] = "deploy (replicas, resources, placement, restart_policy) isn't supported; a single container is started with no resource limits from it",
-        ["profiles"] = "profiles aren't supported; this service is always started",
-        ["configs"] = "configs aren't supported and won't be mounted",
-        ["extends"] = "extends isn't supported; the service is not merged with the referenced one",
-        ["links"] = "links aren't supported; use networks and service names instead",
-        ["platform"] = "platform selection isn't supported",
-        ["scale"] = "scale isn't supported; a single container is started",
+        ["deploy"] = UiStrings.Get("DeployReplicasResourcesPlacementRestartPolicyIsnTSupported"),
+        ["profiles"] = UiStrings.Get("ProfilesArenTSupportedThisServiceIsAlwaysStarted"),
+        ["configs"] = UiStrings.Get("ConfigsArenTSupportedAndWonTBeMounted"),
+        ["extends"] = UiStrings.Get("ExtendsIsnTSupportedTheServiceIsNotMerged"),
+        ["links"] = UiStrings.Get("LinksArenTSupportedUseNetworksAndServiceNames"),
+        ["platform"] = UiStrings.Get("PlatformSelectionIsnTSupported"),
+        ["scale"] = UiStrings.Get("ScaleIsnTSupportedASingleContainerIsStarted"),
     };
 
     internal static readonly HashSet<string> SupportedBuildKeys = ["context", "dockerfile", "args", "target"];
 
     internal static (ComposeAction Run, ComposeAction? Build) PlanService(
-        string project, string name, Dictionary<string, object?> svc, Dictionary<string, object?> allServices,
-        ComposeOptions options, Dictionary<string, NetworkRef> networkRefs, Dictionary<string, VolumeRef> volumeRefs,
-        HashSet<string> usedNetworks, HashSet<string> healthchecked, Dictionary<string, string> secretMap, List<string> warnings, List<string> errors)
+        PlanContext context, string name, Dictionary<string, object?> svc)
     {
-        void Warn(string text) => warnings.Add($"Service '{name}': {text}");
+        void Warn(string text) => context.Warnings.Add(UiStrings.Format("Service", name, text));
 
         foreach (var key in svc.Keys)
         {
@@ -59,34 +58,34 @@ internal static partial class ServicePlanner
             }
 
             Warn(UnsupportedServiceKeys.TryGetValue(key, out var why)
-                ? $"'{key}' — {why}."
-                : $"'{key}' isn't supported by WSLc and will be ignored.");
+                ? UiStrings.Format("ComposeFieldWarning", key, why)
+                : UiStrings.Format("IsnTSupportedByWSLcAndWillBeIgnored", key));
         }
 
         if (Map(svc.GetValueOrDefault("deploy")) is { } deploy && deploy.GetValueOrDefault("replicas") is string replicas && replicas != "1")
         {
-            Warn($"deploy.replicas = {replicas} is ignored; only one container is started.");
+            Warn(UiStrings.Format("DeployReplicasIsIgnoredOnlyOneContainerIsStarted", replicas));
         }
 
-        var containerName = svc.GetValueOrDefault("container_name") as string ?? $"{project}-{name}";
+        var containerName = svc.GetValueOrDefault("container_name") as string ?? $"{context.Project}-{name}";
         var image = svc.GetValueOrDefault("image") as string;
         ComposeAction? build = null;
         if (svc.GetValueOrDefault("build") is { } buildNode)
         {
-            image ??= $"{project}-{name}";
-            build = PlanBuild(name, image, buildNode, options, warnings, errors);
+            image ??= $"{context.Project}-{name}";
+            build = PlanBuild(context, name, image, buildNode);
         }
 
         if (image is null)
         {
-            errors.Add($"Service '{name}' needs an image or a build section.");
+            context.Errors.Add(UiStrings.Format("ServiceNeedsAnImageOrABuildSection", name));
             image = string.Empty;
         }
 
         var args = new List<string>
         {
             "run", "-d", "--name", containerName,
-            "--label", $"{ComposeLabels.Project}={project}",
+            "--label", $"{ComposeLabels.Project}={context.Project}",
             "--label", $"{ComposeLabels.Service}={name}",
         };
 
@@ -106,7 +105,7 @@ internal static partial class ServicePlanner
                     args.AddRange(["--pull", "missing"]);
                     break;
                 default:
-                    Warn($"pull_policy '{pull}' isn't supported and will be ignored.");
+                    Warn(UiStrings.Format("PullPolicyIsnTSupportedAndWillBeIgnored", pull));
                     break;
             }
         }
@@ -138,7 +137,7 @@ internal static partial class ServicePlanner
             var seconds = ParseDurationSeconds(grace);
             if (seconds is null)
             {
-                Warn($"stop_grace_period '{grace}' couldn't be parsed and will be ignored.");
+                Warn(UiStrings.Format("StopGracePeriodCouldnTBeParsedAndWill", grace));
             }
             else
             {
@@ -164,7 +163,7 @@ internal static partial class ServicePlanner
         var explicitEnv = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (k, v) in KeyValues(svc.GetValueOrDefault("environment")))
         {
-            var val = v ?? options.Env.GetValueOrDefault(k);
+            var val = v ?? context.Options.Env.GetValueOrDefault(k);
             if (val is not null)
             {
                 args.AddRange(["--env", $"{k}={val}"]);
@@ -179,11 +178,11 @@ internal static partial class ServicePlanner
             var target = Map(entry)?.GetValueOrDefault("target") as string ?? source;
             if (source is null || target is null)
             {
-                Warn("a secrets entry has no source and was ignored.");
+                Warn(UiStrings.Get("ASecretsEntryHasNoSourceAndWasIgnored"));
             }
-            else if (!secretMap.TryGetValue(source, out var id))
+            else if (!context.Secrets.TryGetValue(source, out var id))
             {
-                errors.Add($"Service '{name}' uses secret '{source}', which isn't defined (or isn't a stored secret) in the top-level secrets.");
+                context.Errors.Add(UiStrings.Format("ServiceUsesSecretWhichIsnTDefinedOrIsn", name, source));
             }
             else
             {
@@ -198,14 +197,14 @@ internal static partial class ServicePlanner
         foreach (var entry in List(svc.GetValueOrDefault("env_file")) ?? (svc.GetValueOrDefault("env_file") is string single ? [single] : []))
         {
             var (path, required) = entry is string p ? (p, true) : (Map(entry)?.GetValueOrDefault("path") as string ?? string.Empty, !IsFalse(Map(entry)?.GetValueOrDefault("required")));
-            var full = Path.GetFullPath(Path.Combine(options.Directory, path));
-            if (options.FileExists(full))
+            var full = Path.GetFullPath(Path.Combine(context.Options.Directory, path));
+            if (context.Options.FileExists(full))
             {
                 args.AddRange(["--env-file", full]);
             }
             else if (required)
             {
-                errors.Add($"Service '{name}': env_file '{path}' wasn't found at {full}.");
+                context.Errors.Add(UiStrings.Format("ServiceEnvFileWasnTFoundAt", name, path, full));
             }
         }
 
@@ -216,7 +215,7 @@ internal static partial class ServicePlanner
 
         foreach (var v in List(svc.GetValueOrDefault("volumes")) ?? [])
         {
-            AddVolume(args, name, v, options, volumeRefs, Warn, errors);
+            AddVolume(context, args, name, v, Warn);
         }
 
         if (svc.GetValueOrDefault("healthcheck") is { } hc)
@@ -225,7 +224,7 @@ internal static partial class ServicePlanner
         }
 
         var after = new List<IReadOnlyList<string>>();
-        AddNetworks(args, after, project, containerName, name, svc, networkRefs, usedNetworks, Warn, errors);
+        AddNetworks(context, args, after, containerName, name, svc, Warn);
 
         var entrypoint = Command(svc.GetValueOrDefault("entrypoint"));
         var command = Command(svc.GetValueOrDefault("command"));
@@ -239,10 +238,10 @@ internal static partial class ServicePlanner
         args.AddRange(command);
 
         var waits = new List<ServiceWait>();
-        AddDependsOn(name, svc.GetValueOrDefault("depends_on"), allServices, healthchecked, waits, warnings, errors);
+        AddDependsOn(context, name, svc.GetValueOrDefault("depends_on"), waits);
 
-        var description = $"Run {name} ({image}) as {containerName}" +
-            (waits.Count > 0 ? $", after {string.Join(", ", waits.Select(w => $"{w.Service} ({ConditionText(w.Condition)})"))}" : string.Empty);
+        var description = UiStrings.Format("RunAs", name, image, containerName) +
+            (waits.Count > 0 ? UiStrings.Format("After", string.Join(", ", waits.Select(w => $"{w.Service} ({ConditionText(w.Condition)})"))) : string.Empty);
         var restart = RestartValue(svc.GetValueOrDefault("restart"), Warn);
         return (new ComposeAction(ActionKind.RunService, containerName, description, args, name, waits, after, restart), build);
     }
@@ -261,7 +260,7 @@ internal static partial class ServicePlanner
             return text;
         }
 
-        warn($"restart: '{text}' isn't a supported restart policy and will be ignored.");
+        warn(UiStrings.Format("RestartIsnTASupportedRestartPolicyAndWill", text));
         return null;
     }
 
@@ -272,7 +271,7 @@ internal static partial class ServicePlanner
         _ => "started",
     };
 
-    internal static ComposeAction? PlanBuild(string name, string image, object node, ComposeOptions options, List<string> warnings, List<string> errors)
+    internal static ComposeAction? PlanBuild(PlanContext plan, string name, string image, object node)
     {
         string context;
         string? dockerfile = null;
@@ -291,17 +290,17 @@ internal static partial class ServicePlanner
             buildArgs = KeyValues(map.GetValueOrDefault("args")).ToList();
             foreach (var key in map.Keys.Where(k => !SupportedBuildKeys.Contains(k) && !k.StartsWith("x-", StringComparison.Ordinal)))
             {
-                warnings.Add($"Service '{name}': build.{key} isn't supported by WSLc and will be ignored.");
+                plan.Warnings.Add(UiStrings.Format("ServiceBuildIsnTSupportedByWSLcAndWill", name, key));
             }
         }
 
         if (context.Contains("://") || context.StartsWith("git@", StringComparison.Ordinal))
         {
-            errors.Add($"Service '{name}': remote build contexts aren't supported; use a local directory.");
+            plan.Errors.Add(UiStrings.Format("ServiceRemoteBuildContextsArenTSupportedUseA", name));
             return null;
         }
 
-        var contextPath = Path.GetFullPath(Path.Combine(options.Directory, context));
+        var contextPath = Path.GetFullPath(Path.Combine(plan.Options.Directory, context));
         var args = new List<string> { "build", "--tag", image };
         if (dockerfile is not null)
         {
@@ -315,7 +314,7 @@ internal static partial class ServicePlanner
 
         foreach (var (k, v) in buildArgs)
         {
-            var val = v ?? options.Env.GetValueOrDefault(k);
+            var val = v ?? plan.Options.Env.GetValueOrDefault(k);
             if (val is not null)
             {
                 args.AddRange(["--build-arg", $"{k}={val}"]);
@@ -323,7 +322,7 @@ internal static partial class ServicePlanner
         }
 
         args.Add(contextPath);
-        return new ComposeAction(ActionKind.Build, image, $"Build {image} from {contextPath}", args, name);
+        return new ComposeAction(ActionKind.Build, image, UiStrings.Format("BuildFrom", image, contextPath), args, name);
     }
 
     internal static IEnumerable<string> Ports(object? node)
@@ -379,13 +378,12 @@ internal static partial class ServicePlanner
         AddFlag(args, "--health-start-period", hc.GetValueOrDefault("start_period"));
         if (hc.ContainsKey("start_interval"))
         {
-            warn("healthcheck.start_interval isn't supported and will be ignored.");
+            warn(UiStrings.Get("HealthcheckStartIntervalIsnTSupportedAndWillBe"));
         }
     }
 
     internal static void AddDependsOn(
-        string service, object? node, Dictionary<string, object?> allServices, HashSet<string> healthchecked,
-        List<ServiceWait> waits, List<string> warnings, List<string> errors)
+        PlanContext context, string service, object? node, List<ServiceWait> waits)
     {
         var entries = node switch
         {
@@ -400,25 +398,25 @@ internal static partial class ServicePlanner
 
         foreach (var (dep, condition, required) in entries)
         {
-            if (!allServices.ContainsKey(dep))
+            if (!context.Services.ContainsKey(dep))
             {
                 if (required)
                 {
-                    errors.Add($"Service '{service}' depends on undefined service '{dep}'.");
+                    context.Errors.Add(UiStrings.Format("ServiceDependsOnUndefinedService", service, dep));
                 }
 
                 continue;
             }
 
             var effective = condition;
-            if (condition == "service_healthy" && !healthchecked.Contains(dep))
+            if (condition == "service_healthy" && !context.HealthcheckedServices.Contains(dep))
             {
-                warnings.Add($"Service '{service}': depends_on '{dep}' waits for healthy, but '{dep}' has no healthcheck; it will only wait for the container to start.");
+                context.Warnings.Add(UiStrings.Format("ServiceDependsOnWaitsForHealthyButHasNo", service, dep, dep));
                 effective = "service_started";
             }
             else if (condition is not ("service_started" or "service_healthy" or "service_completed_successfully"))
             {
-                warnings.Add($"Service '{service}': depends_on condition '{condition}' isn't supported; treating it as service_started.");
+                context.Warnings.Add(UiStrings.Format("ServiceDependsOnConditionIsnTSupportedTreatingIt", service, condition));
                 effective = "service_started";
             }
 

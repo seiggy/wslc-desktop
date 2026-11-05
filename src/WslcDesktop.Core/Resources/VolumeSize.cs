@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Globalization;
 
 namespace WslcDesktop.Resources;
@@ -26,20 +27,20 @@ public static class VolumeSize
         bytes = 0;
         if (double.IsNaN(value) || double.IsInfinity(value) || value <= 0)
         {
-            error = "Enter a size greater than zero.";
+            error = UiStrings.Get("EnterASizeGreaterThanZero");
             return false;
         }
 
         var total = value * UnitBytes(unit);
         if (total < MinBytes)
         {
-            error = "A VHD volume must be at least 3 MB.";
+            error = UiStrings.Get("AVHDVolumeMustBeAtLeastMB");
             return false;
         }
 
         if (total > MaxBytes)
         {
-            error = "A VHD volume can be at most 64 TB.";
+            error = UiStrings.Get("AVHDVolumeCanBeAtMostTB");
             return false;
         }
 

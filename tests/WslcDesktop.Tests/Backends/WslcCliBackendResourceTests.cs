@@ -7,7 +7,7 @@ public class WslcCliBackendResourceTests
 {
     private readonly FakeWslcProcess _process = new();
 
-    private WslcCliBackend Backend(string session = "lab") => new(_process, session);
+    private WslcCliBackend Backend(string session = "lab") => new(_process, session, _ => null);
 
     [Fact]
     public async Task Creating_a_vhd_volume_passes_its_size()

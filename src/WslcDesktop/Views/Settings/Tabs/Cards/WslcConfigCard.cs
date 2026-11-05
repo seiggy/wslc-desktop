@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WslcDesktop.Controls;
@@ -11,11 +12,10 @@ public static class WslcConfigCard
     public static Border Create(StatusReporter report)
     {
         var editor = new WslcConfigEditor(new SettingsFile());
-        var card = InspectUi.Card("WSLc configuration", out var rows);
+        var card = InspectUi.Card(UiStrings.Get("WSLcConfiguration"), out var rows);
         rows.Spacing = 12;
         rows.Children.Add(InspectUi.Description(
-            "settings.yaml configures wslc's default session — the one the wslc command line uses — and any new session it creates. "
-            + "WSLc Desktop Manager runs its own session (WslcDesktop), which doesn't read this file; see the App session card above."));
+            UiStrings.Get("SettingsYamlConfiguresWslcSDefaultSessionTheOne")));
         rows.Children.Add(InspectUi.Mono(editor.File.Path));
 
         try
@@ -24,15 +24,15 @@ public static class WslcConfigCard
         }
         catch (Exception e)
         {
-            report("Couldn't read settings.yaml", e.Message, InfoBarSeverity.Error);
+            report(UiStrings.Get("CouldnTReadSettingsYaml"), e.Message, InfoBarSeverity.Error);
         }
 
-        var fileState = InspectUi.Description(editor.FileExists ? string.Empty : "The file doesn't exist yet; saving creates it.");
+        var fileState = InspectUi.Description(editor.FileExists ? string.Empty : UiStrings.Get("TheFileDoesnTExistYetSavingCreatesIt"));
         rows.Children.Add(fileState);
 
         var inputs = new Dictionary<string, FrameworkElement>();
         var errors = new Dictionary<string, TextBlock>();
-        var save = new Button { Content = "Save", Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
+        var save = new Button { Content = UiStrings.Get("ActionSave"), Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
         var syncing = false;
 
         void Validate()
@@ -126,16 +126,16 @@ public static class WslcConfigCard
                 if (editor.Save())
                 {
                     fileState.Text = string.Empty;
-                    report("Saved", "New sessions use these settings. Existing sessions keep their current ones until they restart.", InfoBarSeverity.Success);
+                    report(UiStrings.Get("Saved"), UiStrings.Get("NewSessionsUseTheseSettingsExistingSessionsKeepTheir"), InfoBarSeverity.Success);
                 }
             }
             catch (Exception ex)
             {
-                report("Couldn't save settings.yaml", ex.Message, InfoBarSeverity.Error);
+                report(UiStrings.Get("CouldnTSaveSettingsYaml"), ex.Message, InfoBarSeverity.Error);
             }
         };
 
-        var revert = new Button { Content = "Revert" };
+        var revert = new Button { Content = UiStrings.Get("ActionRevert") };
         revert.Click += (_, _) =>
         {
             try
@@ -144,25 +144,25 @@ public static class WslcConfigCard
             }
             catch (Exception ex)
             {
-                report("Couldn't read settings.yaml", ex.Message, InfoBarSeverity.Error);
+                report(UiStrings.Get("CouldnTReadSettingsYaml"), ex.Message, InfoBarSeverity.Error);
             }
 
             Show();
         };
 
-        var open = new Button { Content = "Open file" };
+        var open = new Button { Content = UiStrings.Get("OpenFile") };
         open.Click += (_, _) => OpenFile(editor, report);
 
-        var reset = new Button { Content = "Reset to defaults…" };
+        var reset = new Button { Content = UiStrings.Get("ResetToDefaults2") };
         reset.Click += async (_, _) =>
         {
             var confirm = new ContentDialog
             {
                 XamlRoot = card.XamlRoot,
-                Title = "Reset WSLc configuration?",
-                Content = "Every setting goes back to \"default\". Comments in the file are kept.",
-                PrimaryButtonText = "Reset",
-                CloseButtonText = "Cancel",
+                Title = UiStrings.Get("ResetWSLcConfiguration"),
+                Content = UiStrings.Get("EverySettingGoesBackToDefaultCommentsInThe"),
+                PrimaryButtonText = UiStrings.Get("ActionReset"),
+                CloseButtonText = UiStrings.Get("ActionCancel"),
                 DefaultButton = ContentDialogButton.Close,
             };
             if (await confirm.ShowAsync() != ContentDialogResult.Primary)
@@ -174,11 +174,11 @@ public static class WslcConfigCard
             {
                 editor.Reset();
                 Show();
-                report("Reset", "All settings use their defaults.", InfoBarSeverity.Success);
+                report(UiStrings.Get("ActionReset"), UiStrings.Get("AllSettingsUseTheirDefaults"), InfoBarSeverity.Success);
             }
             catch (Exception ex)
             {
-                report("Couldn't reset settings.yaml", ex.Message, InfoBarSeverity.Error);
+                report(UiStrings.Get("CouldnTResetSettingsYaml"), ex.Message, InfoBarSeverity.Error);
             }
         };
 
@@ -213,7 +213,7 @@ public static class WslcConfigCard
         }
         catch (Exception ex)
         {
-            report("Couldn't open settings.yaml", ex.Message, InfoBarSeverity.Error);
+            report(UiStrings.Get("CouldnTOpenSettingsYaml"), ex.Message, InfoBarSeverity.Error);
         }
     }
 }

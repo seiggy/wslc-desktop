@@ -1,9 +1,10 @@
+using WslcDesktop.Localization;
 namespace WslcDesktop.Restart;
 
 /// <summary>User-facing wording for restart policies and their live status. UI-free so it can be tested.</summary>
 public static class RestartDisplay
 {
-    public static readonly string[] ModeLabels = ["Never", "Always", "On failure", "Unless stopped"];
+    public static string[] ModeLabels => [UiStrings.Get("Never"), UiStrings.Get("Always"), UiStrings.Get("OnFailure"), UiStrings.Get("UnlessStopped")];
 
     public static int ModeIndex(RestartPolicy policy) => policy.Mode switch
     {
@@ -23,10 +24,10 @@ public static class RestartDisplay
 
     public static string Describe(RestartPolicy policy) => policy.Mode switch
     {
-        RestartMode.Always => "Always",
-        RestartMode.UnlessStopped => "Unless stopped",
-        RestartMode.OnFailure => policy.MaxRetries > 0 ? $"On failure (max {policy.MaxRetries})" : "On failure",
-        _ => "Never",
+        RestartMode.Always => UiStrings.Get("Always"),
+        RestartMode.UnlessStopped => UiStrings.Get("UnlessStopped"),
+        RestartMode.OnFailure => policy.MaxRetries > 0 ? UiStrings.Format("OnFailureMax", policy.MaxRetries) : UiStrings.Get("OnFailure"),
+        _ => UiStrings.Get("Never"),
     };
 
     /// <summary>Short text for the containers list; empty when the container has no policy.</summary>
@@ -39,11 +40,11 @@ public static class RestartDisplay
 
         return info.State switch
         {
-            RestartState.CrashLoop => "Crash loop",
+            RestartState.CrashLoop => UiStrings.Get("CrashLoop"),
             RestartState.Restarting => info.NextAttemptAt is { } at && at > now
-                ? $"Restarting in {Math.Max(1, (int)Math.Ceiling((at - now).TotalSeconds))}s"
-                : "Restarting…",
-            _ => info.Attempts > 0 ? $"{Describe(info.Policy)} · restarted {info.Attempts}×" : Describe(info.Policy),
+                ? UiStrings.Format("RestartingInS", Math.Max(1, (int)Math.Ceiling((at - now).TotalSeconds)))
+                : UiStrings.Get("Restarting"),
+            _ => info.Attempts > 0 ? UiStrings.Format("Restarted", Describe(info.Policy), info.Attempts) : Describe(info.Policy),
         };
     }
 
@@ -52,19 +53,19 @@ public static class RestartDisplay
     {
         if (info.Policy.IsNone)
         {
-            return "Not restarted automatically.";
+            return UiStrings.Get("NotRestartedAutomatically");
         }
 
-        var error = string.IsNullOrEmpty(info.LastError) ? string.Empty : $" Last restart failed: {info.LastError}";
+        var error = string.IsNullOrEmpty(info.LastError) ? string.Empty : UiStrings.Format("LastRestartFailed", info.LastError);
         return info.State switch
         {
             RestartState.CrashLoop =>
-                $"Crash loop: it kept exiting, so restarts stopped after {info.Attempts} attempts. Start it yourself to try again.{error}",
+                UiStrings.Format("CrashLoopItKeptExitingSoRestartsStoppedAfter", info.Attempts, error),
             RestartState.Restarting =>
-                $"{Short(info, now)} (attempt {info.Attempts} of {info.MaxAttempts}).{error}",
+                UiStrings.Format("AttemptOf", Short(info, now), info.Attempts, info.MaxAttempts, error),
             _ => info.Attempts > 0
-                ? $"Running again after {info.Attempts} restart{(info.Attempts == 1 ? string.Empty : "s")}.{error}"
-                : "Restarted automatically per policy while WSLc Desktop Manager is running.",
+                ? UiStrings.Format(info.Attempts == 1 ? "RestartedOnce" : "RestartedMultiple", info.Attempts, error)
+                : UiStrings.Get("RestartedAutomaticallyPerPolicyWhileWSLcDesktopManagerIs"),
         };
     }
 }

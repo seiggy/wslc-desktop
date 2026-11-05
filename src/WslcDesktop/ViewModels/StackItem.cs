@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.ComponentModel;
 using Microsoft.UI.Xaml;
 using WslcDesktop.Compose;
@@ -19,7 +20,7 @@ public sealed class StackItem(string name) : INotifyPropertyChanged
 
     public string ServicesText => _services;
 
-    public string Summary => $"{_running} / {_total} running";
+    public string Summary => UiStrings.Format("Running", _running, _total);
 
     public bool AnyRunning => _running > 0;
 

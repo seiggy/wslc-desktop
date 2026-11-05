@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Views.Shared;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -67,7 +68,7 @@ public sealed partial class ContainersPage : Page
         }
         catch (Exception e)
         {
-            ErrorBar.Title = "Couldn't list containers";
+            ErrorBar.Title = UiStrings.Get("CouldnTListContainers");
             ErrorBar.Message = e.Message;
             ErrorBar.IsOpen = true;
         }
@@ -113,8 +114,10 @@ public sealed partial class ContainersPage : Page
             }
 
             // Telemetry and restart policies are app features for the app's own session only.
-            var history = entry.IsThisApp ? App.Host.Telemetry.GetHistory(row.Name) : [];
-            item.Update(row, history.Count > 0 ? history[^1] : null, entry.IsThisApp ? App.Host.Restart.GetInfo(row.Name) : null);
+            item.Update(
+                row,
+                entry.IsThisApp ? App.Host.Telemetry.GetLatest(row.Name) : null,
+                entry.IsThisApp ? App.Host.Restart.GetInfo(row.Name) : null);
             item.SetHeader(entry.Header);
         }
 
@@ -127,9 +130,9 @@ public sealed partial class ContainersPage : Page
         SessionErrorBar.IsOpen = failed.Length > 0;
         EmptyText.Visibility = monitor.HasLoaded && entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         EmptyText.Text = _sessionFilter.Filter is null
-            ? "No containers yet. Create one from an image."
-            : $"No containers in session \"{_sessionFilter.Filter}\".";
-        ErrorBar.Title = "Couldn't list containers";
+            ? UiStrings.Get("NoContainersYetCreateOneFromAnImage")
+            : UiStrings.Format("NoContainersInSession", _sessionFilter.Filter);
+        ErrorBar.Title = UiStrings.Get("CouldnTListContainers");
         ErrorBar.Message = monitor.LastError ?? string.Empty;
         ErrorBar.IsOpen = monitor.LastError is not null;
     }
@@ -164,8 +167,8 @@ public sealed partial class ContainersPage : Page
         var imageNames = images.Where(i => i.IsTagged).Select(i => i.DisplayName).ToList();
         var image = new ComboBox
         {
-            Header = "Image",
-            PlaceholderText = "Pick a local image or type one to pull",
+            Header = UiStrings.Get("LabelImage"),
+            PlaceholderText = UiStrings.Get("PickALocalImageOrTypeOneToPull"),
             IsEditable = true,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             ItemsSource = imageNames,
@@ -183,17 +186,17 @@ public sealed partial class ContainersPage : Page
             }
         }
 
-        var name = new TextBox { Header = "Name", PlaceholderText = "my-container" };
+        var name = new TextBox { Header = UiStrings.Get("LabelName"), PlaceholderText = UiStrings.Get("MyContainer") };
         if (!string.IsNullOrEmpty(prefillImage))
         {
             name.Text = RunImage.SuggestName(prefillImage, App.Host.Monitor.Containers.Select(c => c.Name));
             name.SelectAll();
         }
 
-        var command = new TextBox { Header = "Command (optional)", PlaceholderText = "/bin/sleep 3600" };
-        var ports = new TextBox { Header = "Ports (one per line)", PlaceholderText = "8080:80", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
-        var mounts = new TextBox { Header = "Volumes and bind mounts (one per line)", PlaceholderText = "my-data:/data", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
-        var env = new TextBox { Header = "Environment variables (one per line)", PlaceholderText = "KEY=value or KEY=${secret:name}", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var command = new TextBox { Header = UiStrings.Get("CommandOptional"), PlaceholderText = "/bin/sleep 3600" };
+        var ports = new TextBox { Header = UiStrings.Get("PortsOnePerLine"), PlaceholderText = "8080:80", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var mounts = new TextBox { Header = UiStrings.Get("VolumesAndBindMountsOnePerLine"), PlaceholderText = "my-data:/data", AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
+        var env = new TextBox { Header = UiStrings.Get("EnvironmentVariablesOnePerLine"), PlaceholderText = UiStrings.Get("EnvironmentVariableExample"), AcceptsReturn = true, MinHeight = 64, TextWrapping = TextWrapping.Wrap };
         var secretNames = new List<string>();
         try
         {
@@ -206,8 +209,8 @@ public sealed partial class ContainersPage : Page
 
         var secretPicker = new ComboBox
         {
-            Header = "Use a stored secret",
-            PlaceholderText = secretNames.Count > 0 ? "Add a secret as an environment variable" : "No secrets stored yet (add them on the Secrets page)",
+            Header = UiStrings.Get("UseAStoredSecret"),
+            PlaceholderText = secretNames.Count > 0 ? UiStrings.Get("AddASecretAsAnEnvironmentVariable") : UiStrings.Get("NoSecretsStoredYetAddThemOnTheSecrets"),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             ItemsSource = secretNames,
             IsEnabled = secretNames.Count > 0,
@@ -223,12 +226,12 @@ public sealed partial class ContainersPage : Page
         };
         var envNote = new TextBlock
         {
-            Text = "Secret values are resolved only when the container is created and never shown here. Substring redaction elsewhere in the app is best-effort.",
+            Text = UiStrings.Get("SecretValuesAreResolvedOnlyWhenTheContainerIs"),
             TextWrapping = TextWrapping.Wrap,
             Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
         };
-        var network = new ComboBox { Header = "Network", HorizontalAlignment = HorizontalAlignment.Stretch };
-        var networkNames = new List<string> { "Default (bridge)" };
+        var network = new ComboBox { Header = UiStrings.Get("Network"), HorizontalAlignment = HorizontalAlignment.Stretch };
+        var networkNames = new List<string> { UiStrings.Get("DefaultBridge") };
         try
         {
             networkNames.AddRange((await App.Host.Operations.Resources.NetworkNamesAsync(App.Host.AppSession)).Where(n => n != "bridge"));
@@ -240,11 +243,11 @@ public sealed partial class ContainersPage : Page
 
         network.ItemsSource = networkNames;
         network.SelectedIndex = 0;
-        var restart = new ComboBox { Header = "Restart policy", ItemsSource = RestartDisplay.ModeLabels, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
-        var retries = new NumberBox { Header = "Max restarts (0 = default limit)", Minimum = 0, Maximum = 100, Value = 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact, Visibility = Visibility.Collapsed };
+        var restart = new ComboBox { Header = UiStrings.Get("RestartPolicy"), ItemsSource = RestartDisplay.ModeLabels, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var retries = new NumberBox { Header = UiStrings.Get("MaxRestartsDefaultLimit"), Minimum = 0, Maximum = 100, Value = 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact, Visibility = Visibility.Collapsed };
         var restartNote = new TextBlock
         {
-            Text = "Applied by WSLc Desktop Manager, so it only works while the app is running.",
+            Text = UiStrings.Get("AppliedByWSLcDesktopManagerSoItOnlyWorks"),
             Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
             Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
             TextWrapping = TextWrapping.Wrap,
@@ -255,20 +258,20 @@ public sealed partial class ContainersPage : Page
             retries.Visibility = restart.SelectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
             restartNote.Visibility = restart.SelectedIndex > 0 ? Visibility.Visible : Visibility.Collapsed;
         };
-        var startAfter = new CheckBox { Content = "Start after creating", IsChecked = true };
+        var startAfter = new CheckBox { Content = UiStrings.Get("StartAfterCreating"), IsChecked = true };
         var status = new TextBlock { TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
         var bar = new ProgressBar { IsIndeterminate = true, Visibility = Visibility.Collapsed };
         var error = new InfoBar { Severity = InfoBarSeverity.Error, IsOpen = false, IsClosable = false };
-        var secretsPanel = new Controls.SecretsNeededPanel(App.Host.Secrets) { ActionName = "Create" };
+        var secretsPanel = new Controls.SecretsNeededPanel(App.Host.Secrets) { ActionName = UiStrings.Get("ActionCreate") };
         var panel = new StackPanel { Spacing = 12, MinWidth = 400, Children = { image, name, command, ports, mounts, env, secretPicker, secretsPanel, envNote, network, restart, retries, restartNote, startAfter, status, bar, error } };
 
         var dialog = new ContentDialog
         {
             XamlRoot = xamlRoot,
-            Title = "New container",
+            Title = UiStrings.Get("NewContainer"),
             Content = new ScrollViewer { Content = panel, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Disabled, MaxHeight = 640, Padding = new Thickness(0, 0, 16, 0) },
-            PrimaryButtonText = "Create",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = UiStrings.Get("ActionCreate"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Primary,
             IsPrimaryButtonEnabled = false,
         };
@@ -333,10 +336,10 @@ public sealed partial class ContainersPage : Page
             {
                 if ((imageName != prefillImage || !prefillInAppSession) && !HasImage(imageNames, imageName))
                 {
-                    status.Text = $"Pulling {imageName}…";
+                    status.Text = UiStrings.Format("Pulling2", imageName);
                     var progress = new Progress<PullProgress>(p =>
                     {
-                        status.Text = $"Pulling {imageName}: {p.Status}";
+                        status.Text = UiStrings.Format("Pulling", imageName, p.Status);
                         if (p.TotalBytes > 0)
                         {
                             bar.IsIndeterminate = false;
@@ -351,17 +354,17 @@ public sealed partial class ContainersPage : Page
                 // A typed value matching a stored secret becomes its token so it is injected, not kept in plain text.
                 if (!secretsPanel.Commit())
                 {
-                    throw new InvalidOperationException("A secret couldn't be saved; see the message under it.");
+                    throw new InvalidOperationException(UiStrings.Get("ASecretCouldnTBeSavedSeeTheMessage"));
                 }
 
                 var envLines = Lines(App.Host.Secrets.Redact(env.Text));
                 var stored = App.Host.Secrets.List().Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
                 if (envLines.SelectMany(SecretTokens.Find).FirstOrDefault(n => !stored.Contains(n)) is { } missing)
                 {
-                    throw new InvalidOperationException($"The secret '{missing}' isn't stored.");
+                    throw new InvalidOperationException(UiStrings.Format("TheSecretIsnTStored", missing));
                 }
 
-                status.Text = "Creating container…";
+                status.Text = UiStrings.Get("CreatingContainer");
                 await App.Host.Operations.Containers.CreateAsync(App.Host.AppSession, new NewContainerSpec(
                     containerName, imageName, commandLine, Lines(ports.Text), Lines(mounts.Text), envLines,
                     network.SelectedIndex > 0 ? (string)network.SelectedItem : string.Empty));
@@ -372,7 +375,7 @@ public sealed partial class ContainersPage : Page
 
                 if (startAfter.IsChecked == true)
                 {
-                    status.Text = "Starting container…";
+                    status.Text = UiStrings.Get("StartingContainer");
                     await App.Host.Operations.Containers.StartAsync(App.Host.AppSession, containerName);
                 }
 
@@ -426,10 +429,10 @@ public sealed partial class ContainersPage : Page
         { var item = (ContainerItem)e.ClickedItem; Frame.Navigate(typeof(ContainerDetailPage), new ContainerRef(item.Session, item.Name)); }
 
     private async void Start_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't start the container", () => App.Host.Operations.Containers.StartAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
+        await ActAsync(UiStrings.Get("CouldnTStartTheContainer"), () => App.Host.Operations.Containers.StartAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
 
     private async void Stop_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync("Couldn't stop the container", () => App.Host.Operations.Containers.StopAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
+        await ActAsync(UiStrings.Get("CouldnTStopTheContainer"), () => App.Host.Operations.Containers.StopAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
     {
@@ -438,10 +441,10 @@ public sealed partial class ContainersPage : Page
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = $"Delete \"{name}\"?",
-            Content = target.IsThisApp ? "The container is removed, including its writable layer. This can't be undone." : $"The container is removed from session \"{target.Session}\", including its writable layer. This can't be undone.",
-            PrimaryButtonText = "Delete",
-            CloseButtonText = "Cancel",
+            Title = UiStrings.Format("Delete", name),
+            Content = target.IsThisApp ? UiStrings.Get("TheContainerIsRemovedIncludingItsWritableLayerThis") : UiStrings.Format("TheContainerIsRemovedFromSessionIncludingItsWritable", target.Session),
+            PrimaryButtonText = UiStrings.Get("ActionDelete"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await confirm.ShowAsync() != ContentDialogResult.Primary)
@@ -449,7 +452,7 @@ public sealed partial class ContainersPage : Page
             return;
         }
 
-        await ActAsync("Couldn't delete the container", () => App.Host.Operations.Containers.DeleteAsync(App.Host.Handle(target.Session), name));
+        await ActAsync(UiStrings.Get("CouldnTDeleteTheContainer"), () => App.Host.Operations.Containers.DeleteAsync(App.Host.Handle(target.Session), name));
     }
 
     private static ContainerItem ItemOf(object sender) => (ContainerItem)((FrameworkElement)sender).Tag;
@@ -475,7 +478,7 @@ public sealed partial class ContainersPage : Page
             XamlRoot = XamlRoot,
             Title = title,
             Content = message,
-            CloseButtonText = "Close",
+            CloseButtonText = UiStrings.Get("ActionClose"),
         }.ShowAsync();
     }
 }

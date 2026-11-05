@@ -1,7 +1,8 @@
 <Page
     x:Class="WslcDesktop.Views.Settings.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:localization="using:WslcDesktop.Localization">
 
     <Grid Padding="24" RowSpacing="12">
         <Grid.RowDefinitions>
@@ -11,7 +12,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Settings" />
+        <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="{localization:Localized Key=Settings}" />
 
         <SelectorBar
             x:Name="Tabs"
@@ -20,11 +21,11 @@
             <SelectorBarItem
                 IsSelected="True"
                 Tag="appearance"
-                Text="Appearance" />
-            <SelectorBarItem Tag="behavior" Text="Behavior" />
-            <SelectorBarItem Tag="sessions" Text="Sessions" />
-            <SelectorBarItem Tag="registries" Text="Registries" />
-            <SelectorBarItem Tag="updates" Text="Updates" />
+                Text="{localization:Localized Key=Appearance}" />
+            <SelectorBarItem Tag="behavior" Text="{localization:Localized Key=Behavior}" />
+            <SelectorBarItem Tag="sessions" Text="{localization:Localized Key=Sessions}" />
+            <SelectorBarItem Tag="registries" Text="{localization:Localized Key=Registries}" />
+            <SelectorBarItem Tag="updates" Text="{localization:Localized Key=Updates}" />
         </SelectorBar>
 
         <InfoBar

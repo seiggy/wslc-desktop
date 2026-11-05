@@ -2,6 +2,7 @@
     x:Class="WslcDesktop.Views.Images.ImageDetailPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:localization="using:WslcDesktop.Localization"
     xmlns:controls="using:WslcDesktop.Controls">
 
     <Page.Resources>
@@ -22,20 +23,20 @@
 
         <StackPanel Orientation="Horizontal" Spacing="12">
             <Button
-                AutomationProperties.Name="Back to images"
+                AutomationProperties.Name="{localization:Localized Key=BackToImages}"
                 Click="Back_Click"
                 Content="&#xE72B;"
                 FontFamily="{StaticResource SymbolThemeFontFamily}" />
             <TextBlock x:Name="TitleText" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
             <Button
                 x:Name="RunButton"
-                AutomationProperties.Name="Run a container from this image"
+                AutomationProperties.Name="{localization:Localized Key=RunAContainerFromThisImage}"
                 Click="Run_Click"
                 IsEnabled="False"
                 Style="{StaticResource AccentButtonStyle}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <FontIcon FontSize="14" Glyph="&#xE768;" />
-                    <TextBlock Text="Run container" />
+                    <TextBlock Text="{localization:Localized Key=RunContainer}" />
                 </StackPanel>
             </Button>
         </StackPanel>
@@ -46,18 +47,18 @@
 
                 <Border Style="{StaticResource SectionCard}">
                     <StackPanel Spacing="12">
-                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Overview" />
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{localization:Localized Key=Overview}" />
                         <StackPanel x:Name="OverviewRows" Spacing="8" />
                     </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource SectionCard}">
                     <StackPanel Spacing="12">
-                        <TextBlock x:Name="LayersTitle" Style="{StaticResource SubtitleTextBlockStyle}" Text="Layers" />
+                        <TextBlock x:Name="LayersTitle" Style="{StaticResource SubtitleTextBlockStyle}" Text="{localization:Localized Key=Layers}" />
                         <InfoBar
                             IsClosable="False"
                             IsOpen="True"
-                            Message="WSLc reports each layer's digest but not its size or the command that created it, so only digests are shown."
+                            Message="{localization:Localized Key=WSLcReportsEachLayerSDigestButNotIts}"
                             Severity="Informational" />
                         <StackPanel x:Name="LayerRows" Spacing="4" />
                     </StackPanel>
@@ -65,7 +66,7 @@
 
                 <Border Style="{StaticResource SectionCard}">
                     <StackPanel Spacing="12">
-                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Configuration" />
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{localization:Localized Key=Configuration}" />
                         <StackPanel x:Name="ConfigRows" Spacing="8" />
                     </StackPanel>
                 </Border>

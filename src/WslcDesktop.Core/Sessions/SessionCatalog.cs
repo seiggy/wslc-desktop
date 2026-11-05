@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 namespace WslcDesktop.Sessions;
 
 /// <summary>
@@ -36,7 +37,7 @@ public sealed class SessionCatalog<T>(
             {
                 // Without the session list, still show the app's own session.
                 listed = new[] { appSession };
-                failures.Add(new SessionFailure("(session list)", e.Message));
+                failures.Add(new SessionFailure(UiStrings.Get("SessionListSource"), e.Message));
             }
 
             var sessions = listed
@@ -99,7 +100,7 @@ public sealed class SessionCatalog<T>(
                 }
                 else
                 {
-                    failures.Add(new SessionFailure(r.Session, r.Error ?? "Unknown error"));
+                    failures.Add(new SessionFailure(r.Session, r.Error ?? UiStrings.Get("UnknownError")));
                 }
 
                 IReadOnlyList<T> items;

@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.WSL.Containers;
@@ -38,15 +39,15 @@ public sealed partial class MainWindow : Window
 
     private async Task BootAsync()
     {
-        ShowStartup("Starting WSLc…", string.Empty, busy: true);
+        ShowStartup(UiStrings.Get("StartingWSLc"), string.Empty, busy: true);
         try
         {
             _missing = await App.Host.GetMissingComponentsAsync();
             if (_missing.Contains(Component.SdkNeedsUpdate))
             {
                 ShowStartup(
-                    "Update required",
-                    "This app is incompatible with the installed WSL runtime. Update WSL, then retry.",
+                    UiStrings.Get("UpdateRequired"),
+                    UiStrings.Get("ThisAppIsIncompatibleWithTheInstalledWSLRuntime"),
                     busy: false,
                     retry: true);
                 return;
@@ -55,8 +56,8 @@ public sealed partial class MainWindow : Window
             if (_missing.Count > 0)
             {
                 ShowStartup(
-                    "WSL components are missing",
-                    "Missing: " + string.Join(", ", _missing),
+                    UiStrings.Get("WSLComponentsAreMissing"),
+                    UiStrings.Format("MissingComponents", string.Join(", ", _missing)),
                     busy: false,
                     install: true);
                 return;
@@ -64,14 +65,14 @@ public sealed partial class MainWindow : Window
 
             await App.Host.StartSessionAsync();
             var version = await App.Host.GetVersionAsync();
-            AppTitleBar.Subtitle = $"WSL {version}";
+            AppTitleBar.Subtitle = UiStrings.Format("WSL", version);
             StartupPanel.Visibility = Visibility.Collapsed;
             Nav.IsPaneVisible = true;
             Nav.SelectedItem = Nav.MenuItems[0];
         }
         catch (Exception e)
         {
-            ShowStartup("Couldn't start the WSLc session", e.Message, busy: false, retry: true);
+            ShowStartup(UiStrings.Get("CouldnTStartTheWSLcSession"), e.Message, busy: false, retry: true);
         }
     }
 
@@ -87,7 +88,7 @@ public sealed partial class MainWindow : Window
 
     private async void Install_Click(object sender, RoutedEventArgs e)
     {
-        ShowStartup("Installing components…", string.Empty, busy: true);
+        ShowStartup(UiStrings.Get("InstallingComponents"), string.Empty, busy: true);
         try
         {
             var progress = new Progress<InstallProgress>(p =>
@@ -96,7 +97,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            ShowStartup("Install failed", ex.Message, busy: false, retry: true);
+            ShowStartup(UiStrings.Get("InstallFailed"), ex.Message, busy: false, retry: true);
             return;
         }
 

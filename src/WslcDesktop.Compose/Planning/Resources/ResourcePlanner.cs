@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Compose.Planning.Services;
 using WslcDesktop.Compose.Planning;
 using System.Globalization;
@@ -16,9 +17,9 @@ namespace WslcDesktop.Compose.Planning.Resources;
 /// <summary>Plans networks and volumes, and attaches them to services.</summary>
 internal static class ResourcePlanner
 {
-    internal static ComposeAction CreateNetwork(string project, NetworkRef r, Dictionary<string, object?> def, List<string> warnings)
+    internal static ComposeAction CreateNetwork(PlanContext context, NetworkRef r, Dictionary<string, object?> def)
     {
-        var args = new List<string> { "network", "create", "--label", $"{ComposeLabels.Project}={project}" };
+        var args = new List<string> { "network", "create", "--label", $"{ComposeLabels.Project}={context.Project}" };
         if (def.GetValueOrDefault("driver") is string driver)
         {
             args.AddRange(["--driver", driver]);
@@ -60,16 +61,16 @@ internal static class ResourcePlanner
 
         foreach (var key in def.Keys.Where(k => k is not ("driver" or "internal" or "driver_opts" or "labels" or "ipam" or "name" or "external") && !k.StartsWith("x-", StringComparison.Ordinal)))
         {
-            warnings.Add($"Network '{r.Key}': '{key}' isn't supported by WSLc and will be ignored.");
+            context.Warnings.Add(UiStrings.Format("NetworkIsnTSupportedByWSLcAndWillBe", r.Key, key));
         }
 
         args.Add(r.Actual);
-        return new ComposeAction(ActionKind.CreateNetwork, r.Actual, $"Create network {r.Actual}", args);
+        return new ComposeAction(ActionKind.CreateNetwork, r.Actual, UiStrings.Format("CreateNetwork", r.Actual), args);
     }
 
-    internal static ComposeAction CreateVolume(string project, VolumeRef r, Dictionary<string, object?> def, List<string> warnings)
+    internal static ComposeAction CreateVolume(PlanContext context, VolumeRef r, Dictionary<string, object?> def)
     {
-        var args = new List<string> { "volume", "create", "--label", $"{ComposeLabels.Project}={project}" };
+        var args = new List<string> { "volume", "create", "--label", $"{ComposeLabels.Project}={context.Project}" };
         if (def.GetValueOrDefault("driver") is string driver && driver != "local")
         {
             args.AddRange(["--driver", driver]);
@@ -87,17 +88,16 @@ internal static class ResourcePlanner
 
         foreach (var key in def.Keys.Where(k => k is not ("driver" or "driver_opts" or "labels" or "name" or "external") && !k.StartsWith("x-", StringComparison.Ordinal)))
         {
-            warnings.Add($"Volume '{r.Actual}': '{key}' isn't supported by WSLc and will be ignored.");
+            context.Warnings.Add(UiStrings.Format("VolumeIsnTSupportedByWSLcAndWillBe", r.Actual, key));
         }
 
         args.Add(r.Actual);
-        return new ComposeAction(ActionKind.CreateVolume, r.Actual, $"Create volume {r.Actual}", args);
+        return new ComposeAction(ActionKind.CreateVolume, r.Actual, UiStrings.Format("CreateVolume", r.Actual), args);
     }
 
     internal static void AddNetworks(
-        List<string> args, List<IReadOnlyList<string>> after, string project, string containerName, string service,
-        Dictionary<string, object?> svc, Dictionary<string, NetworkRef> networkRefs, HashSet<string> usedNetworks,
-        Action<string> warn, List<string> errors)
+        PlanContext context, List<string> args, List<IReadOnlyList<string>> after, string containerName, string service,
+        Dictionary<string, object?> svc, Action<string> warn)
     {
         if (svc.GetValueOrDefault("network_mode") is string mode)
         {
@@ -106,13 +106,13 @@ internal static class ResourcePlanner
                 args.AddRange(["--network", mode]);
                 if (svc.ContainsKey("networks"))
                 {
-                    warn("'networks' is ignored because network_mode is set.");
+                    warn(UiStrings.Get("NetworksIsIgnoredBecauseNetworkModeIsSet"));
                 }
 
                 return;
             }
 
-            warn($"network_mode '{mode}' isn't supported; the container joins the project's default network instead.");
+            warn(UiStrings.Format("NetworkModeIsnTSupportedTheContainerJoinsThe", mode));
         }
 
         var configs = new List<(string Key, Dictionary<string, object?> Config)>();
@@ -134,19 +134,19 @@ internal static class ResourcePlanner
         var first = true;
         foreach (var (key, config) in configs)
         {
-            usedNetworks.Add(key);
+            context.UsedNetworks.Add(key);
             string actual;
-            if (networkRefs.TryGetValue(key, out var r))
+            if (context.Networks.TryGetValue(key, out var r))
             {
                 actual = r.Actual;
             }
             else if (key == "default")
             {
-                actual = $"{project}_default";
+                actual = $"{context.Project}_default";
             }
             else
             {
-                errors.Add($"Service '{service}' refers to undefined network '{key}'.");
+                context.Errors.Add(UiStrings.Format("ServiceRefersToUndefinedNetwork", service, key));
                 continue;
             }
 
@@ -188,8 +188,7 @@ internal static class ResourcePlanner
     }
 
     internal static void AddVolume(
-        List<string> args, string service, object? entry, ComposeOptions options,
-        Dictionary<string, VolumeRef> volumeRefs, Action<string> warn, List<string> errors)
+        PlanContext context, List<string> args, string service, object? entry, Action<string> warn)
     {
         string? source = null, target = null;
         var readOnly = false;
@@ -213,13 +212,13 @@ internal static class ResourcePlanner
             readOnly = IsTrue(map.GetValueOrDefault("read_only"));
             foreach (var key in map.Keys.Where(k => k is not ("type" or "source" or "target" or "read_only") && !k.StartsWith("x-", StringComparison.Ordinal)))
             {
-                warn($"volumes entry option '{key}' isn't supported and will be ignored.");
+                warn(UiStrings.Format("VolumesEntryOptionIsnTSupportedAndWillBe", key));
             }
         }
 
         if (string.IsNullOrEmpty(target))
         {
-            errors.Add($"Service '{service}' has a volume entry without a target.");
+            context.Errors.Add(UiStrings.Format("ServiceHasAVolumeEntryWithoutATarget", service));
             return;
         }
 
@@ -237,15 +236,15 @@ internal static class ResourcePlanner
 
         if (type == "bind" || IsPath(source))
         {
-            source = ResolveHostPath(source, options.Directory);
+            source = ResolveHostPath(source, context.Options.Directory);
         }
-        else if (volumeRefs.TryGetValue(source, out var vr))
+        else if (context.Volumes.TryGetValue(source, out var vr))
         {
             source = vr.Actual;
         }
         else
         {
-            errors.Add($"Service '{service}' refers to undefined volume '{source}'.");
+            context.Errors.Add(UiStrings.Format("ServiceRefersToUndefinedVolume", service, source));
             return;
         }
 

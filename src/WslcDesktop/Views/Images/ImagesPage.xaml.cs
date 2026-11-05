@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using WslcDesktop.Views.Containers;
 using WslcDesktop.Views.Shared;
 using Microsoft.UI.Xaml;
@@ -51,7 +52,7 @@ public sealed partial class ImagesPage : Page
         catch (Exception e)
         {
             _timer.Stop();
-            await ShowErrorAsync("Couldn't list images", e);
+            await ShowErrorAsync(UiStrings.Get("CouldnTListImages"), e);
             _timer.Start();
         }
         finally
@@ -106,7 +107,7 @@ public sealed partial class ImagesPage : Page
 
         SessionErrorBar.IsOpen = failed.Length > 0;
         EmptyText.Visibility = images.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        EmptyText.Text = _filter is null ? "No images yet. Pull one to get started." : $"No images in session \"{_filter}\".";
+        EmptyText.Text = _filter is null ? UiStrings.Get("NoImagesYetPullOneToGetStarted") : UiStrings.Format("NoImagesInSession", _filter);
     }
 
     private void List_ItemClick(object sender, ItemClickEventArgs e)
@@ -134,7 +135,7 @@ public sealed partial class ImagesPage : Page
 
         PullButton.IsEnabled = false;
         PullStatus.Visibility = Visibility.Visible;
-        PullText.Text = $"Pulling {uri}…";
+        PullText.Text = UiStrings.Format("Pulling2", uri);
         PullBar.IsIndeterminate = true;
         try
         {
@@ -154,7 +155,7 @@ public sealed partial class ImagesPage : Page
         }
         catch (Exception e)
         {
-            await ShowErrorAsync($"Couldn't pull {uri}", e);
+            await ShowErrorAsync(UiStrings.Format("CouldnTPull", uri), e);
         }
         finally
         {
@@ -189,9 +190,9 @@ public sealed partial class ImagesPage : Page
                 await new ContentDialog
                 {
                     XamlRoot = xamlRoot,
-                    Title = "Can't run this image here",
-                    Content = $"This untagged image belongs to session \"{session}\", and containers are created in \"{App.Host.SessionId}\". Untagged images have no reference to pull, so tag it in \"{session}\" first, or run it there with wslc --session {session}.",
-                    CloseButtonText = "Close",
+                    Title = UiStrings.Get("CanTRunThisImageHere"),
+                    Content = UiStrings.Format("ThisUntaggedImageBelongsToSessionAndContainersAre", session, App.Host.SessionId, session, session),
+                    CloseButtonText = UiStrings.Get("ActionClose"),
                 }.ShowAsync();
                 return;
             }
@@ -199,10 +200,10 @@ public sealed partial class ImagesPage : Page
             var confirm = new ContentDialog
             {
                 XamlRoot = xamlRoot,
-                Title = "Image is in another session",
-                Content = $"\"{reference}\" belongs to session \"{session}\". Containers created here run in \"{App.Host.SessionId}\", so the image will be pulled into that session from its registry (a locally built image can't be). The copy in \"{session}\" is left untouched.",
-                PrimaryButtonText = "Continue",
-                CloseButtonText = "Cancel",
+                Title = UiStrings.Get("ImageIsInAnotherSession"),
+                Content = UiStrings.Format("BelongsToSessionContainersCreatedHereRunInSo", reference, session, App.Host.SessionId, session),
+                PrimaryButtonText = UiStrings.Get("ActionContinue"),
+                CloseButtonText = UiStrings.Get("ActionCancel"),
                 DefaultButton = ContentDialogButton.Primary,
             };
             if (await confirm.ShowAsync() != ContentDialogResult.Primary)
@@ -223,10 +224,10 @@ public sealed partial class ImagesPage : Page
         var done = new ContentDialog
         {
             XamlRoot = xamlRoot,
-            Title = $"Created \"{name}\"",
-            Content = "The container was created. Open its details?",
-            PrimaryButtonText = "View container",
-            CloseButtonText = "Stay here",
+            Title = UiStrings.Format("Created", name),
+            Content = UiStrings.Get("TheContainerWasCreatedOpenItsDetails"),
+            PrimaryButtonText = UiStrings.Get("ViewContainer"),
+            CloseButtonText = UiStrings.Get("StayHere"),
             DefaultButton = ContentDialogButton.Primary,
         };
         if (await done.ShowAsync() == ContentDialogResult.Primary)
@@ -245,12 +246,12 @@ public sealed partial class ImagesPage : Page
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
-            Title = item.IsThisApp ? $"Delete image \"{item.DisplayName}\"?" : $"Delete image \"{item.DisplayName}\" from {item.Session}?",
-            Content = item.UsedBy == "Unused"
-                ? "The image is removed from this session. This can't be undone."
-                : $"The image is in use ({item.UsedBy}). Deleting it can fail until those containers are removed.",
-            PrimaryButtonText = "Delete",
-            CloseButtonText = "Cancel",
+            Title = item.IsThisApp ? UiStrings.Format("DeleteImage", item.DisplayName) : UiStrings.Format("DeleteImageFrom", item.DisplayName, item.Session),
+            Content = item.IsUnused
+                ? UiStrings.Get("TheImageIsRemovedFromThisSessionThisCan")
+                : UiStrings.Format("TheImageIsInUseDeletingItCanFail", item.UsedBy),
+            PrimaryButtonText = UiStrings.Get("ActionDelete"),
+            CloseButtonText = UiStrings.Get("ActionCancel"),
             DefaultButton = ContentDialogButton.Close,
         };
         if (await confirm.ShowAsync() != ContentDialogResult.Primary)
@@ -264,7 +265,7 @@ public sealed partial class ImagesPage : Page
         }
         catch (Exception ex)
         {
-            await ShowErrorAsync($"Couldn't delete {item.Target} from {item.Session}", ex);
+            await ShowErrorAsync(UiStrings.Format("CouldnTDeleteFrom", item.Target, item.Session), ex);
         }
 
         await RefreshAsync(true);
@@ -277,7 +278,7 @@ public sealed partial class ImagesPage : Page
             XamlRoot = XamlRoot,
             Title = title,
             Content = e.Message,
-            CloseButtonText = "Close",
+            CloseButtonText = UiStrings.Get("ActionClose"),
         }.ShowAsync();
     }
 }

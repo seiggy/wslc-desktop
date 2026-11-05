@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 namespace WslcDesktop.Updates;
 
 public static class UpdatePolicy
@@ -16,28 +17,27 @@ public static class UpdatePolicy
         state switch
         {
             UpdateState.Unavailable => new(
-                "Updates are managed elsewhere",
-                "This copy wasn't installed with the WSLc Desktop Manager installer. Microsoft Store installs update through the Store; "
-                    + "portable copies update by downloading a newer release.",
+                UiStrings.Get("UpdatesAreManagedElsewhere"),
+                UiStrings.Get("ThisCopyWasnTInstalledWithTheWSLcDesktop"),
                 false, false, false, false),
-            UpdateState.Checking => new("Checking for updates…", "Looking for a newer release on GitHub.", false, false, false, true),
-            UpdateState.UpToDate => new("You're up to date", "This is the latest release.", true, false, false, false),
+            UpdateState.Checking => new(UiStrings.Get("CheckingForUpdates"), UiStrings.Get("LookingForANewerReleaseOnGitHub"), false, false, false, true),
+            UpdateState.UpToDate => new(UiStrings.Get("YouReUpToDate"), UiStrings.Get("ThisIsTheLatestRelease"), true, false, false, false),
             UpdateState.Available => new(
-                $"Version {availableVersion} is available",
-                "Download it now. Nothing changes until you restart.",
+                UiStrings.Format("VersionIsAvailable", availableVersion),
+                UiStrings.Get("DownloadItNowNothingChangesUntilYouRestart"),
                 true, true, false, false),
             UpdateState.Downloading => new(
-                $"Downloading version {availableVersion}…",
-                $"{ClampProgress(progress)}% complete.",
+                UiStrings.Format("DownloadingVersion", availableVersion),
+                UiStrings.Format("Complete", ClampProgress(progress)),
                 false, false, false, true),
             UpdateState.ReadyToInstall => new(
-                $"Version {availableVersion} is ready",
-                "Restart to finish updating. Running containers keep running.",
+                UiStrings.Format("VersionIsReady", availableVersion),
+                UiStrings.Get("RestartToFinishUpdatingRunningContainersKeepRunning"),
                 false, false, true, false),
             UpdateState.Error => new(
-                "Couldn't check for updates",
-                string.IsNullOrWhiteSpace(error) ? "Check your connection and try again." : error,
+                UiStrings.Get("CouldnTCheckForUpdates"),
+                string.IsNullOrWhiteSpace(error) ? UiStrings.Get("CheckYourConnectionAndTryAgain") : error,
                 true, false, false, false),
-            _ => new("Check for updates", "See whether a newer release is available.", true, false, false, false),
+            _ => new(UiStrings.Get("CheckForUpdates"), UiStrings.Get("SeeWhetherANewerReleaseIsAvailable"), true, false, false, false),
         };
 }

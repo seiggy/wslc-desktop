@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Globalization;
 using System.Text.Json;
 using WslcDesktop.Cli;
@@ -6,13 +7,13 @@ using WslcDesktop.Containers;
 using WslcDesktop.Containers.Creation;
 using WslcDesktop.Images;
 using WslcDesktop.Resources;
-using WslcDesktop.Secrets;
 
 namespace WslcDesktop.Backends;
 
 /// <summary>Drives one WSLc session through wslc.exe. Used for other sessions and for an app session attached from an earlier run.</summary>
-public sealed class WslcCliBackend(IWslcProcess process, string session) : ISessionBackend
+public sealed class WslcCliBackend(IWslcProcess process, string session, Func<string, string?> lookupSecret) : ISessionBackend
 {
+    private readonly Func<string, string?> _lookupSecret = lookupSecret ?? throw new ArgumentNullException(nameof(lookupSecret));
     private static readonly string[] BuiltInNetworks = ["bridge", "host", "none"];
 
     private static readonly TimeSpan RegistryTimeout = TimeSpan.FromSeconds(60);
@@ -91,7 +92,7 @@ public sealed class WslcCliBackend(IWslcProcess process, string session) : ISess
         args.AddRange(spec.Command);
         if (SecretTokens.ContainsAny(args))
         {
-            using var prepared = SecretInjection.Prepare(args, SecretService.Default.Get);
+            using var prepared = SecretInjection.Prepare(args, _lookupSecret);
             await process.RunAsync(new WslcInvocation(["--session", Session, .. prepared.Args], prepared.Environment));
             return;
         }
@@ -177,7 +178,7 @@ public sealed class WslcCliBackend(IWslcProcess process, string session) : ISess
                 ? new ResourceRow(name, Str(o, "Driver"), Str(o, "Mountpoint"), Str(o, "Scope"), true,
                     usage.Volumes.GetValueOrDefault(name) ?? [])
                 : new ResourceRow(name, Str(o, "Driver"), Str(o, "Scope"),
-                    Str(o, "Internal") == "true" ? "Internal" : "External",
+                    Str(o, "Internal") == "true" ? UiStrings.Get("Internal") : UiStrings.Get("External"),
                     !BuiltInNetworks.Contains(name),
                     usage.Networks.GetValueOrDefault(name) ?? []));
         }

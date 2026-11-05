@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -11,16 +12,16 @@ public sealed class SettingsFile
 {
     public const string Default = "default";
 
-    public static readonly SettingDef[] Definitions =
+    public static SettingDef[] Definitions =>
     [
-        new("cpuCount", "session", "CPU count", "Virtual CPUs for the default session. Default: all available CPUs."),
-        new("memorySize", "session", "Memory", "Memory limit, e.g. 2GB or 512MB. Default: half of the available memory."),
-        new("maxStorageSize", "session", "Max storage", "Maximum disk image size, e.g. 500GB. Default: 1TB."),
-        new("storagePath", "session", "Storage path", "Absolute base folder for the default session's storage. Changing it creates a new, empty session; existing data isn't moved."),
-        new("defaultBindingAddress", "session", "Default binding address", "Host address published ports bind to when none is given. Default: 127.0.0.1."),
-        new("hostLoopback", "session", "Host loopback name", "DNS name that resolves to the host loopback address. Use \"none\" to disable. Default: host.wslc.internal."),
-        new("idleTimeout", "session", "Idle timeout (seconds)", "Seconds an idle session VM stays running before it is torn down. Default: 30."),
-        new("credentialStore", string.Empty, "Credential store", "Where registry credentials are kept.", ["wincred", "file"]),
+        new("cpuCount", "session", UiStrings.Get("CPUCount"), UiStrings.Get("VirtualCPUsForTheDefaultSessionDefaultAllAvailable")),
+        new("memorySize", "session", UiStrings.Get("LabelMemory"), UiStrings.Get("MemoryLimitEGGBOrMBDefaultHalf")),
+        new("maxStorageSize", "session", UiStrings.Get("MaxStorage"), UiStrings.Get("MaximumDiskImageSizeEGGBDefaultTB")),
+        new("storagePath", "session", UiStrings.Get("StoragePath"), UiStrings.Get("AbsoluteBaseFolderForTheDefaultSessionSStorage")),
+        new("defaultBindingAddress", "session", UiStrings.Get("DefaultBindingAddress"), UiStrings.Get("HostAddressPublishedPortsBindToWhenNoneIs")),
+        new("hostLoopback", "session", UiStrings.Get("HostLoopbackName"), UiStrings.Get("DNSNameThatResolvesToTheHostLoopbackAddress")),
+        new("idleTimeout", "session", UiStrings.Get("IdleTimeoutSeconds"), UiStrings.Get("SecondsAnIdleSessionVMStaysRunningBeforeIt")),
+        new("credentialStore", string.Empty, UiStrings.Get("CredentialStore"), UiStrings.Get("WhereRegistryCredentialsAreKept"), ["wincred", "file"]),
     ];
 
     private static readonly Regex Memory = new(@"^\d+(\.\d+)?\s?(KB|MB|GB|TB)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -66,7 +67,7 @@ public sealed class SettingsFile
         var v = raw.Trim();
         if (v.Length == 0)
         {
-            return "Enter a value, or \"default\".";
+            return UiStrings.Get("EnterAValueOrDefault");
         }
 
         if (v.Equals(Default, StringComparison.OrdinalIgnoreCase))
@@ -79,24 +80,24 @@ public sealed class SettingsFile
             case "cpuCount":
                 return int.TryParse(v, out var n) && n >= 1 && n <= Environment.ProcessorCount
                     ? null
-                    : $"Use a whole number from 1 to {Environment.ProcessorCount}.";
+                    : UiStrings.Format("UseAWholeNumberFromTo", Environment.ProcessorCount);
             case "memorySize":
             case "maxStorageSize":
-                return Memory.IsMatch(v) ? null : "Use a size such as 512MB, 4GB or 1TB.";
+                return Memory.IsMatch(v) ? null : UiStrings.Get("UseASizeSuchAsMBGBOrTB");
             case "storagePath":
                 return System.IO.Path.IsPathFullyQualified(v) && v.IndexOfAny(System.IO.Path.GetInvalidPathChars()) < 0
                     ? null
-                    : "Use an absolute path such as D:\\data.";
+                    : UiStrings.Get("UseAnAbsolutePathSuchAsDData");
             case "defaultBindingAddress":
-                return IPAddress.TryParse(v, out _) ? null : "Use an IP address such as 127.0.0.1 or 0.0.0.0.";
+                return IPAddress.TryParse(v, out _) ? null : UiStrings.Get("UseAnIPAddressSuchAsOr");
             case "hostLoopback":
                 return v.Equals("none", StringComparison.OrdinalIgnoreCase) || Host.IsMatch(v)
                     ? null
-                    : "Use a DNS name, or \"none\" to disable.";
+                    : UiStrings.Get("UseADNSNameOrNoneToDisable");
             case "idleTimeout":
-                return int.TryParse(v, out var s) && s >= 0 ? null : "Use a number of seconds (0 or more).";
+                return int.TryParse(v, out var s) && s >= 0 ? null : UiStrings.Get("UseANumberOfSecondsOrMore");
             case "credentialStore":
-                return def.Choices!.Contains(v, StringComparer.OrdinalIgnoreCase) ? null : "Choose wincred or file.";
+                return def.Choices!.Contains(v, StringComparer.OrdinalIgnoreCase) ? null : UiStrings.Get("ChooseWincredOrFile");
             default:
                 return null;
         }

@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WslcDesktop.Controls;
@@ -15,24 +16,23 @@ public sealed class RegistriesTab : SettingsTab
 
     public RegistriesTab(StatusReporter report) : base(report)
     {
-        var card = InspectUi.Card("Registries", out var rows);
+        var card = InspectUi.Card(UiStrings.Get("Registries"), out var rows);
         rows.Spacing = 12;
         rows.Children.Add(InspectUi.Description(
-            "Sign in to private registries so images can be pulled. Credentials are handed to wslc and kept in its credential store; "
-            + "this app never stores or shows them. WSLc can't list saved credentials, so the list below shows registries you signed in to from here."));
+            UiStrings.Get("SignInToPrivateRegistriesSoImagesCanBe")));
         rows.Children.Add(_list);
         RenderServers();
 
-        var server = new TextBox { Header = "Server (blank for the default registry)", PlaceholderText = "ghcr.io" };
-        var user = new TextBox { Header = "Username" };
-        var password = new PasswordBox { Header = "Password or access token" };
-        var signIn = new Button { Content = "Sign in", Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
+        var server = new TextBox { Header = UiStrings.Get("ServerBlankForTheDefaultRegistry"), PlaceholderText = "ghcr.io" };
+        var user = new TextBox { Header = UiStrings.Get("Username") };
+        var password = new PasswordBox { Header = UiStrings.Get("PasswordOrAccessToken") };
+        var signIn = new Button { Content = UiStrings.Get("ActionSignIn"), Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
         signIn.Click += async (_, _) =>
         {
             var host = server.Text.Trim();
             if (RegistryAccounts.Validate(user.Text, password.Password) is { } problem)
             {
-                report("Missing details", problem, InfoBarSeverity.Warning);
+                report(UiStrings.Get("MissingDetails"), problem, InfoBarSeverity.Warning);
                 return;
             }
 
@@ -42,11 +42,11 @@ public sealed class RegistriesTab : SettingsTab
                 await _accounts.SignInAsync(host, user.Text.Trim(), password.Password);
                 password.Password = string.Empty;
                 RenderServers();
-                report("Signed in", host.Length == 0 ? "Signed in to the default registry." : $"Signed in to {host}.", InfoBarSeverity.Success);
+                report(UiStrings.Get("SignedIn"), host.Length == 0 ? UiStrings.Get("SignedInToTheDefaultRegistry") : UiStrings.Format("SignedInTo", host), InfoBarSeverity.Success);
             }
             catch (Exception ex)
             {
-                report("Couldn't sign in", ex.Message, InfoBarSeverity.Error);
+                report(UiStrings.Get("CouldnTSignIn"), ex.Message, InfoBarSeverity.Error);
             }
             finally
             {
@@ -66,7 +66,7 @@ public sealed class RegistriesTab : SettingsTab
         _list.Children.Clear();
         if (_accounts.Servers.Count == 0)
         {
-            _list.Children.Add(InspectUi.Description("No registries signed in from this app."));
+            _list.Children.Add(InspectUi.Description(UiStrings.Get("NoRegistriesSignedInFromThisApp")));
             return;
         }
 
@@ -77,12 +77,12 @@ public sealed class RegistriesTab : SettingsTab
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.Children.Add(new TextBlock
             {
-                Text = server.Length == 0 ? "Default registry" : server,
+                Text = server.Length == 0 ? UiStrings.Get("DefaultRegistry") : server,
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
             });
-            var signOut = new Button { Content = "Sign out" };
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(signOut, $"Sign out of {server}");
+            var signOut = new Button { Content = UiStrings.Get("ActionSignOut") };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(signOut, UiStrings.Format("SignOutOf", server));
             signOut.Click += async (_, _) => await SignOutAsync(server);
             Grid.SetColumn(signOut, 1);
             row.Children.Add(signOut);
@@ -96,11 +96,11 @@ public sealed class RegistriesTab : SettingsTab
         {
             await _accounts.SignOutAsync(server);
             RenderServers();
-            Report("Signed out", server.Length == 0 ? "Signed out of the default registry." : $"Signed out of {server}.", InfoBarSeverity.Success);
+            Report(UiStrings.Get("SignedOut"), server.Length == 0 ? UiStrings.Get("SignedOutOfTheDefaultRegistry") : UiStrings.Format("SignedOutOf", server), InfoBarSeverity.Success);
         }
         catch (Exception ex)
         {
-            Report("Couldn't sign out", ex.Message, InfoBarSeverity.Error);
+            Report(UiStrings.Get("CouldnTSignOut"), ex.Message, InfoBarSeverity.Error);
         }
     }
 }

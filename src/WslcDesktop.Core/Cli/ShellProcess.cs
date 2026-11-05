@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Diagnostics;
 using WslcDesktop.Lifecycle;
 
@@ -17,7 +18,7 @@ public sealed class ShellProcess : IShellProcess
         }
         catch (System.ComponentModel.Win32Exception)
         {
-            throw new InvalidOperationException("wslc.exe wasn't found on PATH.");
+            throw new InvalidOperationException(UiStrings.Get("WslcExeWasnTFoundOnPATH"));
         }
 
         _process.StandardInput.AutoFlush = true;

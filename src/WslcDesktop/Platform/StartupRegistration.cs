@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using Windows.ApplicationModel;
@@ -99,7 +100,7 @@ internal static class StartupRegistration
         return StartupPolicy.IsApprovedByUser(approved?.GetValue(StartupPolicy.RunValueName) as byte[])
             ? new StartupStatus(StartupState.On, string.Empty)
             : new StartupStatus(StartupState.DisabledByUser,
-                "Turned off in Windows. Re-enable WSLc Desktop Manager under Settings > Apps > Startup.");
+                UiStrings.Get("TurnedOffInWindowsReEnableWSLcDesktopManager"));
     }
 
     private static async Task<StartupStatus> GetTaskStatusAsync()
@@ -109,9 +110,9 @@ internal static class StartupRegistration
         {
             StartupTaskState.Enabled or StartupTaskState.EnabledByPolicy => new StartupStatus(StartupState.On, string.Empty),
             StartupTaskState.DisabledByUser => new StartupStatus(StartupState.DisabledByUser,
-                "Turned off in Windows. Re-enable WSLc Desktop Manager under Settings > Apps > Startup."),
+                UiStrings.Get("TurnedOffInWindowsReEnableWSLcDesktopManager")),
             StartupTaskState.DisabledByPolicy => new StartupStatus(StartupState.DisabledByPolicy,
-                "Your organization's policy prevents this app from starting with Windows."),
+                UiStrings.Get("YourOrganizationSPolicyPreventsThisAppFromStarting")),
             _ => new StartupStatus(StartupState.Off, string.Empty),
         };
     }
@@ -129,7 +130,7 @@ internal static class StartupRegistration
 
     private static string ExpectedCommand()
     {
-        var path = Environment.ProcessPath ?? throw new InvalidOperationException("The app path is unknown.");
+        var path = Environment.ProcessPath ?? throw new InvalidOperationException(UiStrings.Get("TheAppPathIsUnknown"));
         return StartupPolicy.RunCommand(Form, path, Form == InstallForm.Velopack ? VelopackStub(path) : null);
     }
 

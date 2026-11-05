@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Text;
 using WslcDesktop.Compose.Secrets.Injection;
 
@@ -43,7 +44,7 @@ public static class Interpolator
                 var end = FindClose(input, i + 2);
                 if (end < 0)
                 {
-                    throw new ComposeException($"Invalid interpolation (missing '}}') in \"{input}\".");
+                    throw new ComposeException(UiStrings.Format("InvalidInterpolationMissingIn", input));
                 }
 
                 var body = input[(i + 2)..end];
@@ -53,7 +54,7 @@ public static class Interpolator
                     var secretName = body[SecretTokens.Prefix.Length..];
                     sb.Append(SecretTokens.IsValidName(secretName)
                         ? SecretTokens.Format(secretName)
-                        : throw new ComposeException($"Invalid secret reference \"${{{body}}}\"; names use letters, digits, '.', '_' and '-'."));
+                        : throw new ComposeException(UiStrings.Format("InvalidSecretReferenceNamesUseLettersDigitsAnd", body)));
                 }
                 else
                 {
@@ -75,7 +76,7 @@ public static class Interpolator
             }
             else
             {
-                throw new ComposeException($"Invalid interpolation format in \"{input}\". Use $$ for a literal dollar sign.");
+                throw new ComposeException(UiStrings.Format("InvalidInterpolationFormatInUseForALiteralDollar", input));
             }
         }
 
@@ -111,7 +112,7 @@ public static class Interpolator
         var name = body[..n];
         if (name.Length == 0 || !IsNameStart(name[0]))
         {
-            throw new ComposeException($"Invalid interpolation variable in \"${{{body}}}\".");
+            throw new ComposeException(UiStrings.Format("InvalidInterpolationVariableIn", body));
         }
 
         var rest = body[n..];
@@ -138,12 +139,12 @@ public static class Interpolator
 
         if (rest.StartsWith(":?", StringComparison.Ordinal))
         {
-            return isNonEmpty ? value! : throw new ComposeException($"Required variable {name} is missing: {Operand(2)}");
+            return isNonEmpty ? value! : throw new ComposeException(UiStrings.Format("RequiredVariableIsMissing", name, Operand(2)));
         }
 
         if (rest.StartsWith('?'))
         {
-            return isSet ? value! : throw new ComposeException($"Required variable {name} is missing: {Operand(1)}");
+            return isSet ? value! : throw new ComposeException(UiStrings.Format("RequiredVariableIsMissing", name, Operand(1)));
         }
 
         if (rest.StartsWith(":+", StringComparison.Ordinal))
@@ -156,7 +157,7 @@ public static class Interpolator
             return isSet ? Operand(1) : string.Empty;
         }
 
-        throw new ComposeException($"Invalid interpolation format for \"${{{body}}}\".");
+        throw new ComposeException(UiStrings.Format("InvalidInterpolationFormatFor", body));
     }
 
     private static bool IsNameStart(char c) => char.IsAsciiLetter(c) || c == '_';
