@@ -5,7 +5,7 @@ Releases are built by `.github/workflows/release.yml`.
 **Cut a release:** push a tag (`git tag v1.2.3 && git push origin v1.2.3`) or run the *Release* workflow manually with a version
 (`1.2.3` or `1.2.3-beta.1`; pre-release suffixes mark the GitHub Release as a pre-release). Untick *create_release* to build artifacts only.
 
-## Artifacts
+## Public release artifacts
 
 | File | Description |
 | --- | --- |
@@ -14,9 +14,10 @@ Releases are built by `.github/workflows/release.yml`.
 | `RELEASES-win-<arch>`, `releases.win-<arch>.json`, `assets.win-<arch>.json` | Velopack update feed for the `win-x64` / `win-arm64` channels. Required for in-app updates; don't delete. |
 | `WslcDesktopManager-win-<arch>-Portable.zip` | Velopack portable bundle (needs no install; updates only via the installed app). |
 | `WslcDesktop-<v>-win-x64-portable.zip`, `…-win-arm64-portable.zip` | Plain self-contained folder, zipped. Extract and run `WslcDesktop.exe`. No self-extraction, so it starts immediately. No auto-update. |
-| `WslcDesktop-<v>-x64.msix`, `…-arm64.msix` | Unsigned Microsoft Store MSIX packages; not sideload installers. |
-| `WslcDesktop-<v>.appxbundle` | Unsigned Store submission bundle containing both architectures. Upload this file to Partner Center; the individual MSIX files need not be uploaded as well. |
 | `SHA256SUMS.txt` | Checksums of every file. |
+
+Store MSIX packages and app bundles are not built or attached by the release workflow. Keep the Velopack update packages and feed indexes
+on the release: installed apps need them for updates. Release notes identify the installer and plain portable zip as the user-facing downloads.
 
 Package version is `<major>.<minor>.<patch>.0` (the tag), stamped into the manifest and assembly.
 The minimum supported OS is Windows 11 22H2 (`10.0.22621.0`), declared in both the project and MSIX manifest.
@@ -24,7 +25,23 @@ MakeAppx carries each MSIX package's minimum into the bundle automatically. SDK 
 
 ## Microsoft Store submission
 
-The release workflow builds unsigned packages using the Partner Center identity in `src/WslcDesktop/Package.appxmanifest`:
+The manually triggered **Store packages** workflow (`.github/workflows/store.yml`) builds unsigned packages using the Partner Center identity in `src/WslcDesktop/Package.appxmanifest`.
+It does not create tags, publish releases, or upload release assets.
+
+In GitHub, open **Actions → Store packages → Run workflow**, select the branch or tag to build, and enter the intended version
+(for example, `1.2.3`, producing package version `1.2.3.0`). To submit the same code as a public release, select its release tag.
+After the run succeeds, download **store-submission** from the run's **Artifacts** section and extract it.
+You must be signed in with repository read access to download Actions artifacts; they expire according to the repository's artifact-retention policy,
+so keep a local copy for submission. They do not need to be attached to a release.
+
+| Store workflow artifact file | Description |
+| --- | --- |
+| `WslcDesktop-<v>-x64.msix`, `…-arm64.msix` | Unsigned per-architecture packages, not sideload installers. |
+| `WslcDesktop-<v>.appxbundle` | Unsigned submission bundle containing both architectures. Upload this to Partner Center. |
+| `SHA256SUMS.txt`, `store-instructions.md` | Package checksums and submission guidance. |
+
+The workflow also retains per-architecture `store-msix-x64` and `store-msix-arm64` artifacts.
+
 
 | Partner Center field | Value |
 | --- | --- |
@@ -34,9 +51,9 @@ The release workflow builds unsigned packages using the Partner Center identity 
 | Package/Properties/PublisherDisplayName | `seiggy` |
 | Store ID | `9N9HFWX6046M` |
 
-Download `WslcDesktop-<v>.appxbundle` from the GitHub Release or the `release-files` workflow artifact and upload it in
-the app's Partner Center submission. PR builds also provide a `store-bundle` workflow artifact for validation, built with version `1.0.0.0`;
-use a release build with the intended version for submission. Complete the listing, declarations, and certification steps in Partner Center.
+Upload `WslcDesktop-<v>.appxbundle` from **store-submission** in the app's Partner Center submission; the individual MSIX files need not be uploaded as well.
+PR builds also provide a `store-bundle` workflow artifact for validation, built with version `1.0.0.0`;
+use the Store workflow with the intended version for submission. Complete the listing, declarations, and certification steps in Partner Center.
 Microsoft signs the packages after certification; no purchased certificate, PFX, or test-certificate trust setup is needed.
 Both the package display name and application visual-elements display name must match the reserved app name above.
 After the documentation site has deployed this policy, use `https://seiggy.github.io/wslc-desktop/privacy` for the
@@ -44,10 +61,11 @@ Partner Center privacy policy URL. The canonical policy is `PRIVACY.md`; the doc
 Store review also needs justification for the restricted capabilities below. The package family name and SID are derived from the identity,
 not stamped separately into the manifest.
 
-The GitHub MSIX packages and bundle are submission artifacts, not directly installable unsigned packages. For direct downloads, use the
+The Actions MSIX packages and bundle are submission artifacts, not directly installable unsigned packages. For direct downloads, use the
 Velopack `Setup.exe` or the portable zip. The workflow no longer generates sideload packages or self-signed certificates, and no longer reads `MSIX_CERT_PFX_BASE64`,
 `MSIX_CERT_PASSWORD`, or `MSIX_PUBLISHER`; any previously configured values can be removed from repository settings.
-Store signing does not sign the Velopack or portable files (unsigned until a certificate is available). Older GitHub releases retain their original test-signed packages.
+Store signing does not sign the Velopack or portable files (unsigned until a certificate is available). Older GitHub releases retain their existing assets;
+this separation applies to future workflow runs.
 
 See Microsoft's [MSIX Store submission requirements](https://learn.microsoft.com/windows/apps/publish/publish-your-app/msix/app-package-requirements).
 
@@ -109,23 +127,24 @@ The zipped folder starts in ~0.6 s with the same files, so it replaced the singl
 
 ## Packaging notes
 
-- Unpackaged is still the default (`WindowsPackageType=None`); the release script builds the MSIX with `-p:WindowsPackageType=MSIX`.
+- Unpackaged is still the default (`WindowsPackageType=None`); `Build-Release.ps1 -PackageType Store` builds the MSIX with `-p:WindowsPackageType=MSIX`.
+  Use `-PackageType Portable` for direct-download builds. The default `All` preserves the combined build used in PR validation.
 - Portable publishing uses `Properties/PublishProfiles/Portable.pubxml` (self-contained .NET and Windows App SDK, not single-file).
   App settings and container data live under `%LOCALAPPDATA%`; WSLc remains an external prerequisite.
 - To publish just the portable folder locally:
   `dotnet publish src\WslcDesktop -c Release -p:Platform=x64 -r win-x64 -p:PublishProfile=Portable -p:DebugType=embedded -p:RestoreConfigFile=.github\nuget.ci.config -o out\portable`.
-- Local Velopack build: `dotnet tool install -g vpk --version 1.2.161`, run `Build-Release.ps1`, then
+- Local Velopack build: `dotnet tool install -g vpk --version 1.2.161`, run `Build-Release.ps1 -PackageType Portable` with the architecture and version, then
   `.\tools\packaging\Pack-Velopack.ps1 -Arch x64 -Version 1.0.0 -OutDir out\velopack`.
 - Capabilities: `runFullTrust` (WinUI 3 desktop app that starts `wslc.exe` and uses the WSLc API) and `unvirtualizedResources`.
   The manifest sets `desktop6:FileSystemWriteVirtualization` and `RegistryWriteVirtualization` to `disabled`, so
   `%LOCALAPPDATA%\wslc\settings.yaml` and `%LOCALAPPDATA%\WslcDesktop\` are the real paths shared with the CLI and the WSLc service,
   not redirected into the package's `LocalCache`.
-- Packaged builds restore from nuget.org in CI (the repo `nuget.config` points at an internal feed).
-- Local release build (requires the Windows SDK's `makeappx`, but no signing certificate):
+- Release and Store workflows restore through the repository's single-feed `nuget.config`.
+- Local Store build (requires the Windows SDK's `makeappx`, but no signing certificate):
   ```powershell
-  .\tools\packaging\Build-Release.ps1 -Arch x64 -Version 1.0.0 -OutDir out -NuGetConfig .github\nuget.ci.config
-  .\tools\packaging\Build-Release.ps1 -Arch arm64 -Version 1.0.0 -OutDir out -NuGetConfig .github\nuget.ci.config
-  .\tools\packaging\Bundle-Release.ps1 -Version 1.0.0 -Directory out
+  .\tools\packaging\Build-Release.ps1 -Arch x64 -Version 1.0.0 -OutDir out -PackageType Store
+  .\tools\packaging\Build-Release.ps1 -Arch arm64 -Version 1.0.0 -OutDir out -PackageType Store
+  .\tools\packaging\Bundle-Store.ps1 -Version 1.0.0 -Directory out
   ```
   Build architectures sequentially because the script resets shared build output. The bundler rejects signed packages, mismatched Store
   identities, display names, versions, minimum OS versions or device families, and missing or duplicate architectures before creating the unsigned bundle.

@@ -70,28 +70,15 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('src/**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
-      # The repo nuget.config may point at an internal feed; CI restores from the public feed instead.
-      - name: Write public NuGet config
-        shell: pwsh
-        run: |
-          @'
-          <?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <packageSources>
-              <clear />
-              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-            </packageSources>
-          </configuration>
-          '@ | Set-Content "$env:RUNNER_TEMP\nuget.ci.config"
-
-      - name: Build portable zip, Velopack-ready publish and unsigned Store MSIX (${{ matrix.arch }})
+      - name: Build portable zip and Velopack-ready publish (${{ matrix.arch }})
         shell: pwsh
         run: >
           ./tools/packaging/Build-Release.ps1
           -Arch ${{ matrix.arch }}
           -Version $env:VERSION
           -OutDir artifacts
-          -NuGetConfig "$env:RUNNER_TEMP\nuget.ci.config"
+          -PackageType Portable
+          -NuGetConfig nuget.config
 
       - name: Fetch previous release packages for delta generation
         shell: pwsh
@@ -132,7 +119,7 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Bundle unsigned Store packages and checksum release files
+      - name: Write download guidance and checksum release files
         shell: pwsh
         run: >
           ./tools/packaging/Bundle-Release.ps1
