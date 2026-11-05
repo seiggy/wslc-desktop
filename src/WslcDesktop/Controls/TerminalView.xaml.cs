@@ -1,4 +1,7 @@
+using WslcDesktop.Localization;
+using System.Buffers;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
@@ -13,6 +16,8 @@ using Windows.System;
 using Windows.UI;
 using WslcDesktop.Platform;
 using WslcDesktop.Services;
+using WslcDesktop.Lifecycle;
+using WslcDesktop.Terminal;
 
 namespace WslcDesktop.Controls;
 
@@ -61,7 +66,7 @@ public sealed partial class TerminalView : UserControl
     {
         if (!_ready)
         {
-            throw new InvalidOperationException("The terminal drawing surface (Win2D) isn't available.");
+            throw new InvalidOperationException(UiStrings.Get("TheTerminalDrawingSurfaceWin2DIsnTAvailable"));
         }
 
         Stop();
@@ -200,23 +205,41 @@ public sealed partial class TerminalView : UserControl
     private void FlushOutput()
     {
         byte[] bytes;
+        int byteCount;
         lock (_outputGate)
         {
-            bytes = [.. _outputBuffer];
+            byteCount = _outputBuffer.Count;
+            bytes = ArrayPool<byte>.Shared.Rent(byteCount);
+            _outputBuffer.CopyTo(bytes, 0);
+            CollectionsMarshal.AsSpan(_outputBuffer).Clear();
             _outputBuffer.Clear();
             _flushQueued = false;
         }
 
-        var chars = new char[_decoder.GetCharCount(bytes, 0, bytes.Length)];
-        var n = _decoder.GetChars(bytes, 0, bytes.Length, chars, 0);
-        var before = _screen.ScrollbackCount;
-        _screen.Feed(chars.AsSpan(0, n));
-        if (_scrollOffset > 0)
+        char[]? chars = null;
+        try
         {
-            _scrollOffset = Math.Min(_screen.ScrollbackCount, _scrollOffset + _screen.ScrollbackCount - before);
-        }
+            var charCount = _decoder.GetCharCount(bytes, 0, byteCount);
+            chars = ArrayPool<char>.Shared.Rent(charCount);
+            var n = _decoder.GetChars(bytes, 0, byteCount, chars, 0);
+            var before = _screen.ScrollbackCount;
+            _screen.Feed(chars.AsSpan(0, n));
+            if (_scrollOffset > 0)
+            {
+                _scrollOffset = Math.Min(_screen.ScrollbackCount, _scrollOffset + _screen.ScrollbackCount - before);
+            }
 
-        Surface.Invalidate();
+            Surface.Invalidate();
+        }
+        finally
+        {
+            if (chars is not null)
+            {
+                ArrayPool<char>.Shared.Return(chars, clearArray: true);
+            }
+
+            ArrayPool<byte>.Shared.Return(bytes, clearArray: true);
+        }
     }
 
     private Color Resolve(int color, bool bold, Color fallback)
@@ -320,10 +343,11 @@ public sealed partial class TerminalView : UserControl
         var run = new StringBuilder();
         var runStart = 0;
         VtCell runCell = default;
+        var hasVisibleText = false;
 
         void Flush()
         {
-            if (run.Length > 0 && run.ToString().Any(ch => ch != ' ' || runCell.Attr.HasFlag(VtAttr.Underline)))
+            if (run.Length > 0 && hasVisibleText)
             {
                 var (fg, _, _) = Colors(runCell);
                 var x = runStart * _cellWidth;
@@ -340,6 +364,7 @@ public sealed partial class TerminalView : UserControl
             }
 
             run.Clear();
+            hasVisibleText = false;
         }
 
         for (var x = 0; x < columns; x++)
@@ -369,7 +394,9 @@ public sealed partial class TerminalView : UserControl
                 runCell = cell;
             }
 
-            run.Append((char)cell.Cp);
+            var character = (char)cell.Cp;
+            run.Append(character);
+            hasVisibleText |= character != ' ' || runCell.Attr.HasFlag(VtAttr.Underline);
         }
 
         Flush();
@@ -411,7 +438,7 @@ public sealed partial class TerminalView : UserControl
     private (int Col, int Row) ViewportCell(Windows.Foundation.Point point) =>
         (Math.Clamp((int)(point.X / _cellWidth), 0, _screen.Columns - 1), Math.Clamp((int)(point.Y / _cellHeight), 0, _screen.Rows - 1));
 
-    private static bool KeyDown(VirtualKey key) =>
+    private static bool IsKeyDown(VirtualKey key) =>
         InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
     private void Send(string text) => _session?.Write(Encoding.UTF8.GetBytes(text));
@@ -420,7 +447,7 @@ public sealed partial class TerminalView : UserControl
     {
         Focus(FocusState.Pointer);
         var point = e.GetCurrentPoint(Surface);
-        var shift = KeyDown(VirtualKey.Shift);
+        var shift = IsKeyDown(VirtualKey.Shift);
         if (point.Properties.IsRightButtonPressed && !(_screen.MouseMode > 0 && !shift))
         {
             if (_hasSelection)
@@ -488,7 +515,7 @@ public sealed partial class TerminalView : UserControl
         var delta = e.GetCurrentPoint(Surface).Properties.MouseWheelDelta;
         var notches = Math.Max(1, Math.Abs(delta) / 120);
         var up = delta > 0;
-        if (_screen.MouseMode > 0 && !KeyDown(VirtualKey.Shift))
+        if (_screen.MouseMode > 0 && !IsKeyDown(VirtualKey.Shift))
         {
             var (col, row) = ViewportCell(e.GetCurrentPoint(Surface).Position);
             for (var i = 0; i < notches; i++)
@@ -548,9 +575,9 @@ public sealed partial class TerminalView : UserControl
             return;
         }
 
-        var ctrl = KeyDown(VirtualKey.Control);
-        var shift = KeyDown(VirtualKey.Shift);
-        var alt = KeyDown(VirtualKey.Menu);
+        var ctrl = IsKeyDown(VirtualKey.Control);
+        var shift = IsKeyDown(VirtualKey.Shift);
+        var alt = IsKeyDown(VirtualKey.Menu);
         var vk = (int)e.Key;
 
         if ((ctrl && shift && e.Key == VirtualKey.C) || (ctrl && !shift && e.Key == VirtualKey.C && _hasSelection))
@@ -598,8 +625,8 @@ public sealed partial class TerminalView : UserControl
         }
 
         var ch = e.Character;
-        var ctrl = KeyDown(VirtualKey.Control);
-        var alt = KeyDown(VirtualKey.Menu);
+        var ctrl = IsKeyDown(VirtualKey.Control);
+        var alt = IsKeyDown(VirtualKey.Menu);
         if (ch < 0x20 || ch == 0x7F || (ctrl != alt) || (ctrl && alt && false))
         {
             return;

@@ -1,5 +1,6 @@
 using Velopack;
 using Velopack.Sources;
+using WslcDesktop.Updates;
 
 namespace WslcDesktop.Services;
 

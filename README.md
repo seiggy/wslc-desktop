@@ -119,9 +119,12 @@ The WinUI 3 app uses the [`Microsoft.WSL.Containers`](https://wsl.dev/api-refere
 
 | Location | Contents |
 | --- | --- |
-| `src\WslcDesktop` | Windows app, including views and WSLc integration services. |
+| `src\WslcDesktop` | WinUI 3 app: views, controls, and composition of the Core and SDK services. |
+| `src\WslcDesktop.Core` | UI-free domain logic, CLI adapters, settings, and session operations. |
+| `src\WslcDesktop.Sdk` | Native SDK integration for owned sessions, with a CLI backend fallback for unsupported operations. |
+| `src\WslcDesktop.Localization` | Shared English UI resources and Spanish, French, German, Italian, Japanese, and Simplified Chinese translations. |
 | `src\WslcDesktop.Compose` | Compose parsing, execution planning, and the runner. |
-| `tests` | xUnit test projects. |
+| `tests` | xUnit projects for Core/app logic and Compose, plus opt-in SDK integration tests against real WSL. |
 | `docs` | VitePress documentation and screenshots. |
 | `tools` | Packaging scripts and icon tooling. |
 | `assets\branding` | Logos and branding assets. |

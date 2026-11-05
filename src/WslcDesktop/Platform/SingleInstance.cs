@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Windows.AppLifecycle;
@@ -106,9 +107,8 @@ internal static class SingleInstance
 
         MessageBox(
             0,
-            $"WSLc Desktop Manager is already running (process {others[0].Id}) but isn't responding.\n\n"
-                + "Close it from Task Manager, then open WSLc Desktop Manager again.",
-            "WSLc Desktop Manager",
+            UiStrings.Format("WSLcDesktopManagerIsAlreadyRunningProcessButIsn", others[0].Id),
+            UiStrings.Get("AppTitle"),
             0x30 /* MB_ICONWARNING */);
         return true;
     }

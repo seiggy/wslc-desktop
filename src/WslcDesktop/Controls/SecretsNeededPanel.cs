@@ -1,3 +1,4 @@
+using WslcDesktop.Localization;
 using System.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -5,6 +6,8 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using WslcDesktop.Compose;
 using WslcDesktop.Services;
+using WslcDesktop.Compose.Secrets;
+using WslcDesktop.Secrets;
 
 namespace WslcDesktop.Controls;
 
@@ -18,7 +21,7 @@ public sealed class SecretsNeededPanel : UserControl
     private readonly Dictionary<string, Row> _rows = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<Row> _order = [];
     private readonly TextBlock _summary = new() { VerticalAlignment = VerticalAlignment.Center, Style = (Style)Application.Current.Resources["SecondaryTextStyle"] };
-    private readonly Button _saveAll = new() { Content = "Save all", HorizontalAlignment = HorizontalAlignment.Right };
+    private readonly Button _saveAll = new() { Content = UiStrings.Get("ActionSaveAll"), HorizontalAlignment = HorizontalAlignment.Right };
     private readonly StackPanel _rowHost = new() { Spacing = 8 };
 
     public SecretsNeededPanel(SecretService secrets)
@@ -30,7 +33,7 @@ public sealed class SecretsNeededPanel : UserControl
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var title = new StackPanel { Spacing = 2 };
-        title.Children.Add(new TextBlock { Text = "Secrets needed", Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"] });
+        title.Children.Add(new TextBlock { Text = UiStrings.Get("SecretsNeeded"), Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"] });
         title.Children.Add(_summary);
         header.Children.Add(title);
         Grid.SetColumn(_saveAll, 1);
@@ -52,7 +55,7 @@ public sealed class SecretsNeededPanel : UserControl
     public Func<string, string?> EnvLookup { get; set; } = _ => null;
 
     /// <summary>The button that stays disabled while a secret is unset; used in the "left unset" explanation.</summary>
-    public string ActionName { get; set; } = "Up";
+    public string ActionName { get; set; } = UiStrings.Get("ActionUp");
 
     public bool HasNeeds => _order.Count > 0;
 
@@ -60,7 +63,7 @@ public sealed class SecretsNeededPanel : UserControl
     public bool IsSatisfied => _order.All(r => r.Satisfied);
 
     /// <summary>Names of secrets the user chose to leave unset.</summary>
-    public IReadOnlyList<string> Skipped => [.. _order.Where(r => r.Skip.IsChecked == true).Select(r => r.Need.Name)];
+    public IReadOnlyList<string> Skipped => _order.Where(r => r.Skip.IsChecked == true).Select(r => r.Need.Name).ToArray();
 
     public void SetNeeds(IReadOnlyList<SecretNeed> needs)
     {
@@ -124,7 +127,7 @@ public sealed class SecretsNeededPanel : UserControl
         var ready = _order.Count(r => r.Satisfied);
         _summary.Text = _order.Count == 0
             ? string.Empty
-            : ready == _order.Count ? "All secrets are ready." : $"{ready} of {_order.Count} ready. Enter the missing values to continue.";
+            : ready == _order.Count ? UiStrings.Get("AllSecretsAreReady") : UiStrings.Format("OfReadyEnterTheMissingValuesToContinue", ready, _order.Count);
         _saveAll.Visibility = _order.Any(r => r.HasPending) ? Visibility.Visible : Visibility.Collapsed;
     }
 
@@ -141,14 +144,14 @@ public sealed class SecretsNeededPanel : UserControl
         private readonly TextBlock _usedBy = new() { Style = (Style)Application.Current.Resources["SecondaryTextStyle"], TextWrapping = TextWrapping.Wrap };
         private readonly TextBlock _error = new() { Foreground = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"], TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
         private readonly TextBlock _skipNote = new() { Style = (Style)Application.Current.Resources["SecondaryTextStyle"], TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
-        private readonly PasswordBox _value = new() { PlaceholderText = "Value", PasswordRevealMode = PasswordRevealMode.Hidden, HorizontalAlignment = HorizontalAlignment.Stretch };
+        private readonly PasswordBox _value = new() { PlaceholderText = UiStrings.Get("LabelValue"), PasswordRevealMode = PasswordRevealMode.Hidden, HorizontalAlignment = HorizontalAlignment.Stretch };
         private readonly ToggleButton _reveal = new() { Content = "\uE7B3", FontFamily = (FontFamily)Application.Current.Resources["SymbolThemeFontFamily"], Style = (Style)Application.Current.Resources["DefaultToggleButtonStyle"] };
-        private readonly Button _generate = new() { Content = "Generate" };
+        private readonly Button _generate = new() { Content = UiStrings.Get("ActionGenerate") };
         private readonly Button _import = new();
-        private readonly TextBox _label = new() { PlaceholderText = "Label (optional)", HorizontalAlignment = HorizontalAlignment.Stretch };
-        private readonly Button _save = new() { Content = "Save" };
-        private readonly Button _replace = new() { Content = "Replace", HorizontalAlignment = HorizontalAlignment.Left };
-        private readonly Button _cancelReplace = new() { Content = "Keep stored value" };
+        private readonly TextBox _label = new() { PlaceholderText = UiStrings.Get("LabelOptional"), HorizontalAlignment = HorizontalAlignment.Stretch };
+        private readonly Button _save = new() { Content = UiStrings.Get("ActionSave") };
+        private readonly Button _replace = new() { Content = UiStrings.Get("ActionReplace"), HorizontalAlignment = HorizontalAlignment.Left };
+        private readonly Button _cancelReplace = new() { Content = UiStrings.Get("KeepStoredValue") };
         private readonly StackPanel _entry = new() { Spacing = 8 };
         private bool _replacing;
 
@@ -156,7 +159,7 @@ public sealed class SecretsNeededPanel : UserControl
         {
             Need = need;
             _owner = owner;
-            Skip = new CheckBox { Content = "Leave unset for now", MinWidth = 0 };
+            Skip = new CheckBox { Content = UiStrings.Get("LeaveUnsetForNow"), MinWidth = 0 };
 
             var name = new TextBlock { Text = need.Name, Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"], VerticalAlignment = VerticalAlignment.Center };
             var top = new Grid { ColumnSpacing = 8 };
@@ -175,14 +178,14 @@ public sealed class SecretsNeededPanel : UserControl
             Grid.SetColumn(_generate, 2);
             valueRow.Children.Add(_reveal);
             valueRow.Children.Add(_generate);
-            AutomationProperties(_value, $"Value for secret {need.Name}");
-            AutomationProperties(_reveal, $"Show value for {need.Name}");
-            AutomationProperties(_generate, $"Generate a random value for {need.Name}");
-            AutomationProperties(_label, $"Label for secret {need.Name}");
-            AutomationProperties(_save, $"Save secret {need.Name}");
-            AutomationProperties(Skip, $"Leave {need.Name} unset");
-            ToolTipService.SetToolTip(_reveal, "Show or hide the value");
-            ToolTipService.SetToolTip(_generate, "Fill in a random 32-character value");
+            AutomationProperties(_value, UiStrings.Format("ValueForSecret", need.Name));
+            AutomationProperties(_reveal, UiStrings.Format("ShowValueFor", need.Name));
+            AutomationProperties(_generate, UiStrings.Format("GenerateARandomValueFor", need.Name));
+            AutomationProperties(_label, UiStrings.Format("LabelForSecret", need.Name));
+            AutomationProperties(_save, UiStrings.Format("SaveSecret", need.Name));
+            AutomationProperties(Skip, UiStrings.Format("LeaveUnset", need.Name));
+            ToolTipService.SetToolTip(_reveal, UiStrings.Get("ShowOrHideTheValue"));
+            ToolTipService.SetToolTip(_generate, UiStrings.Get("FillInARandomCharacterValue"));
 
             var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
             actions.Children.Add(_save);
@@ -271,13 +274,13 @@ public sealed class SecretsNeededPanel : UserControl
         {
             var bytes = Encoding.UTF8.GetByteCount(_value.Password);
             return bytes > CredentialManagerSecretStore.MaxValueBytes
-                ? $"The value is {bytes:N0} bytes; the limit is {CredentialManagerSecretStore.MaxValueBytes:N0}."
+                ? UiStrings.Format("TheValueIsBytesTheLimitIs", bytes, CredentialManagerSecretStore.MaxValueBytes)
                 : null;
         }
 
         public void Refresh()
         {
-            _usedBy.Text = Need.Services.Count > 0 ? "Used by " + string.Join(", ", Need.Services) : "Used by this container";
+            _usedBy.Text = Need.Services.Count > 0 ? UiStrings.Format("SecretsUsedBy", string.Join(", ", Need.Services)) : UiStrings.Get("UsedByThisContainer");
             var editing = Editing;
             var skipped = editing && Skip.IsChecked == true;
             _replace.Visibility = !editing ? Visibility.Visible : Visibility.Collapsed;
@@ -286,7 +289,7 @@ public sealed class SecretsNeededPanel : UserControl
             Skip.Visibility = Need.Exists ? Visibility.Collapsed : Visibility.Visible;
             _label.Visibility = Need.Exists ? Visibility.Collapsed : Visibility.Visible;
             _value.IsEnabled = _generate.IsEnabled = _reveal.IsEnabled = !skipped;
-            _skipNote.Text = skipped ? $"Nothing is saved for this secret, and {_owner.ActionName} stays unavailable until it is set." : string.Empty;
+            _skipNote.Text = skipped ? UiStrings.Format("NothingIsSavedForThisSecretAndStaysUnavailable", _owner.ActionName) : string.Empty;
             _skipNote.Visibility = skipped ? Visibility.Visible : Visibility.Collapsed;
 
             var import = Need.Import;
@@ -294,9 +297,9 @@ public sealed class SecretsNeededPanel : UserControl
             if (import is not null)
             {
                 var available = import.Content is not null || (import.FilePath is not null && File.Exists(import.FilePath)) || (import.EnvVar is not null && _owner.EnvLookup(import.EnvVar) is not null);
-                _import.Content = import.Content is not null ? "Use value from the file" : $"Import from {import.Describe()}";
+                _import.Content = import.Content is not null ? UiStrings.Get("UseValueFromTheFile") : UiStrings.Format("ImportFrom", import.Describe());
                 _import.IsEnabled = available && !skipped;
-                ToolTipService.SetToolTip(_import, available ? "Store the content as a secret; the container gets it as an environment variable" : "The source isn't available; enter a value instead");
+                ToolTipService.SetToolTip(_import, available ? UiStrings.Get("StoreTheContentAsASecretTheContainerGets") : UiStrings.Get("TheSourceIsnTAvailableEnterAValueInstead"));
             }
 
             _save.IsEnabled = HasPending;
@@ -309,22 +312,22 @@ public sealed class SecretsNeededPanel : UserControl
 
             if (Need.Exists && !_replacing)
             {
-                _status.Text = "Stored";
+                _status.Text = UiStrings.Get("Stored");
                 _status.Foreground = (Brush)Application.Current.Resources["SystemFillColorSuccessBrush"];
             }
             else if (skipped)
             {
-                _status.Text = "Left unset";
+                _status.Text = UiStrings.Get("LeftUnset");
                 _status.Foreground = (Brush)Application.Current.Resources["SystemFillColorCautionBrush"];
             }
             else if (HasPending)
             {
-                _status.Text = _replacing ? "Will replace stored value" : "Ready to save";
+                _status.Text = _replacing ? UiStrings.Get("WillReplaceStoredValue") : UiStrings.Get("ReadyToSave");
                 _status.Foreground = (Brush)Application.Current.Resources["SystemFillColorSuccessBrush"];
             }
             else
             {
-                _status.Text = "Needed";
+                _status.Text = UiStrings.Get("Needed");
                 _status.Foreground = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"];
             }
         }
@@ -356,13 +359,13 @@ public sealed class SecretsNeededPanel : UserControl
             try
             {
                 var text = import.Content
-                    ?? (import.FilePath is not null ? File.ReadAllText(import.FilePath) : _owner.EnvLookup(import.EnvVar!) ?? throw new InvalidOperationException($"${import.EnvVar} isn't set."));
+                    ?? (import.FilePath is not null ? File.ReadAllText(import.FilePath) : _owner.EnvLookup(import.EnvVar!) ?? throw new InvalidOperationException(UiStrings.Format("IsnTSet", import.EnvVar)));
                 _value.Password = text.TrimEnd('\r', '\n');
                 Skip.IsChecked = false;
             }
             catch (Exception ex)
             {
-                _error.Text = "Couldn't import the value: " + ex.Message;
+                _error.Text = UiStrings.Format("CouldNotImportSecret", ex.Message);
                 _error.Visibility = Visibility.Visible;
             }
         }

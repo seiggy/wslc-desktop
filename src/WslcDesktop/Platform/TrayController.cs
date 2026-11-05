@@ -2,6 +2,9 @@ using System.Runtime.InteropServices;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using WslcDesktop.Services;
+using WslcDesktop.Containers;
+using WslcDesktop.Lifecycle;
+using WslcDesktop.ViewModels;
 
 namespace WslcDesktop.Platform;
 

@@ -1,0 +1,2405 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+  <data xml:space="preserve" name="AContainerNamedAlreadyExistsAndDoesnTBelong">
+    <value>名为“{0}”的容器已存在，且不属于堆栈“{1}”。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = action.Target; {1} = plan.Project. Source: src\WslcDesktop.Compose\Execution\ComposeRunner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ASecretCanOnlyBeUsedAsTheValue">
+    <value>机密只能用作 KEY=VALUE 中的值。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Secrets/Injection/SecretInjection.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ASecretCouldnTBeSavedSeeTheMessage">
+    <value>无法保存某个机密；请查看其下方的消息。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ASecretNamedAlreadyExistsEditItInstead">
+    <value>名为“{0}”的机密已存在。请改为编辑该机密。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Composite format placeholders: {0} = n. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ASecretsEntryHasNoSourceAndWasIgnored">
+    <value>某个 secrets 条目没有来源，已被忽略。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Planning/Services/ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AVHDVolumeCanBeAtMostTB">
+    <value>VHD 卷最大为 64 TB。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Resources/VolumeSize.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AVHDVolumeIsAVirtualDiskWithA">
+    <value>VHD 卷是具有固定最大容量（3 MB 至 64 TB）的虚拟磁盘。只有写入数据时才会占用主机磁盘空间。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AVHDVolumeMustBeAtLeastMB">
+    <value>VHD 卷至少为 3 MB。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Resources/VolumeSize.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AbsoluteBaseFolderForTheDefaultSessionSStorage">
+    <value>默认会话存储的绝对基础文件夹路径。更改此项会创建新的空会话；现有数据不会移动。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionCancel">
+    <value>取消</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionClear">
+    <value>清除</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionClose">
+    <value>关闭</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionConnect">
+    <value>连接</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionContinue">
+    <value>继续</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionCopyJson">
+    <value>复制 JSON</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/RawJsonExpander.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionCreate">
+    <value>创建</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionDelete">
+    <value>删除</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionDisconnect">
+    <value>断开连接</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionDown">
+    <value>停止并移除</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionEdit">
+    <value>编辑</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionExit">
+    <value>退出</value>
+    <comment>UI text. Source: src/WslcDesktop/Platform/TrayIcon.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionGenerate">
+    <value>生成</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionPrune">
+    <value>清理</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionPull">
+    <value>拉取</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionReload">
+    <value>重新加载</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionRemove">
+    <value>移除</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionReplace">
+    <value>替换</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionReset">
+    <value>重置</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionRetry">
+    <value>重试</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionRevert">
+    <value>还原</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionSave">
+    <value>保存</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionSaveAll">
+    <value>全部保存</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionSignIn">
+    <value>登录</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionSignOut">
+    <value>退出登录</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionStart">
+    <value>启动</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionStop">
+    <value>停止</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ActionUp">
+    <value>启动堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AddASecretAsAnEnvironmentVariable">
+    <value>将机密添加为环境变量</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AddSecret">
+    <value>添加机密</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="After">
+    <value>，在 {0} 后</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = string.Join(", ", waits.Select(w =&gt; $"{w.Service} ({ConditionText(w.Condition)})")). Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AliasOptional">
+    <value>别名（可选）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AllContainersOfThisStackAreStoppedAndRemoved">
+    <value>将停止并移除此堆栈的所有容器，同时删除其网络。此操作无法撤销。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AllContainersRunningInThisSessionWillBeStopped">
+    <value>将停止此会话中运行的所有容器。此操作无法撤销。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AllSecretsAreReady">
+    <value>所有机密均已就绪。</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AllSessions">
+    <value>所有会话</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Shared/SessionFilterController.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AllSettingsUseTheirDefaults">
+    <value>所有设置均使用默认值。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AlsoRemoveTheStackSVolumesDeletesData">
+    <value>同时移除堆栈的卷（会删除数据）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Always">
+    <value>始终</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AppSessionWslcDesktop">
+    <value>应用会话 (WslcDesktop)</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AppTitle">
+    <value>WSLc Desktop Manager</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Lifecycle/TrayPolicy.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Appearance">
+    <value>外观</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/SettingsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AppliedByWSLcDesktopManagerSoItOnlyWorks">
+    <value>由 WSLc Desktop Manager 应用，因此仅在应用运行时生效。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ApplyColor">
+    <value>应用颜色</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/ThemeCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="AttemptOf">
+    <value>{0}（第 {1} 次尝试，共 {2} 次）。{3}</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Composite format placeholders: {0} = Short(info, now); {1} = info.Attempts; {2} = info.MaxAttempts; {3} = error. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Back">
+    <value>返回</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="BackToContainers">
+    <value>返回容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="BackToImages">
+    <value>返回镜像</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="BackToNetworks">
+    <value>返回网络</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="BackToStacks">
+    <value>返回堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StackDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="BackToVolumes">
+    <value>返回卷</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Behavior">
+    <value>行为</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/SettingsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="BelongsToSessionContainersCreatedHereRunInSo">
+    <value>“{0}”属于会话“{1}”。在此创建的容器会在“{2}”中运行，因此会将镜像从其注册表拉取到该会话（本地构建的镜像无法拉取）。“{3}”中的副本保持不变。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Composite format placeholders: {0} = reference; {1} = session; {2} = App.Host.SessionId; {3} = session. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="BringingTheStackUp">
+    <value>正在启动堆栈…</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="BuildFrom">
+    <value>从 {1} 构建 {0}</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = image; {1} = contextPath. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Building">
+    <value>正在构建 {0}…</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = action.Target. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CPUCount">
+    <value>CPU 数量</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CPUCount2">
+    <value>CPU 数量（1–{0}）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Composite format placeholders: {0} = Environment.ProcessorCount. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CPUCountAndMemoryMustBeNumbers">
+    <value>CPU 数量和内存必须为数字。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/AppSettings.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CPUs">
+    <value>{0:0.##} 个 CPU</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Containers/Inspection/ContainerDetail.cs. Composite format placeholders: {0} = nanoCpus / 1e9. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CPUsMBMemory">
+    <value>{0} 个 CPU，{1:N0} MB 内存</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Composite format placeholders: {0} = host.StartedCpuCount; {1} = host.StartedMemoryMb. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CanTRunThisImageHere">
+    <value>无法在此运行此镜像</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ChangesApplyImmediatelyAndAreSavedForTheNext">
+    <value>更改会立即应用，并保存以供下次启动时使用。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/ThemeCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CheckForUpdates">
+    <value>检查更新</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CheckTheValues">
+    <value>请检查值</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CheckYourConnectionAndTryAgain">
+    <value>请检查连接，然后重试。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CheckingForUpdates">
+    <value>正在检查更新…</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ChooseAccentColor">
+    <value>选择主题色</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/ThemeCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ChooseWincredOrFile">
+    <value>请选择 wincred 或 file。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CloseButtonMinimizesToTray">
+    <value>关闭按钮将窗口最小化到托盘</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/BehaviorTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CommandOptional">
+    <value>命令（可选）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Complete">
+    <value>已完成 {0}%。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Composite format placeholders: {0} = ClampProgress(progress). Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ComposeFieldWarning">
+    <value>“{0}”——{1}。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = key; {1} = why. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ComposeNetworkExists">
+    <value>网络 {0} 已存在。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ComposeVolumeExists">
+    <value>卷 {0} 已存在。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ConfigsArenTSupportedAndWonTBeMounted">
+    <value>不支持 configs，因此不会挂载</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Configuration">
+    <value>配置</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ConnectToANetwork">
+    <value>将 {0} 连接到网络</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = _name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ConnectToNetwork">
+    <value>连接到网络…</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ConnectedTo">
+    <value>已连接到 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = _name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ConnectedToBasicShellNoTTYFullScreenPrograms">
+    <value>已连接到 {0}（基本 Shell，无 TTY：不支持全屏程序）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = _name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Container">
+    <value>1 个容器</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Images/ImageSummary.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ContainerStopped">
+    <value>[容器已停止]</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Containers">
+    <value>{0} 个容器</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Images/ImageSummary.cs. Composite format placeholders: {0} = Containers. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Copied">
+    <value>已复制</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/RawJsonExpander.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CopyToken">
+    <value>复制令牌</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CopyToken2">
+    <value>复制 ${secret:NAME} 令牌</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldNotImportSecret">
+    <value>无法导入值：{0}</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldNotListNetworks">
+    <value>无法列出网络</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldNotListVolumes">
+    <value>无法列出卷</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldNotPruneNetworks">
+    <value>无法清理网络</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldNotPruneVolumes">
+    <value>无法清理卷</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTAttachThePseudoconsoleToTheProcess">
+    <value>无法将伪控制台附加到进程。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Terminal/ConPtySession.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTCheckForUpdates">
+    <value>无法检查更新</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTConnect">
+    <value>无法连接</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTDeleteFrom">
+    <value>无法从 {1} 删除 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Composite format placeholders: {0} = item.Target; {1} = item.Session. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTDeleteTheContainer">
+    <value>无法删除容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTDeleteTheSecret">
+    <value>无法删除机密</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTDeleteTheSecretWindowsError">
+    <value>无法删除机密“{0}”（Windows 错误 {1}）。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Secrets/CredentialManagerSecretStore.cs. Composite format placeholders: {0} = name; {1} = error. Keep placeholder indexes and format specifiers. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTDeriveAProjectNameSetAName">
+    <value>无法推导项目名称；请设置 name: 或选择一个名称。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Planning/ComposePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTDisconnect">
+    <value>无法断开连接</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTInitializeTheProcessAttributeList">
+    <value>无法初始化进程属性列表。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Terminal/ConPtySession.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTInspect">
+    <value>无法检查 {0}：{1}</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = c.Name; {1} = e.Message. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTInspect2">
+    <value>无法检查 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Composite format placeholders: {0} = _name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTInspectTheContainer">
+    <value>无法检查容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTInspectTheImage">
+    <value>无法检查镜像</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTListContainers">
+    <value>无法列出容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTListImages">
+    <value>无法列出镜像</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTListSecretsWindowsError">
+    <value>无法列出机密（Windows 错误 {0}）。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Secrets/CredentialManagerSecretStore.cs. Composite format placeholders: {0} = error. Keep placeholder indexes and format specifiers. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTLoadTheEnvironment">
+    <value>无法加载环境</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTOpenSettingsYaml">
+    <value>无法打开 settings.yaml</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTPull">
+    <value>无法拉取 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Composite format placeholders: {0} = uri. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTReadSecrets">
+    <value>无法读取机密</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTReadSettingsYaml">
+    <value>无法读取 settings.yaml</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTReadTheComposeFile">
+    <value>无法读取 Compose 文件</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTReadTheSecret">
+    <value>无法读取机密</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTReadTheSecretWindowsError">
+    <value>无法读取机密“{0}”（Windows 错误 {1}）。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Secrets/CredentialManagerSecretStore.cs. Composite format placeholders: {0} = name; {1} = error. Keep placeholder indexes and format specifiers. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTRemove">
+    <value>无法移除 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Composite format placeholders: {0} = name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTResetSettingsYaml">
+    <value>无法重置 settings.yaml</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTSaveAppSettings">
+    <value>无法保存应用设置</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/BehaviorTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTSaveAppearance">
+    <value>无法保存外观设置</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/ThemeCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTSaveSettingsYaml">
+    <value>无法保存 settings.yaml</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTSaveTerminalSettings">
+    <value>无法保存终端设置</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/TerminalCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTSaveTheSecretWindowsError">
+    <value>无法保存机密“{0}”（Windows 错误 {1}）。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Secrets/CredentialManagerSecretStore.cs. Composite format placeholders: {0} = name; {1} = Marshal.GetLastWin32Error(). Keep placeholder indexes and format specifiers. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTSignIn">
+    <value>无法登录</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTSignOut">
+    <value>无法退出登录</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTStartTheContainer">
+    <value>无法启动容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTStartTheStack">
+    <value>无法启动堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTStartTheWSLcSession">
+    <value>无法启动 WSLc 会话</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTStartWslcExe">
+    <value>无法启动 wslc.exe。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Lifecycle/ChildProcessTracker.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTStopTheContainer">
+    <value>无法停止容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTStopTheStack">
+    <value>无法停止堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTTakeTheStackDown">
+    <value>无法停止并移除堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CouldnTTerminateTheSession">
+    <value>无法终止会话</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CrashLoop">
+    <value>崩溃循环</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CrashLoopItKeptExitingSoRestartsStoppedAfter">
+    <value>崩溃循环：容器不断退出，因此在尝试 {0} 次后已停止重启。请手动启动以重试。{1}</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Composite format placeholders: {0} = info.Attempts; {1} = error. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CreateComposeNetwork">
+    <value>正在创建网络 {0}…</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CreateComposeVolume">
+    <value>正在创建卷 {0}…</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CreateNetwork">
+    <value>创建网络 {0}</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = r.Actual. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CreatePseudoConsoleFailedX">
+    <value>CreatePseudoConsole 失败 (0x{0:X8})。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Terminal/ConPtySession.cs. Composite format placeholders: {0} = hr. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CreateVolume">
+    <value>创建卷 {0}</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = r.Actual. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Created">
+    <value>已创建“{0}”</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Composite format placeholders: {0} = name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CreatingContainer">
+    <value>正在创建容器…</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="CredentialStore">
+    <value>凭据存储</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DNSNameThatResolvesToTheHostLoopbackAddress">
+    <value>解析为主机环回地址的 DNS 名称。使用“none”可禁用。默认值：host.wslc.internal。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Dark">
+    <value>深色</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/AppearanceChoices.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DefaultBindingAddress">
+    <value>默认绑定地址</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DefaultBridge">
+    <value>默认（桥接）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DefaultRegistry">
+    <value>默认注册表</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Delete">
+    <value>删除“{0}”？</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Composite format placeholders: {0} = name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DeleteImage">
+    <value>删除镜像“{0}”？</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Composite format placeholders: {0} = item.DisplayName. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DeleteImageFrom">
+    <value>从 {1} 删除镜像“{0}”？</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Composite format placeholders: {0} = item.DisplayName; {1} = item.Session. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DeployReplicasIsIgnoredOnlyOneContainerIsStarted">
+    <value>deploy.replicas = {0} 将被忽略；仅启动一个容器。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Planning/Services/ServicePlanner.cs. Composite format placeholders: {0} = replicas. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DeployReplicasResourcesPlacementRestartPolicyIsnTSupported">
+    <value>不支持 deploy (replicas, resources, placement, restart_policy)；将启动单个容器，且不应用其中的资源限制</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Disabled">
+    <value>已禁用</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DisconnectFrom">
+    <value>断开与“{0}”的连接？</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = network. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DiskIO">
+    <value>磁盘 I/O</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Done">
+    <value>完成</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DownRemoveContainers">
+    <value>停止并移除（移除容器）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DownStack">
+    <value>停止并移除堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DownloadItNowNothingChangesUntilYouRestart">
+    <value>立即下载。重启前不会有任何更改。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DownloadUpdate">
+    <value>下载更新</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/UpdatesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="DownloadingVersion">
+    <value>正在下载版本 {0}…</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Composite format placeholders: {0} = availableVersion. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Edit">
+    <value>编辑“{0}”</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Composite format placeholders: {0} = existing. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Enabled">
+    <value>已启用</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="EndShell">
+    <value>结束 Shell</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop\Views\Containers\ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="EnterASizeGreaterThanZero">
+    <value>请输入大于零的大小。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Resources/VolumeSize.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="EnterAUsernameAndAPasswordOrAccessToken">
+    <value>请输入用户名以及密码或访问令牌。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/RegistryAccounts.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="EnterAValue">
+    <value>请输入一个值。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="EnterAValueOrDefault">
+    <value>请输入一个值或“default”。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="EnvironmentVariablesOnePerLine">
+    <value>环境变量（每行一个）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="EverySettingGoesBackToDefaultCommentsInThe">
+    <value>所有设置都将恢复为“default”。文件中的注释会保留。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ExtendsIsnTSupportedTheServiceIsNotMerged">
+    <value>不支持 extends；此服务不会与引用的服务合并</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="External">
+    <value>外部</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Backends/WslcCliBackend.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="FillInARandomCharacterValue">
+    <value>填入一个随机的 32 字符值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="FilterBySession">
+    <value>按会话筛选</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Follow">
+    <value>跟随</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Font">
+    <value>字体</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/TerminalCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="FontForTheShellTabSTerminalChangesApply">
+    <value>Shell 选项卡中终端的字体。更改会立即应用于已打开的终端，并保存以供下次启动时使用。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/TerminalCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="GPUAccess">
+    <value>GPU 访问</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Gateway">
+    <value>网关 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = n.Gateway. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Gateway2">
+    <value> · 网关 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Composite format placeholders: {0} = Str(c, "Gateway"). Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="GatewayOptional">
+    <value>网关（可选）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="GenerateARandomValueFor">
+    <value>为 {0} 生成随机值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = need.Name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="HealthcheckStartIntervalIsnTSupportedAndWillBe">
+    <value>不支持 healthcheck.start_interval，将被忽略。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="HostAddressPublishedPortsBindToWhenNoneIs">
+    <value>未指定地址时，发布的端口所绑定的主机地址。默认值：127.0.0.1。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="HostLoopbackName">
+    <value>主机环回名称</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="HowWSLcDesktopManagerBehavesOnYourDesktopChanges">
+    <value>WSLc Desktop Manager 在桌面上的行为。更改会立即应用。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/BehaviorTab.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="IdleTimeoutSeconds">
+    <value>空闲超时（秒）</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ImageIsInAnotherSession">
+    <value>镜像位于另一个会话中</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ImageWasNotFound">
+    <value>未找到镜像“{0}”。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Cli/WslcCli.cs. Composite format placeholders: {0} = target. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Images">
+    <value>镜像</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ImportFrom">
+    <value>从 {0} 导入</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = import.Describe(). Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="IncludeIsnTSupportedIncludedComposeFilesAreNot">
+    <value>不支持“include”；不会加载包含的 Compose 文件。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\ComposePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InstallComponents">
+    <value>安装组件</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InstallFailed">
+    <value>安装失败</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InstalledVersion">
+    <value>已安装版本：{0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/UpdatesTab.cs. Composite format placeholders: {0} = updates.CurrentVersion ?? "unknown". Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InstallingComponents">
+    <value>正在安装组件…</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Internal">
+    <value>内部</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Backends/WslcCliBackend.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InternalNoExternalAccess">
+    <value>内部（无外部访问）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InvalidInterpolationFormatFor">
+    <value>“${{{0}}}”的插值格式无效。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Parsing/Interpolator.cs. Composite format placeholders: {0} = body. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InvalidInterpolationFormatInUseForALiteralDollar">
+    <value>“{0}”中的插值格式无效。请使用 $$ 表示字面美元符号。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Parsing/Interpolator.cs. Composite format placeholders: {0} = input. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InvalidInterpolationMissingIn">
+    <value>“{0}”中的插值无效（缺少“}}”）。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Parsing/Interpolator.cs. Composite format placeholders: {0} = input. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InvalidInterpolationVariableIn">
+    <value>“${{{0}}}”中的插值变量无效。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Parsing/Interpolator.cs. Composite format placeholders: {0} = body. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="InvalidSecretReferenceNamesUseLettersDigitsAnd">
+    <value>机密引用“${{{0}}}”无效；名称只能使用字母、数字、“.”、“_”和“-”。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Parsing/Interpolator.cs. Composite format placeholders: {0} = body. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="IsAlreadyRunning">
+    <value>{0} 已在运行。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = action.Service. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="IsnTAValidEnvironmentVariableName">
+    <value>“{0}”不是有效的环境变量名称。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Secrets/Injection/SecretInjection.cs. Composite format placeholders: {0} = key. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="IsnTSet">
+    <value>未设置 ${0}。</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = import.EnvVar. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="IsnTSupportedByWSLcAndWillBeIgnored">
+    <value>WSLc 不支持“{0}”，将被忽略。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = key. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="KeepStoredValue">
+    <value>保留已存储的值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelAccess">
+    <value>访问</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelAuthor">
+    <value>作者</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelCommand">
+    <value>命令</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelComment">
+    <value>注释</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelContainer">
+    <value>容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StackDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelContainers">
+    <value>容器</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelCpu">
+    <value>CPU</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelCpuLimit">
+    <value>CPU 限制</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelCreated">
+    <value>创建时间</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelCreatedBy">
+    <value>创建者</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelDigest">
+    <value>摘要</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelDriver">
+    <value>驱动程序</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelEntrypoint">
+    <value>入口点</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelEnvironment">
+    <value>环境</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelExitCode">
+    <value>退出代码</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelExposedPorts">
+    <value>暴露的端口</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelFinished">
+    <value>结束时间</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelForSecret">
+    <value>机密 {0} 的标签</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = need.Name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelHealth">
+    <value>健康状态</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelId">
+    <value>ID</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelImage">
+    <value>镜像</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelImageId">
+    <value>镜像 ID</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelInUse">
+    <value>正在使用</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelInUseBy">
+    <value>使用方</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelInspect">
+    <value>检查</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelIpv4">
+    <value>IPv4</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelIpv6">
+    <value>IPv6</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelKernel">
+    <value>内核</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelLabels">
+    <value>标签</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelLogs">
+    <value>日志</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelMemory">
+    <value>内存</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelMemoryLimit">
+    <value>内存限制</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelMetadata">
+    <value>元数据</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelMountpoint">
+    <value>挂载点</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelMounts">
+    <value>挂载</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelName">
+    <value>名称</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelNetworkMode">
+    <value>网络模式</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelOptional">
+    <value>标签（可选）</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelOptions">
+    <value>选项</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelOsArch">
+    <value>操作系统 / 架构</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelPorts">
+    <value>端口</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelRestart">
+    <value>重启</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelScope">
+    <value>范围</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelService">
+    <value>服务</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StackDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelSession">
+    <value>会话</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelSessionManager">
+    <value>会话管理器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelShell">
+    <value>Shell</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelSize">
+    <value>大小</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelStack">
+    <value>堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelStarted">
+    <value>启动时间</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelState">
+    <value>状态</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelStatus">
+    <value>运行状态</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelSubnets">
+    <value>子网</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelTags">
+    <value>标记</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelTelemetry">
+    <value>遥测</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelUnit">
+    <value>单位</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelUpdated">
+    <value>更新时间</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelUsedBy">
+    <value>使用方</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourceDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelUser">
+    <value>用户</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelValue">
+    <value>值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LabelWorkingDir">
+    <value>工作目录</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LastLines">
+    <value>末尾行数</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LastRestartFailed">
+    <value> 上次重启失败：{0}</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Composite format placeholders: {0} = info.LastError. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Layers">
+    <value>层</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Layers2">
+    <value>层（{0}）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Composite format placeholders: {0} = detail.Layers.Count. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LeaveUnset">
+    <value>不设置 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = need.Name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LeaveUnsetForNow">
+    <value>暂不设置</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LeftUnset">
+    <value>未设置</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Light">
+    <value>浅色</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/AppearanceChoices.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LinksArenTSupportedUseNetworksAndServiceNames">
+    <value>不支持 links；请改用网络和服务名称</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Loading">
+    <value>正在加载…</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="LookingForANewerReleaseOnGitHub">
+    <value>正在 GitHub 上查找更新的版本。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MaxRestarts">
+    <value>最大重启次数</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MaxRestartsDefaultLimit">
+    <value>最大重启次数（0 = 默认限制）</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop\Views\Containers\ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MaxStorage">
+    <value>最大存储空间</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MaximumDiskImageSizeEGGBDefaultTB">
+    <value>磁盘镜像的最大大小，例如 500GB。默认值：1TB。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MaximumRestarts">
+    <value>最大重启次数</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MemoryLimitEGGBOrMBDefaultHalf">
+    <value>内存限制，例如 2GB 或 512MB。默认值：可用内存的一半。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MemoryMB">
+    <value>内存 (MB)</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MinimizeToTray">
+    <value>最小化到托盘</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/BehaviorTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MinimizingHidesTheWindowToTheNotificationAreaAnd">
+    <value>最小化时，窗口会隐藏到通知区域并从任务栏移除。容器会继续运行；点击托盘图标可恢复窗口。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/BehaviorTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MissingComponents">
+    <value>缺少：{0}</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MissingDetails">
+    <value>缺少详细信息</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="MyContainer">
+    <value>my-container</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NamesUseLettersDigitsAndAndStartWithA">
+    <value>名称可以使用字母、数字、“.”、“_”和“-”，且必须以字母或数字开头。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NamesUseLettersDigitsAndUpToCharactersAnd">
+    <value>名称可以使用字母、数字、“.”、“_”和“-”（最多 {0} 个字符），且必须以字母或数字开头。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Secrets/SecretService.cs. Composite format placeholders: {0} = SecretTokens.MaxNameLength. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Needed">
+    <value>必需</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Network">
+    <value>网络</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Network2">
+    <value>网络 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = n.Name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NetworkIsnTSupportedByWSLcAndWillBe">
+    <value>网络“{0}”：WSLc 不支持“{1}”，将被忽略。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = r.Key; {1} = key. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NetworkModeIsnTSupportedTheContainerJoinsThe">
+    <value>不支持 network_mode“{0}”；容器将改为加入项目的默认网络。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = mode. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Networks">
+    <value>网络</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NetworksIsIgnoredBecauseNetworkModeIsSet">
+    <value>由于已设置 network_mode，“networks”将被忽略。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Never">
+    <value>从不</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="New">
+    <value>新建 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Composite format placeholders: {0} = Noun. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NewContainer">
+    <value>新建容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NewNetwork">
+    <value>新建网络</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NewSessionsUseTheseSettingsExistingSessionsKeepTheir">
+    <value>新会话将使用这些设置。现有会话会保留当前设置，直到重新启动。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NewValueLeaveBlankToKeepTheCurrentOne">
+    <value>新值（留空以保留当前值）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NewVolume">
+    <value>新建卷</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoContainersInSession">
+    <value>会话“{0}”中没有容器。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Composite format placeholders: {0} = _sessionFilter.Filter. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoContainersUseNetwork">
+    <value>没有容器使用此网络</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoContainersUseVolume">
+    <value>没有容器使用此卷</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoContainersYetCreateOneFromAnImage">
+    <value>尚无容器。请从镜像创建一个容器。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoImagesInSession">
+    <value>会话“{0}”中没有镜像。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Composite format placeholders: {0} = _filter. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoImagesYetPullOneToGetStarted">
+    <value>尚无镜像。请先拉取一个镜像。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoNetworks">
+    <value>没有网络。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoNetworksAvailable">
+    <value>没有可用网络</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoNetworksInSession">
+    <value>会话“{0}”中没有网络。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoRegistriesSignedInFromThisApp">
+    <value>尚未通过此应用登录任何注册表。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoSecretsStoredYetAddThemOnTheSecrets">
+    <value>尚未存储任何机密（请在“机密”页面添加）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoSecretsYetAddOneToUseItIn">
+    <value>尚无机密。添加一个机密即可在容器和 Compose 堆栈中使用。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoStacksYetOpenAComposeFileToBring">
+    <value>尚无堆栈。请打开 Compose 文件来启动堆栈。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoVolumesInSession">
+    <value>会话“{0}”中没有卷。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoVolumesYetCreateOneToPersistContainerData">
+    <value>尚无卷。创建一个卷即可持久保存容器数据。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="None">
+    <value>无</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NoneNotPulledFromARegistry">
+    <value>无（未从注册表拉取）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NotPublished">
+    <value>{0}（未发布）</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Containers/Inspection/ContainerDetail.cs. Composite format placeholders: {0} = p.Name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NotRestartedAutomatically">
+    <value>未自动重启。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="NothingIsSavedForThisSecretAndStaysUnavailable">
+    <value>不会为此机密保存任何内容，在设置机密前 {0} 将不可用。</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = _owner.ActionName. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Of">
+    <value>{0} / {1}（{2:0.##}%）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = WslcHost.FormatSize(last.MemoryBytes); {1} = WslcHost.FormatSize(last.MemoryLimitBytes); {2} = last.MemoryPercent. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="OfContainersRunning">
+    <value>{0} / {1} 个容器正在运行</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Lifecycle/TrayPolicy.cs. Composite format placeholders: {0} = running; {1} = total ?? running. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="OfReadyEnterTheMissingValuesToContinue">
+    <value>{0} / {1} 项已就绪。请输入缺少的值以继续。</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = ready; {1} = _order.Count. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="OffFollowsTheWindowsAccentCustomColorsAreAdjusted">
+    <value>关闭时将使用 Windows 主题色。自定义颜色会进行调整，以确保浅色和深色控件清晰可读。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/ThemeCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="OnFailure">
+    <value>失败时</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="OnFailureMax">
+    <value>失败时（最多 {0} 次）</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Composite format placeholders: {0} = policy.MaxRetries. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="OpenComposeFile">
+    <value>打开 Compose 文件</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="OpenFile">
+    <value>打开文件</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="OpenWSLcDesktopManager">
+    <value>打开 WSLc Desktop Manager</value>
+    <comment>UI text. Source: src/WslcDesktop/Platform/TrayIcon.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="OpenWindowsStartupSettings">
+    <value>打开 Windows 启动设置</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/BehaviorTab.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Overview">
+    <value>概览</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PasswordOrAccessToken">
+    <value>密码或访问令牌</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PickALocalImageOrTypeOneToPull">
+    <value>选择本地镜像或输入要拉取的镜像</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PlannedActions">
+    <value>计划的操作（{0}）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Composite format placeholders: {0} = plan.Actions.Count. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PlatformSelectionIsnTSupported">
+    <value>不支持 platform 选择</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PortsAndNetworking">
+    <value>端口和网络</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PortsOnePerLine">
+    <value>端口（每行一个）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ProcessesReadBlueWriteAmberPerSecond">
+    <value>{0} 个进程 · 每秒读取（蓝色）、写入（琥珀色）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = last.Pids. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ProfilesArenTSupportedThisServiceIsAlwaysStarted">
+    <value>不支持 profiles；此服务将始终启动</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ProjectName">
+    <value>项目名称</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PruneNetworksMessage">
+    <value>将移除会话“{0}”中未被任何容器使用的所有网络。此操作无法撤销。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PruneNetworksTitle">
+    <value>清理 {0} 中未使用的网络？</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PruneUnused">
+    <value>清理未使用项</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PruneUnusedIn">
+    <value>清理 {0} 中的未使用项</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Composite format placeholders: {0} = _sessionFilter.Filter. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PruneVolumesMessage">
+    <value>将移除会话“{0}”中未被任何容器使用的所有卷。此操作无法撤销。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PruneVolumesTitle">
+    <value>清理 {0} 中未使用的卷？</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PullAnImageEGDockerIoLibraryAlpine">
+    <value>拉取镜像，例如 docker.io/library/alpine:latest</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="PullPolicyIsnTSupportedAndWillBeIgnored">
+    <value>不支持 pull_policy“{0}”，将被忽略。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Planning/Services/ServicePlanner.cs. Composite format placeholders: {0} = pull. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Pulling">
+    <value>正在拉取 {0}：{1}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Composite format placeholders: {0} = imageName; {1} = p.Status. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Pulling2">
+    <value>正在拉取 {0}…</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Composite format placeholders: {0} = imageName. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RawJSON">
+    <value>原始 JSON</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/RawJsonExpander.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ReadAccentWriteAmberPerSecond">
+    <value>每秒读取（主题色）、写入（琥珀色）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ReadSWriteSTotalReadWrite">
+    <value>读取 {0}/s  写入 {1}/s · 总读取 {2}  总写入 {3}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = WslcHost.FormatSize((ulong)rd[^1]); {1} = WslcHost.FormatSize((ulong)wr[^1]); {2} = WslcHost.FormatSize(last.BlockReadBytes); {3} = WslcHost.FormatSize(last.BlockWriteBytes). Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ReadyToSave">
+    <value>可以保存</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ReceiveAccentTransmitAmberPerSecond">
+    <value>每秒接收（主题色）、发送（琥珀色）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Registries">
+    <value>注册表</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/SettingsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RemoveNetworkFromSessionTitle">
+    <value>从 {1} 移除网络“{0}”？</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0; {1} = argument 1. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RemoveNetworkTitle">
+    <value>移除网络“{0}”？</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RemoveVolumeFromSessionTitle">
+    <value>从 {1} 移除卷“{0}”？</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0; {1} = argument 1. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RemoveVolumeTitle">
+    <value>移除卷“{0}”？</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RemovingContainers">
+    <value>正在移除容器…</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RemovingNetwork">
+    <value>正在移除网络 {0}…</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = n. Source: src\WslcDesktop.Compose\Execution\ComposeRunner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RemovingVolume">
+    <value>正在移除卷 {0}…</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = v. Source: src\WslcDesktop.Compose\Execution\ComposeRunner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RequiredVariableIsMissing">
+    <value>缺少必需变量 {0}：{1}</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Parsing/Interpolator.cs. Composite format placeholders: {0} = name; {1} = Operand(1). Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ResetToDefaults">
+    <value>重置为默认值</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ResetToDefaults2">
+    <value>重置为默认值…</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ResetWSLcConfiguration">
+    <value>重置 WSLc 配置？</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ResourcesForTheSessionWSLcDesktopManagerRunsYour">
+    <value>WSLc Desktop Manager 用于运行容器的会话资源。这些资源会在应用启动时传递给 WSLc，因此更改会在下次打开应用时生效。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RestartIsnTASupportedRestartPolicyAndWill">
+    <value>restart: “{0}”不是受支持的重启策略，将被忽略。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = text. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RestartPolicy">
+    <value>重启策略</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RestartToFinishUpdatingRunningContainersKeepRunning">
+    <value>重启以完成更新。正在运行的容器将继续运行。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RestartToUpdate">
+    <value>重启以更新</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/UpdatesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RestartWSLcDesktopManagerToApplyTheNewSession">
+    <value>请重启 WSLc Desktop Manager 以应用新的会话资源。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Restarted">
+    <value>{0} · 已重启 {1} 次</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Composite format placeholders: {0} = Describe(info.Policy); {1} = info.Attempts. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RestartedAutomaticallyPerPolicyWhileWSLcDesktopManagerIs">
+    <value>WSLc Desktop Manager 运行期间，按照策略自动重启。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RestartedMultiple">
+    <value>经过 {0} 次重启后再次运行。{1}</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0; {1} = argument 1. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RestartedOnce">
+    <value>经过 {0} 次重启后再次运行。{1}</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0; {1} = argument 1. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Restarting">
+    <value>正在重启…</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RestartingInS">
+    <value>将在 {0} 秒后重启</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Composite format placeholders: {0} = Math.Max(1, (int)Math.Ceiling((at - now).TotalSeconds)). Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RevealOrHideValue">
+    <value>显示或隐藏值</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RunAContainerFromThisImage">
+    <value>从此镜像运行容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RunAs">
+    <value>将 {0} ({1}) 作为 {2} 运行</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = name; {1} = image; {2} = containerName. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RunContainer">
+    <value>运行容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Running">
+    <value>{0} / {1} 正在运行</value>
+    <comment>UI text. Source: src/WslcDesktop/ViewModels/StackItem.cs. Composite format placeholders: {0} = _running; {1} = _total. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="RunningWith">
+    <value>运行参数</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SSTotal">
+    <value>↓ {0}/s  ↑ {1}/s · 总计 ↓ {2}  ↑ {3}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = WslcHost.FormatSize((ulong)rx[^1]); {1} = WslcHost.FormatSize((ulong)tx[^1]); {2} = WslcHost.FormatSize(last.NetRxBytes); {3} = WslcHost.FormatSize(last.NetTxBytes). Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SaveSecret">
+    <value>保存机密 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = need.Name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Saved">
+    <value>已保存</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ScaleIsnTSupportedASingleContainerIsStarted">
+    <value>不支持 scale；将启动单个容器</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SecondsAnIdleSessionVMStaysRunningBeforeIt">
+    <value>空闲的会话虚拟机在被销毁前继续运行的秒数。默认值：30。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SecretMapsToWhichIsnTAValidStored">
+    <value>机密“{0}”映射到“{1}”，但后者不是有效的已存储机密名称。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = key; {1} = id. Source: src\WslcDesktop.Compose\Planning\ComposePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SecretValuesAreResolvedOnlyWhenTheContainerIs">
+    <value>机密值仅在创建容器时解析，绝不会在此显示。应用其他位置会尽力遮盖匹配的子字符串，但不保证完全遮盖。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SecretValuesCanBeAtMostBytesUTF">
+    <value>机密值最多为 {0:N0} 字节 (UTF-8)。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Secrets/CredentialManagerSecretStore.cs. Composite format placeholders: {0} = MaxValueBytes. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Secrets">
+    <value>机密</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SecretsCanOnlyBeUsedInEnvironmentVariableValues">
+    <value>机密只能用于环境变量的值。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Secrets/Injection/SecretInjection.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SecretsCanOnlyBeUsedInEnvironmentVariableValues2">
+    <value>{0}：机密只能用于环境变量的值。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = action.Description. Source: src\WslcDesktop.Compose\Planning\ComposePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SecretsNeeded">
+    <value>需要机密</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SecretsUsedBy">
+    <value>由 {0} 使用</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SeeWhetherANewerReleaseIsAvailable">
+    <value>查看是否有更新的版本。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServerBlankForTheDefaultRegistry">
+    <value>服务器（留空以使用默认注册表）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Service">
+    <value>服务“{0}”：{1}</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Planning/Services/ServicePlanner.cs. Composite format placeholders: {0} = name; {1} = text. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceBuildIsnTSupportedByWSLcAndWill">
+    <value>服务“{0}”：WSLc 不支持 build.{1}，将被忽略。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = name; {1} = key. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceDependsOnConditionIsnTSupportedTreatingIt">
+    <value>服务“{0}”：不支持 depends_on 条件“{1}”；将按 service_started 处理。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = service; {1} = condition. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceDependsOnUndefinedService">
+    <value>服务“{0}”依赖于未定义的服务“{1}”。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = service; {1} = dep. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceDependsOnWaitsForHealthyButHasNo">
+    <value>服务“{0}”：depends_on“{1}”等待健康状态，但“{2}”没有 healthcheck；因此只会等待容器启动。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = service; {1} = dep; {2} = dep. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceEnvFileWasnTFoundAt">
+    <value>服务“{0}”：在 {2} 未找到 env_file“{1}”。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = name; {1} = path; {2} = full. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceExitedWithCodeDependentServicesWereNotStarted">
+    <value>服务“{0}”已退出，代码为 {1}；依赖它的服务未启动。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = wait.Service; {1} = exit. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceHasAVolumeEntryWithoutATarget">
+    <value>服务“{0}”中有一个未指定目标的卷条目。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = service. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceIsUnhealthyDependentServicesWereNotStarted">
+    <value>服务“{0}”处于不健康状态；依赖它的服务未启动。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = wait.Service. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceMustBeAMapping">
+    <value>服务“{0}”必须为映射。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Planning/ComposePlanner.cs. Composite format placeholders: {0} = name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceNeedsAnImageOrABuildSection">
+    <value>服务“{0}”需要 image 或 build 节。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = name. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceRefersToUndefinedNetwork">
+    <value>服务“{0}”引用了未定义的网络“{1}”。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = service; {1} = key. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceRefersToUndefinedVolume">
+    <value>服务“{0}”引用了未定义的卷“{1}”。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = service; {1} = source. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceRemoteBuildContextsArenTSupportedUseA">
+    <value>服务“{0}”：不支持远程构建上下文；请使用本地目录。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = name. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ServiceUsesSecretWhichIsnTDefinedOrIsn">
+    <value>服务“{0}”使用了机密“{1}”，但该机密未在顶层 secrets 中定义（或不是已存储的机密）。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = name; {1} = source. Source: src\WslcDesktop.Compose\Planning\Services\ServicePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Session">
+    <value>会话：{0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = _session. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Sessions">
+    <value>会话</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/SettingsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Settings">
+    <value>设置</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/SettingsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SettingsYamlConfiguresWslcSDefaultSessionTheOne">
+    <value>settings.yaml 用于配置 wslc 的默认会话（即 wslc 命令行使用的会话）以及它创建的所有新会话。WSLc Desktop Manager 运行自己的会话 (WslcDesktop)，不会读取此文件；请参阅上方的“应用会话”卡片。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ShellCommand">
+    <value>Shell 命令</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ShellExitedWithCode">
+    <value>[Shell 已退出，代码为 {0}]</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = code. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ShowOrHideTheValue">
+    <value>显示或隐藏值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ShowValueFor">
+    <value>显示 {0} 的值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = need.Name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SignInToPrivateRegistriesSoImagesCanBe">
+    <value>登录私有注册表以拉取镜像。凭据会交给 wslc 并保存在其凭据存储中；此应用绝不会存储或显示凭据。WSLc 无法列出已保存的凭据，因此下方列表仅显示您通过此处登录的注册表。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SignOutOf">
+    <value>退出 {0} 的登录</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Composite format placeholders: {0} = server. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SignedIn">
+    <value>已登录</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SignedInTo">
+    <value>已登录 {0}。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Composite format placeholders: {0} = host. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SignedInToTheDefaultRegistry">
+    <value>已登录默认注册表。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SignedOut">
+    <value>已退出登录</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SignedOutOf">
+    <value>已退出 {0} 的登录。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Composite format placeholders: {0} = server. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SignedOutOfTheDefaultRegistry">
+    <value>已退出默认注册表的登录。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Skipped">
+    <value>  已跳过：{0}</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = e.Message. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SomeSessionsCouldnTBeRead">
+    <value>无法读取部分会话</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data name="StackGroupHeading" xml:space="preserve">
+    <value>堆栈：{0} ({1})</value>
+    <comment>Container group heading. {0} is the stack name; {1} is the number of containers. Preserve placeholders. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StackIsDown">
+    <value>堆栈“{0}”已停止并移除。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = project. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StackIsUp">
+    <value>堆栈“{0}”已启动。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = plan.Project. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StackOperationFailed">
+    <value>失败：{0}</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Stacks">
+    <value>堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartAfterCreating">
+    <value>创建后启动</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartContainer">
+    <value>启动容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartShell">
+    <value>启动 Shell</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartStack">
+    <value>启动堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartTheContainerToOpenAShell">
+    <value>请启动容器以打开 Shell。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartWithWindows">
+    <value>随 Windows 启动</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/BehaviorTab.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Starting">
+    <value>正在启动 {0}…</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = action.Service. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartingContainer">
+    <value>正在启动容器…</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartingContainerS">
+    <value>正在启动 {0} 个容器…</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = names.Count. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartingExisting">
+    <value>正在启动现有的 {0}…</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = action.Service. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartingWSLc">
+    <value>正在启动 WSLc…</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartsWSLcDesktopManagerWhenYouSignInTo">
+    <value>登录 Windows 时以最小化方式启动 WSLc Desktop Manager，避免干扰。重启策略仅在应用运行时生效，此设置可使其持续生效。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Lifecycle/Startup/StartupHelp.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StartupAndTray">
+    <value>启动和托盘</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/BehaviorTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StatusUnavailable">
+    <value>状态不可用</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Lifecycle/TrayPolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StayHere">
+    <value>留在此处</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StopGracePeriodCouldnTBeParsedAndWill">
+    <value>无法解析 stop_grace_period“{0}”，将被忽略。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Planning/Services/ServicePlanner.cs. Composite format placeholders: {0} = grace. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StopStack">
+    <value>停止堆栈</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StoppingContainerS">
+    <value>正在停止 {0} 个容器…</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Composite format placeholders: {0} = names.Count. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Storage">
+    <value>存储</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/AppSessionCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StoragePath">
+    <value>存储路径</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StoreTheContentAsASecretTheContainerGets">
+    <value>将内容存储为机密；容器将通过环境变量接收它</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Stored">
+    <value>已存储</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="StreamEndedContainerStopped">
+    <value>流已结束（容器已停止？）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Streaming">
+    <value>正在流式传输…</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="SubnetOptional">
+    <value>子网（可选）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Tagged">
+    <value>有标记</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Images/ImageSummary.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TakeDown">
+    <value>停止并移除“{0}”？</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Composite format placeholders: {0} = name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TelemetryIsOnlyCollectedForContainersInThisApp">
+    <value>仅收集此应用会话（“{0}”）中容器的遥测数据。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = App.Host.SessionId. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Terminal">
+    <value>终端</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/TerminalView.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TerminalFont">
+    <value>终端字体</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/TerminalCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TerminalFontSize">
+    <value>终端字号</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/TerminalCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data name="TerminalPipesFailure" xml:space="preserve">
+    <value>无法创建终端管道：{0}</value>
+    <comment>Terminal initialization failure. {0} is the operating system's diagnostic message. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data name="TerminalProcessFailure" xml:space="preserve">
+    <value>无法启动进程：{0}</value>
+    <comment>Terminal initialization failure. {0} is the operating system's diagnostic message. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TerminalUnavailableUsingTheBasicShell">
+    <value>终端不可用（{0}：{1}）；将使用基本 Shell。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = ex.GetType().Name; {1} = ex.Message. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Terminate">
+    <value>终止</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TerminateSession">
+    <value>终止会话</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TerminateSession2">
+    <value>终止会话“{0}”？</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml.cs. Composite format placeholders: {0} = s.Name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheAppPathIsUnknown">
+    <value>应用路径未知。</value>
+    <comment>UI text. Source: src/WslcDesktop/Platform/StartupRegistration.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheCloseButtonXHidesTheWindowToThe">
+    <value>关闭按钮 (X) 会将窗口隐藏到托盘，而不是退出应用。请使用托盘菜单中的“退出”来退出应用。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/BehaviorTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheCommandWasnTFoundOnPATH">
+    <value>在 PATH 中未找到该命令。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Terminal/ConPtySession.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheComposeFile">
+    <value>Compose 文件</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Secrets/SecretImportSource.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheComposeFileDefinesNoServices">
+    <value>Compose 文件未定义任何服务。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Planning/ComposePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheComposeFileIsnTValidYAML">
+    <value>Compose 文件不是有效的 YAML：{0}</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Parsing/YamlTree.cs. Composite format placeholders: {0} = e.Message. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheComposeFileMustContainAMappingAtThe">
+    <value>Compose 文件的顶层必须包含一个映射。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Parsing/YamlTree.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheContainerIsRemovedFromSessionIncludingItsWritable">
+    <value>将从会话“{0}”移除容器及其可写层。此操作无法撤销。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Composite format placeholders: {0} = target.Session. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheContainerIsRemovedIncludingItsWritableLayerThis">
+    <value>将移除容器及其可写层。此操作无法撤销。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheContainerWasCreatedOpenItsDetails">
+    <value>容器已创建。是否打开其详细信息？</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheFileDoesnTExistYetSavingCreatesIt">
+    <value>文件尚不存在；保存时会创建。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheImageIsInUseDeletingItCanFail">
+    <value>镜像正在使用中（{0}）。在移除这些容器之前，删除操作可能失败。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Composite format placeholders: {0} = item.UsedBy. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheImageIsRemovedFromThisSessionThisCan">
+    <value>将从此会话移除镜像。此操作无法撤销。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheNetworkWillBeRemovedContainersMustBeDisconnected">
+    <value>将移除此网络。必须先断开容器连接。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThePlanHasErrorsAndCanTBeRun">
+    <value>计划存在错误，无法运行。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheSecretIsnTStored">
+    <value>机密“{0}”尚未存储。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Composite format placeholders: {0} = missing. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheSecretIsnTStoredAddItOnThe">
+    <value>机密“{0}”尚未存储。请在“机密”页面添加。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = name. Source: src\WslcDesktop.Compose\Secrets\SecretUnavailableException.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheServicesDependsOnEntriesFormACycle">
+    <value>服务的 depends_on 条目形成了循环依赖。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Source: src\WslcDesktop.Compose\Planning\Services\DependencyOrder.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheSourceIsnTAvailableEnterAValueInstead">
+    <value>来源不可用；请改为输入值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheTerminalDrawingSurfaceWin2DIsnTAvailable">
+    <value>终端绘图表面 (Win2D) 不可用。</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/TerminalView.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheValueCanTBeEmpty">
+    <value>值不能为空。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Secrets/SecretService.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheValueForSpansSeveralLinesWhichIsnT">
+    <value>{0} 的值跨越多行，此变量名称不支持多行值。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Secrets/Injection/SecretInjection.cs. Composite format placeholders: {0} = key. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheValueIsBytesTheLimitIs">
+    <value>值的大小为 {0:N0} 字节；上限为 {1:N0} 字节。</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = bytes; {1} = CredentialManagerSecretStore.MaxValueBytes. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheValueIsRemovedFromWindowsCredentialManagerCompose">
+    <value>将从 Windows 凭据管理器中移除此值。引用 {0} 的 Compose 文件和容器将无法启动，直到重新添加该值。此操作无法撤销。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Composite format placeholders: {0} = SecretTokens.Format(name). Keep placeholder indexes and format specifiers. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheVolumeAndAllTheDataInItWill">
+    <value>将删除卷及其所有数据。此操作无法撤销。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Resources/ResourcesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TheWindowsPseudoconsoleConPTYRequiresWindowsVersionOrLater">
+    <value>Windows 伪控制台 (ConPTY) 需要 Windows 10 版本 1809 或更高版本。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Terminal/ConPtySession.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Theme">
+    <value>主题</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/ThemeCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThemeAndColor">
+    <value>主题和颜色</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/ThemeCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisApp">
+    <value>此应用</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisApp2">
+    <value>{0}（此应用）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml.cs. Composite format placeholders: {0} = _session. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisAppIsIncompatibleWithTheInstalledWSLRuntime">
+    <value>此应用与已安装的 WSL 运行时不兼容。请更新 WSL，然后重试。</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisContainerIsAlreadyConnectedToEveryNetwork">
+    <value>此容器已连接到所有网络。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisContainerIsStopped">
+    <value>此容器已停止</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisContainerIsStoppedTelemetryIsCapturedWhileIt">
+    <value>此容器已停止。仅在运行期间收集遥测数据。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisCopyWasnTInstalledWithTheWSLcDesktop">
+    <value>此副本并非通过 WSLc Desktop Manager 安装程序安装。通过 Microsoft Store 安装的版本由 Store 更新；便携版则需下载较新的版本来更新。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisIsTheLatestRelease">
+    <value>这已是最新版本。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisStackUsesSecretsButNoSecretStoreIs">
+    <value>此堆栈使用了机密，但没有可用的机密存储。</value>
+    <comment>UI text. Source: src/WslcDesktop.Compose/Execution/ComposeRunner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ThisUntaggedImageBelongsToSessionAndContainersAre">
+    <value>此无标记镜像属于会话“{0}”，但容器会在“{1}”中创建。无标记镜像没有可供拉取的引用，因此请先在“{2}”中为其添加标记，或在那里使用 wslc --session {3} 运行它。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Composite format placeholders: {0} = session; {1} = App.Host.SessionId; {2} = session; {3} = session. Keep placeholder indexes and format specifiers. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TimedOutWaitingForService">
+    <value>等待服务“{0}”超时。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = wait.Service. Source: src\WslcDesktop.Compose\Execution\ComposeRunner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Timestamps">
+    <value>时间戳</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TopLevelIsnTSupportedByWSLcAndWill">
+    <value>WSLc 不支持顶层“{0}”，将被忽略。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = key. Source: src\WslcDesktop.Compose\Planning\ComposePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TurnOnMinimizeToTrayToKeepItOut">
+    <value> 开启“最小化到托盘”也可将其从任务栏隐藏。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Lifecycle/Startup/StartupHelp.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TurnedOffInWindowsReEnableWSLcDesktopManager">
+    <value>已在 Windows 中关闭。请在“设置 &gt; 应用 &gt; 启动”中重新启用 WSLc Desktop Manager。</value>
+    <comment>UI text. Source: src/WslcDesktop/Platform/StartupRegistration.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="TypeACommandAndPressEnter">
+    <value>输入命令并按 Enter</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UnknownError">
+    <value>未知错误</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Sessions/SessionCatalog.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UnlessStopped">
+    <value>除非手动停止</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Restart/RestartDisplay.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Unlimited">
+    <value>无限制</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Untagged">
+    <value>无标记</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Images/ImageSummary.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UntaggedImage">
+    <value>无标记镜像</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Images/ImageSummary.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Unused">
+    <value>未使用</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Images/ImageSummary.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Up">
+    <value>已启动：{0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Stacks/StacksPage.xaml.cs. Composite format placeholders: {0} = Path.GetFileName(path). Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UpdateRequired">
+    <value>需要更新</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Updates">
+    <value>更新</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/SettingsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UpdatesAreManagedElsewhere">
+    <value>更新由其他方式管理</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseADNSNameOrNoneToDisable">
+    <value>请输入 DNS 名称，或使用“none”禁用。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseANumberOfSecondsOrMore">
+    <value>请输入秒数（0 或更大）。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseASizeSuchAsMBGBOrTB">
+    <value>请使用 512MB、4GB 或 1TB 等大小。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseAStoredSecret">
+    <value>使用已存储的机密</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseAWholeNumberFromTo">
+    <value>请输入 1 到 {0} 之间的整数。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Composite format placeholders: {0} = Environment.ProcessorCount. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseAnAbsolutePathSuchAsDData">
+    <value>请使用绝对路径，例如 D:\data。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseAnIPAddressSuchAsOr">
+    <value>请使用 IP 地址，例如 127.0.0.1 或 0.0.0.0。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseCustomAccentColor">
+    <value>使用自定义主题色</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/ThemeCard.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseItAs">
+    <value>用作 {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Composite format placeholders: {0} = SecretTokens.Format(n). Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseValueFromTheFile">
+    <value>使用文件中的值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UseWindowsSetting">
+    <value>使用 Windows 设置</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/AppearanceChoices.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="UsedByThisContainer">
+    <value>由此容器使用</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Username">
+    <value>用户名</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/RegistriesTab.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ValueForSecret">
+    <value>机密 {0} 的值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Composite format placeholders: {0} = need.Name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ValuesAreKeptInWindowsCredentialManagerNeverIn">
+    <value>值保存在 Windows 凭据管理器中，绝不会保存在 Compose 文件或应用设置中。在环境变量值中使用 ${secret:NAME} 引用机密；它仅在创建容器时解析，在此应用的所有位置均显示为令牌。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="VersionIsAvailable">
+    <value>版本 {0} 可用</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Composite format placeholders: {0} = availableVersion. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="VersionIsReady">
+    <value>版本 {0} 已就绪</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Composite format placeholders: {0} = availableVersion. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="ViewContainer">
+    <value>查看容器</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImagesPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="VirtualCPUsForTheDefaultSessionDefaultAllAvailable">
+    <value>默认会话的虚拟 CPU。默认值：所有可用 CPU。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="VolumeIsnTSupportedByWSLcAndWillBe">
+    <value>卷“{0}”：WSLc 不支持“{1}”，将被忽略。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = r.Actual; {1} = key. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="Volumes">
+    <value>卷</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="VolumesAndBindMountsOnePerLine">
+    <value>卷和绑定挂载（每行一个）</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainersPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="VolumesEntryOptionIsnTSupportedAndWillBe">
+    <value>不支持 volumes 条目选项“{0}”，将被忽略。</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = key. Source: src\WslcDesktop.Compose\Planning\Resources\ResourcePlanner.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WSL">
+    <value>WSL {0}</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml.cs. Composite format placeholders: {0} = version. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WSL2">
+    <value>WSL</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Sessions/SessionsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WSLComponentsAreMissing">
+    <value>缺少 WSL 组件</value>
+    <comment>UI text. Source: src/WslcDesktop/MainWindow.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WSLcConfiguration">
+    <value>WSLc 配置</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WSLcDesktopManagerContainerRunning">
+    <value>WSLc Desktop Manager — 1 个容器正在运行</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Lifecycle/TrayPolicy.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WSLcDesktopManagerContainersRunning">
+    <value>WSLc Desktop Manager — {0} 个容器正在运行</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Lifecycle/TrayPolicy.cs. Composite format placeholders: {0} = running. Keep placeholder indexes and format specifiers. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WSLcDesktopManagerIsAlreadyRunningProcessButIsn">
+    <value>WSLc Desktop Manager 已在运行（进程 {0}），但没有响应。
+
+请在任务管理器中将其关闭，然后重新打开 WSLc Desktop Manager。</value>
+    <comment>UI text. Source: src/WslcDesktop/Platform/SingleInstance.cs. Composite format placeholders: {0} = others[0].Id. Keep placeholder indexes and format specifiers. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WSLcDesktopManagerNoContainersRunning">
+    <value>WSLc Desktop Manager — 没有正在运行的容器</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Lifecycle/TrayPolicy.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WSLcReportsEachLayerSDigestButNotIts">
+    <value>WSLc 会报告每一层的摘要，但不报告其大小或创建它的命令，因此仅显示摘要。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Images/ImageDetailPage.xaml. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WaitingForTheFirstSample">
+    <value>正在等待首个采样。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WaitingForTheFirstSampleTelemetryIsOnlyAvailable">
+    <value>正在等待首个采样。仅在容器运行时提供遥测数据。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WaitingServiceCompleted">
+    <value>正在等待 {0} 完成…</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WaitingServiceHealthy">
+    <value>正在等待 {0} 进入健康状态…</value>
+    <comment>UI text. Preserve commands, protocol identifiers, syntax examples and product names. Placeholders: {0} = argument 0. Source: UI. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WhereItSUsedEGShopStackDatabase">
+    <value>使用位置，例如商店堆栈的数据库</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Secrets/SecretsPage.xaml.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WhereRegistryCredentialsAreKept">
+    <value>注册表凭据的保存位置。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Settings/SettingsFile.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WillLoseAccessToThisNetwork">
+    <value>{0} 将失去对此网络的访问权限。</value>
+    <comment>UI text. Source: src/WslcDesktop/Views/Containers/ContainerDetailPage.xaml.cs. Composite format placeholders: {0} = _name. Keep placeholder indexes and format specifiers. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WillReplaceStoredValue">
+    <value>将替换已存储的值</value>
+    <comment>UI text. Source: src/WslcDesktop/Controls/SecretsNeededPanel.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WslcDidnTRespondInTime">
+    <value>wslc 未及时响应。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Cli/WslcProcess.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WslcExeWasnTFoundOnPATH">
+    <value>在 PATH 中未找到 wslc.exe。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Cli/ShellProcess.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WslcExeWasnTFoundOnPATHItS">
+    <value>在 PATH 中未找到 wslc.exe。列出容器和会话需要此程序。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Cli/WslcProcess.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WslcExitedWith">
+    <value>wslc 已退出，代码为 {0}。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Cli/WslcProcess.cs. Composite format placeholders: {0} = process.ExitCode. Keep placeholder indexes and format specifiers. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="WslcWasCancelled">
+    <value>wslc 已取消。</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Cli/WslcProcess.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="YouReUpToDate">
+    <value>已是最新版本</value>
+    <comment>UI text. Source: src/WslcDesktop.Core/Updates/UpdatePolicy.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data xml:space="preserve" name="YourOrganizationSPolicyPreventsThisAppFromStarting">
+    <value>组织策略阻止此应用随 Windows 启动。</value>
+    <comment>UI text. Source: src/WslcDesktop/Platform/StartupRegistration.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
+  </data>
+  <data name="SessionListSource" xml:space="preserve">
+    <value>（会话列表）</value>
+    <comment>Source label for an error reading the session list. This is not a session name or protocol identifier.</comment>
+  </data>
+  <data name="EnvironmentVariableExample" xml:space="preserve">
+    <value>KEY=value 或 KEY=${secret:name}</value>
+    <comment>Environment-variable field placeholder. Translate only the word "or"; preserve KEY=value and KEY=${secret:name} exactly as command syntax examples. This is not a composite format string.</comment>
+  </data>
+</root>

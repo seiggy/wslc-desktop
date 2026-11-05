@@ -11,25 +11,29 @@
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <Platforms>x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <!-- IDEs/solution builds default to AnyCPU, which WinUI self-contained and Win2D reject; fall back to x64. -->
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == '' and ('$(Platform)' == '' or '$(Platform)' == 'AnyCPU')">win-x64</RuntimeIdentifier>
+    <PlatformTarget Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">x64</PlatformTarget>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
     <!-- Unpackaged by default; the release workflow passes -p:WindowsPackageType=MSIX to produce the .msix. -->
     <WindowsPackageType Condition="'$(WindowsPackageType)' == ''">None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <!-- Custom Program.Main for single-instance redirection (see Program.cs). -->
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.4" />
-    <PackageReference Include="Velopack" Version="1.2.161" />
-    <PackageReference Include="Microsoft.WSL.Containers" Version="3.0.3" />
-    <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.4.0" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.*" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+    <PackageReference Include="Velopack" />
+    <PackageReference Include="Microsoft.WSL.Containers" />
+    <PackageReference Include="Microsoft.Graphics.Win2D" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <ProjectReference Include="..\WslcDesktop.Compose\WslcDesktop.Compose.csproj" />
+    <ProjectReference Include="..\WslcDesktop.Core\WslcDesktop.Core.csproj" />
+    <ProjectReference Include="..\WslcDesktop.Sdk\WslcDesktop.Sdk.csproj" />
+    <ProjectReference Include="..\WslcDesktop.Localization\WslcDesktop.Localization.csproj" />
   </ItemGroup>
 
   <ItemGroup>

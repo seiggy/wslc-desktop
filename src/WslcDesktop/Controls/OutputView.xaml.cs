@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -45,20 +46,33 @@ public sealed partial class OutputView : UserControl
             return;
         }
 
+        var appended = new StringBuilder();
+        var appendedCount = 0;
+        var oldLineCount = _lines.Count;
+        var removedLine = false;
         while (_pending.TryDequeue(out var line))
         {
+            if (oldLineCount + appendedCount > 0)
+            {
+                appended.Append('\n');
+            }
+
+            appended.Append(line);
+            appendedCount++;
             _lines.AddLast(line);
             if (_lines.Count > MaxLines)
             {
                 _lines.RemoveFirst();
+                removedLine = true;
             }
         }
 
-        Text.Text = string.Join('\n', _lines);
+        Text.Text = removedLine
+            ? string.Join('\n', _lines)
+            : string.Concat(Text.Text, appended.ToString());
         if (AutoScroll)
         {
-            Scroller.UpdateLayout();
-            Scroller.ChangeView(null, Scroller.ScrollableHeight, null, disableAnimation: true);
+            Scroller.ChangeView(null, double.MaxValue, null, disableAnimation: true);
         }
     }
 }

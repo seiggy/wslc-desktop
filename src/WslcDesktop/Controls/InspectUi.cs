@@ -58,6 +58,14 @@ public static class InspectUi
         Style = (Style)Application.Current.Resources["SecondaryTextStyle"],
     };
 
+    /// <summary>Secondary text for a sentence or paragraph: it wraps instead of clipping.</summary>
+    public static TextBlock Description(string text)
+    {
+        var block = Secondary(text);
+        block.TextWrapping = TextWrapping.Wrap;
+        return block;
+    }
+
     public static TextBlock Mono(string text) => new()
     {
         Text = text,
