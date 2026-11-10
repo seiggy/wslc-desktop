@@ -18,6 +18,8 @@ public sealed class SessionCatalog<T>(
     private readonly object _cacheLock = new();
     private readonly Dictionary<string, int> _invalidatedAt = new(StringComparer.OrdinalIgnoreCase);
     private int _version;
+    private IReadOnlyList<string>? _listed;
+    private DateTimeOffset _listedAt;
 
     public SessionSnapshot<T>? Latest { get; private set; }
 
@@ -29,15 +31,25 @@ public sealed class SessionCatalog<T>(
             var startedAt = Volatile.Read(ref _version);
             var failures = new List<SessionFailure>();
             IReadOnlyList<string> listed;
-            try
+            var listNow = time.GetUtcNow();
+            if (!force && _listed is { } cachedList && listNow - _listedAt < otherSessionInterval)
             {
-                listed = await listSessions();
+                listed = cachedList;
             }
-            catch (Exception e)
+            else
             {
-                // Without the session list, still show the app's own session.
-                listed = new[] { appSession };
-                failures.Add(new SessionFailure(UiStrings.Get("SessionListSource"), e.Message));
+                try
+                {
+                    listed = await listSessions().ConfigureAwait(false);
+                    _listed = listed;
+                    _listedAt = listNow;
+                }
+                catch (Exception e)
+                {
+                    // Without the session list, still show the app's own session.
+                    listed = new[] { appSession };
+                    failures.Add(new SessionFailure(UiStrings.Get("SessionListSource"), e.Message));
+                }
             }
 
             var sessions = listed

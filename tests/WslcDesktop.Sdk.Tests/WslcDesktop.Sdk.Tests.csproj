@@ -2,7 +2,7 @@
 
   <!-- Opt-in integration tests against real WSL. Set WSLC_INTEGRATION=1 to run them; they create a throwaway session. -->
   <PropertyGroup>
-    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetFramework>net11.0-windows10.0.26100.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <Platforms>x64;ARM64</Platforms>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>

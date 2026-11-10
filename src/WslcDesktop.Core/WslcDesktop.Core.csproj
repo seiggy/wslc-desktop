@@ -2,7 +2,7 @@
 
   <!-- UI-free logic shared by the WinUI app and the tests. Must not reference WinUI/WinRT. -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <RootNamespace>WslcDesktop</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

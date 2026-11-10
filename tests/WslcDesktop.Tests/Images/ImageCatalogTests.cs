@@ -136,6 +136,7 @@ public class ImageCatalogTests
         Assert.Equal(2, (await catalog.RefreshAsync()).Images.Count);
 
         listed = ["WslcDesktop"];
+        clock.Now += TimeSpan.FromSeconds(10);
         var snap = await catalog.RefreshAsync();
 
         Assert.Single(snap.Images);

@@ -20,7 +20,7 @@ Update packages (`.nupkg`) and feed indexes on the Releases page are used by the
 
 1. Launch **WSLc Desktop Manager**. It starts its own WSLc session named `WslcDesktop`, separate from the default session used by the `wslc` command line.
 2. If the WSLc components are missing, the app offers an **Install components** button. Use it, then **Retry**.
-3. The **Containers** page opens. Anything you create here lives in the `WslcDesktop` session.
+3. The **Containers** page opens. Anything you create here lives in the `wslc-cli-<user>` default session, shared with the `wslc` CLI.
 
 ![Containers page after first run](/screenshots/containers.png)
 

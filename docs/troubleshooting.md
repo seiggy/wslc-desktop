@@ -16,7 +16,7 @@ If the app offers **Install components**, the WSLc runtime isn't installed. Use 
 
 ## My containers aren't listed
 
-The app only shows its own session. Containers from the `wslc` CLI's default session live elsewhere. See [Environment](/features/environment) and use `wslc --session WslcDesktop ...` from a terminal.
+The app only shows what's in its session and the other visible sessions. By default it joins the `wslc` CLI's default session (`wslc-cli-<user>`), so CLI containers show up automatically; use `wslc` from a terminal with no `--session`.
 
 ## A published port doesn't respond
 

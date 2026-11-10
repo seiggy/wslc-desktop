@@ -19,7 +19,7 @@ public sealed class WslcProcess(string executable = "wslc") : IWslcProcess
         Process process;
         try
         {
-            process = ChildProcessTracker.Start(CreateStartInfo(invocation));
+            process = await Task.Run(() => ChildProcessTracker.Start(CreateStartInfo(invocation)), ct);
         }
         catch (System.ComponentModel.Win32Exception)
         {
@@ -110,7 +110,7 @@ public sealed class WslcProcess(string executable = "wslc") : IWslcProcess
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, timeout?.Token ?? CancellationToken.None);
         try
         {
-            using var process = ChildProcessTracker.Start(info);
+            using var process = await Task.Run(() => ChildProcessTracker.Start(info), linked.Token).ConfigureAwait(false);
             using var registration = linked.Token.Register(() => ChildProcessTracker.Kill(process));
             var stdout = process.StandardOutput.ReadToEndAsync(linked.Token);
             var stderr = process.StandardError.ReadToEndAsync(linked.Token);

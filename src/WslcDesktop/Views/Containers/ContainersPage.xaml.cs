@@ -33,17 +33,26 @@ public sealed partial class ContainersPage : Page
         Loaded += (_, _) =>
         {
             App.Host.Monitor.Updated += OnChanged;
-            App.Host.Telemetry.Updated += OnChanged;
+            App.Host.Telemetry.Updated += OnTelemetry;
             _ = RefreshAsync();
         };
         Unloaded += (_, _) =>
         {
             App.Host.Monitor.Updated -= OnChanged;
-            App.Host.Telemetry.Updated -= OnChanged;
+            App.Host.Telemetry.Updated -= OnTelemetry;
         };
     }
 
     private void OnChanged() => DispatcherQueue.TryEnqueue(() => _ = RefreshAsync());
+
+    // Telemetry only changes the CPU and memory cells, so it never re-reads the container lists.
+    private void OnTelemetry() => DispatcherQueue.TryEnqueue(() =>
+    {
+        foreach (var item in _items)
+        {
+            item.UpdateTelemetry(App.Host.Telemetry.GetLatest(item.Session, item.Name));
+        }
+    });
 
     // The app's session is polled by the monitor; other sessions are merged in (throttled) by the catalog.
     private async Task RefreshAsync(bool force = false)
@@ -89,34 +98,35 @@ public sealed partial class ContainersPage : Page
         var monitor = App.Host.Monitor;
         _sessionFilter.Sync(snap.Sessions);
         var entries = ContainerListing.Build(snap, _sessionFilter.Filter);
-        foreach (var gone in _items.Where(i => entries.All(e => e.Key != i.Key)).ToList())
+        var wanted = entries.Select(e => e.Key).ToHashSet();
+        for (var i = _items.Count - 1; i >= 0; i--)
         {
-            _items.Remove(gone);
+            if (!wanted.Contains(_items[i].Key))
+            {
+                _items.RemoveAt(i);
+            }
         }
 
+        var existing = _items.ToDictionary(i => i.Key);
         for (var n = 0; n < entries.Count; n++)
         {
             var entry = entries[n];
             var row = entry.Row;
-            var item = _items.FirstOrDefault(i => i.Key == entry.Key);
-            if (item is null)
+            if (!existing.TryGetValue(entry.Key, out var item))
             {
                 item = new ContainerItem(entry.Session, entry.IsThisApp, row.Name);
+                existing[entry.Key] = item;
                 _items.Insert(Math.Min(n, _items.Count), item);
             }
-            else
+            else if (n >= _items.Count || !ReferenceEquals(_items[n], item))
             {
-                var current = _items.IndexOf(item);
-                if (current != n)
-                {
-                    _items.Move(current, n);
-                }
+                _items.Move(_items.IndexOf(item), Math.Min(n, _items.Count - 1));
             }
 
-            // Telemetry and restart policies are app features for the app's own session only.
+            // Restart policies are an app feature for the app's own session only.
             item.Update(
                 row,
-                entry.IsThisApp ? App.Host.Telemetry.GetLatest(row.Name) : null,
+                App.Host.Telemetry.GetLatest(entry.Session, row.Name),
                 entry.IsThisApp ? App.Host.Restart.GetInfo(row.Name) : null);
             item.SetHeader(entry.Header);
         }

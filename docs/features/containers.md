@@ -15,7 +15,7 @@ Each row shows:
 
 Select a row to open the [container details](/features/container-details). Use **New container** (top right) to [create one](/features/new-container).
 
-**Start**, **Stop**, **Delete**, logs, shell, inspect and network attach/detach always act on the session that owns the container; the Delete confirmation names that session. Some features exist only for this app's session: **New container** creates containers in `WslcDesktop`, and [restart policies](/features/restart-policy), [telemetry](/features/container-details#telemetry) and [stacks](/features/stacks) don't apply to containers in other sessions (their Restart column is empty).
+**Start**, **Stop**, **Delete**, logs, shell, inspect and network attach/detach always act on the session that owns the container; the Delete confirmation names that session. Some features exist only for this app's session: **New container** creates containers in `WslcDesktop`, and [restart policies](/features/restart-policy) and [stacks](/features/stacks) don't apply to containers in other sessions (their Restart column is empty). [Telemetry](/features/container-details#telemetry) is collected for every session.
 
 ::: tip
 The list refreshes automatically, so containers started from a terminal in the same session show up without a manual refresh.

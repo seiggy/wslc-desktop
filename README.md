@@ -82,7 +82,7 @@ The built-in container shell also has a limit: it runs without a TTY. Use it for
 
 ## Build from source
 
-You'll need a Windows development machine and the **.NET 10 SDK or a newer SDK that can build .NET 10 projects**. The app targets .NET 10 with WinUI 3 and the Windows App SDK. CI currently uses a .NET 11 preview SDK. Running the app still requires WSLc.
+You'll need a Windows development machine and the **.NET 11 SDK**. The app targets .NET 11 with WinUI 3 and the Windows App SDK. Running the app still requires WSLc.
 
 From the repository root, restore using the public NuGet configuration, then build:
 
@@ -96,7 +96,7 @@ The repository's default `nuget.config` points to an internal feed. The explicit
 Run the resulting `WslcDesktop.exe` from:
 
 ```text
-src\WslcDesktop\bin\x64\Debug\net10.0-windows10.0.26100.0\win-x64\
+src\WslcDesktop\bin\x64\Debug\net11.0-windows10.0.26100.0\win-x64\
 ```
 
 For an ARM64 build, use `-p:Platform=ARM64 -r win-arm64` in both commands. Close any running instance before launching a development build.

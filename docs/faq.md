@@ -6,7 +6,7 @@ WSLc Desktop Manager manages WSLc, the container runtime built into WSL, rather 
 
 ## Does it replace the `wslc` CLI?
 
-No. It's a graphical front end. It runs its own `WslcDesktop` session, and you can use the CLI against it with `--session WslcDesktop`.
+No. It's a graphical front end. It joins the `wslc` CLI's default session (`wslc-cli-<user>`), so the CLI and the app share the same containers.
 
 ## Where is my data stored?
 

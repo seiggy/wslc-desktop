@@ -25,7 +25,7 @@ namespace WslcDesktop.Services;
 /// </summary>
 public sealed class WslcHost
 {
-    private const string SessionName = "WslcDesktop";
+    private static readonly string SessionName = DefaultSession.Name();
 
     private readonly string _root = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WslcDesktop");
@@ -62,7 +62,7 @@ public sealed class WslcHost
 
     public WslcHost()
     {
-        Telemetry = new TelemetryService(Cli);
+        Telemetry = new TelemetryService(Cli, ListSessionNamesAsync);
         _router = new BackendRouter(owned: null, CliBackend);
         Operations = new WslcOperations(_router, new HostEffects(this));
         Restart = new RestartEngine(new RestartPolicyStore(), new HostRestartActions(this), TimeProvider.System);
@@ -130,7 +130,7 @@ public sealed class WslcHost
 
         StartedCpuCount = cpuCount;
         StartedMemoryMb = memoryMb;
-        Telemetry.Start(SessionName);
+        Telemetry.Start();
         Monitor.Start(ct => GetContainersAsync(ct));
     }
 

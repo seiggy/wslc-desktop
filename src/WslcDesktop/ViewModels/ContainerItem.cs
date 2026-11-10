@@ -88,6 +88,11 @@ public sealed class ContainerItem(string session, bool isThisApp, string name) :
         ComposeLabels.TryParse(row.Labels, out var project, out var service);
         Stack = project;
         Service = service;
+        UpdateTelemetry(sample);
+    }
+
+    public void UpdateTelemetry(StatsSample? sample)
+    {
         if (IsRunning && sample is not null)
         {
             Cpu = $"{sample.CpuPercent:0.#}%";

@@ -4,17 +4,20 @@ using WslcDesktop.Containers;
 namespace WslcDesktop.Services;
 
 /// <summary>
-/// Polls <c>wslc stats</c> for all running containers and keeps a rolling in-memory history per container,
-/// so charts have data even for the time before the user opened a container.
+/// Polls <c>wslc stats</c> for the running containers of every visible session and keeps a rolling in-memory history
+/// per container, so charts have data even for the time before the user opened a container.
 /// </summary>
-public sealed class TelemetryService(WslcCli cli)
+public sealed class TelemetryService(WslcCli cli, Func<Task<IReadOnlyList<string>>> listSessions)
 {
     public const int Capacity = 150;
     public static readonly TimeSpan Interval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan SessionListInterval = TimeSpan.FromSeconds(10);
 
     private readonly Dictionary<string, List<StatsSample>> _history = new(StringComparer.Ordinal);
     private readonly object _gate = new();
     private CancellationTokenSource? _cts;
+    private IReadOnlyList<string> _sessions = [];
+    private DateTimeOffset _sessionsAt;
 
     public event Action? Updated;
 
@@ -22,7 +25,7 @@ public sealed class TelemetryService(WslcCli cli)
     public volatile bool Paused;
     public string? LastError { get; private set; }
 
-    public void Start(string session)
+    public void Start()
     {
         if (_cts is not null)
         {
@@ -30,7 +33,7 @@ public sealed class TelemetryService(WslcCli cli)
         }
 
         _cts = new CancellationTokenSource();
-        _ = LoopAsync(session, _cts.Token);
+        _ = LoopAsync(_cts.Token);
     }
 
     public void Stop()
@@ -39,23 +42,86 @@ public sealed class TelemetryService(WslcCli cli)
         _cts = null;
     }
 
-    public IReadOnlyList<StatsSample> GetHistory(string container)
+    private static string Key(string session, string container) => $"{session}|{container}";
+
+    public IReadOnlyList<StatsSample> GetHistory(string session, string container)
     {
         lock (_gate)
         {
-            return _history.TryGetValue(container, out var list) ? list.ToArray() : Array.Empty<StatsSample>();
+            return _history.TryGetValue(Key(session, container), out var list) ? list.ToArray() : Array.Empty<StatsSample>();
         }
     }
 
-    public StatsSample? GetLatest(string container)
+    public StatsSample? GetLatest(string session, string container)
     {
         lock (_gate)
         {
-            return _history.TryGetValue(container, out var list) && list.Count > 0 ? list[^1] : null;
+            return _history.TryGetValue(Key(session, container), out var list) && list.Count > 0 ? list[^1] : null;
         }
     }
 
-    private async Task LoopAsync(string session, CancellationToken ct)
+    private async Task<IReadOnlyList<string>> SessionsAsync(CancellationToken ct)
+    {
+        var now = DateTimeOffset.UtcNow;
+        if (_sessions.Count == 0 || now - _sessionsAt >= SessionListInterval)
+        {
+            _sessions = await listSessions().WaitAsync(ct).ConfigureAwait(false);
+            _sessionsAt = now;
+        }
+
+        return _sessions;
+    }
+
+    private async Task SampleAsync(CancellationToken ct)
+    {
+        var sessions = await SessionsAsync(ct).ConfigureAwait(false);
+        var results = await Task.WhenAll(sessions.Select(async s =>
+        {
+            try
+            {
+                return (Session: s, Snapshot: (IReadOnlyDictionary<string, StatsSample>?)await cli.GetStatsAsync(s, ct).ConfigureAwait(false), Error: (string?)null);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                return (s, null, e.Message);
+            }
+        })).ConfigureAwait(false);
+
+        lock (_gate)
+        {
+            var sampled = results.Where(r => r.Snapshot is not null).Select(r => r.Session).ToHashSet(StringComparer.Ordinal);
+            var live = results.Where(r => r.Snapshot is not null)
+                .SelectMany(r => r.Snapshot!.Keys.Select(name => Key(r.Session, name)))
+                .ToHashSet(StringComparer.Ordinal);
+            // A stopped container's old samples would mislead the chart on restart; failed sessions keep theirs.
+            foreach (var key in _history.Keys.Where(k => !live.Contains(k) && (sampled.Contains(k[..k.IndexOf('|')]) || !sessions.Contains(k[..k.IndexOf('|')]))).ToList())
+            {
+                _history.Remove(key);
+            }
+
+            foreach (var r in results.Where(r => r.Snapshot is not null))
+            {
+                foreach (var (name, sample) in r.Snapshot!)
+                {
+                    var key = Key(r.Session, name);
+                    if (!_history.TryGetValue(key, out var list))
+                    {
+                        _history[key] = list = [];
+                    }
+
+                    list.Add(sample);
+                    if (list.Count > Capacity)
+                    {
+                        list.RemoveAt(0);
+                    }
+                }
+            }
+        }
+
+        LastError = results.FirstOrDefault(r => r.Error is not null).Error;
+    }
+
+    private async Task LoopAsync(CancellationToken ct)
     {
         using var timer = new PeriodicTimer(Interval);
         do
@@ -67,31 +133,7 @@ public sealed class TelemetryService(WslcCli cli)
 
             try
             {
-                var snapshot = await cli.GetStatsAsync(session, ct);
-                lock (_gate)
-                {
-                    foreach (var name in _history.Keys.Where(k => !snapshot.ContainsKey(k)).ToList())
-                    {
-                        // A stopped container's old samples would mislead the chart on restart.
-                        _history.Remove(name);
-                    }
-
-                    foreach (var (name, sample) in snapshot)
-                    {
-                        if (!_history.TryGetValue(name, out var list))
-                        {
-                            _history[name] = list = [];
-                        }
-
-                        list.Add(sample);
-                        if (list.Count > Capacity)
-                        {
-                            list.RemoveAt(0);
-                        }
-                    }
-                }
-
-                LastError = null;
+                await SampleAsync(ct).ConfigureAwait(false);
             }
             catch (Exception e) when (e is not OperationCanceledException)
             {
@@ -103,9 +145,8 @@ public sealed class TelemetryService(WslcCli cli)
                 Updated?.Invoke();
             }
         }
-        while (await WaitAsync(timer, ct));
+        while (await WaitAsync(timer, ct).ConfigureAwait(false));
     }
-
     private static async Task<bool> WaitAsync(PeriodicTimer timer, CancellationToken ct)
     {
         try

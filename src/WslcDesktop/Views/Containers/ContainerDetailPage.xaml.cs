@@ -536,14 +536,7 @@ public sealed partial class ContainerDetailPage : Page
 
     private void RenderTelemetry()
     {
-        if (!IsAppSession)
-        {
-            TelemetryNotice.IsOpen = true;
-            TelemetryNotice.Message = UiStrings.Format("TelemetryIsOnlyCollectedForContainersInThisApp", App.Host.SessionId);
-            return;
-        }
-
-        var history = App.Host.Telemetry.GetHistory(_name);
+        var history = App.Host.Telemetry.GetHistory(_session, _name);
         if (history.Count == 0 || !IsRunning)
         {
             TelemetryNotice.IsOpen = true;
