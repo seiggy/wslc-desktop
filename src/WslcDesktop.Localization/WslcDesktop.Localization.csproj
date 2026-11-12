@@ -3,5 +3,6 @@
     <TargetFramework>net11.0</TargetFramework>
     <RootNamespace>WslcDesktop.Localization</RootNamespace>
     <NeutralLanguage>en</NeutralLanguage>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 </Project>
