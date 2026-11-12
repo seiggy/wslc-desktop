@@ -80,4 +80,54 @@ public sealed class SdkSessionBackendTests : IAsyncLifetime
 
         await backend.DeleteImageAsync("docker.io/library/alpine:3");
     }
+
+    [SkippableFact]
+    public async Task Networks_are_created_listed_with_usage_and_removed_through_the_sdk()
+    {
+        Skip.IfNot(Enabled, "Set WSLC_INTEGRATION=1 to run against real WSL.");
+        var backend = _backend!;
+
+        await backend.CreateNetworkAsync("itest-net", "bridge", "10.123.0.0/24", "10.123.0.1", isInternal: true);
+        try
+        {
+            Assert.Contains("itest-net", await backend.ListNetworkNamesAsync());
+
+            var row = Assert.Single(await backend.ListResourcesAsync(Resources.ResourceKind.Network), r => r.Name == "itest-net");
+            Assert.Equal("bridge", row.Col1);
+            Assert.True(row.CanRemove);
+            Assert.Empty(row.UsedBy);
+            Assert.Contains(await backend.ListResourcesAsync(Resources.ResourceKind.Network), r => r.Name == "bridge" && !r.CanRemove);
+
+            // The CLI sees what the SDK made, with the requested subnet and the internal flag.
+            var inspect = await backend.InspectResourceAsync(Resources.ResourceKind.Network, "itest-net");
+            Assert.Contains("10.123.0.0/24", inspect);
+            Assert.Contains("\"Internal\":true", inspect.Replace(" ", string.Empty));
+
+            await backend.PullImageAsync("docker.io/library/alpine:3", progress: null);
+            // SDK-created containers default to no networking, so this one is attached at creation instead.
+            await backend.CreateContainerAsync(new Containers.Creation.NewContainerSpec(
+                "itest-net-user", "docker.io/library/alpine:3", ["sleep", "300"], [], [], [], "itest-net"));
+            try
+            {
+                var used = Assert.Single(await backend.ListResourcesAsync(Resources.ResourceKind.Network), r => r.Name == "itest-net");
+                Assert.Equal(["itest-net-user"], used.UsedBy);
+
+                // What the store reads: rows without usage, and every container inspected in-process.
+                Assert.Contains(await backend.ListResourceRowsAsync(Resources.ResourceKind.Network), r => r.Name == "itest-net" && r.UsedBy.Count == 0);
+                var inspected = await backend.InspectContainersAsync(["itest-net-user", "no-such-container"]);
+                var json = Assert.Single(inspected).Value;
+                Assert.Equal(["itest-net-user"], Resources.ResourceUsage.From(Resources.ResourceUsage.Objects(json).Select(o => ("itest-net-user", o))).For(Resources.ResourceKind.Network, "itest-net"));
+            }
+            finally
+            {
+                await backend.DeleteContainerAsync("itest-net-user");
+            }
+        }
+        finally
+        {
+            await backend.RemoveResourceAsync(Resources.ResourceKind.Network, "itest-net");
+        }
+
+        Assert.DoesNotContain("itest-net", await backend.ListNetworkNamesAsync());
+    }
 }

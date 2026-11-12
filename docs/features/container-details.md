@@ -38,6 +38,8 @@ If the container is stopped, the tab offers **Start container** instead.
 
 Live charts for **CPU**, **Memory**, **Network** (receive and transmit per second) and **Disk I/O** (read and write per second), plus process count and running totals.
 
+Samples are taken every 2 seconds while the page is open (and every 5 seconds while the Containers list is showing), never while the window is hidden in the tray. The charts keep up to the last 150 samples, and a container that stops starts a fresh history when it runs again.
+
 ## Inspect
 
 ![Inspect view](/screenshots/container-inspect.png)

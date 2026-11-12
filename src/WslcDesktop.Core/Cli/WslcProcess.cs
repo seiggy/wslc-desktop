@@ -28,17 +28,7 @@ public sealed class WslcProcess(string executable = "wslc") : IWslcProcess
 
         using (process)
         {
-            using var registration = ct.Register(() =>
-            {
-                try
-                {
-                    process.Kill(entireProcessTree: true);
-                }
-                catch (InvalidOperationException)
-                {
-                    // Already exited.
-                }
-            });
+            using var registration = ct.Register(() => ChildProcessTracker.Kill(process));
 
             async Task Pump(StreamReader reader)
             {

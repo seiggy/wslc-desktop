@@ -10,8 +10,11 @@ using WslcDesktop.Services;
 using WslcDesktop.Cli;
 using WslcDesktop.Containers;
 using WslcDesktop.Containers.Inspection;
+using WslcDesktop.Data;
 using WslcDesktop.Restart;
+using WslcDesktop.Secrets;
 using WslcDesktop.ViewModels;
+using WslcDesktop.Views.Shared;
 
 namespace WslcDesktop.Views.Containers;
 
@@ -19,16 +22,15 @@ public sealed partial class ContainerDetailPage : Page
 {
     private string _name = string.Empty;
     private string _session = string.Empty;
-    private readonly DispatcherTimer _otherSessionTimer = new() { Interval = TimeSpan.FromSeconds(3) };
+    private StoreBinding? _binding;
+    private IDisposable? _charts;
+    private readonly DispatcherTimer _countdown = new() { Interval = TimeSpan.FromSeconds(1) };
 
     private bool IsAppSession => App.Host.IsAppSession(_session);
 
-    private bool HasLoaded => IsAppSession ? App.Host.Monitor.HasLoaded : App.Host.ContainerCatalog.Latest is not null;
+    private bool HasLoaded => App.Host.Store.HasLoaded(DataKind.Containers, _session);
 
-    private ContainerRow? FindRow() => IsAppSession
-        ? App.Host.Monitor.Find(_name)
-        : App.Host.ContainerCatalog.Latest?.Items
-            .FirstOrDefault(e => string.Equals(e.Session, _session, StringComparison.OrdinalIgnoreCase) && e.Item.Name == _name)?.Item;
+    private ContainerRow? FindRow() => App.Host.Store.FindContainer(_session, _name);
     private bool _ready;
     private CancellationTokenSource? _logCts;
     private IShellProcess? _shell;
@@ -36,50 +38,55 @@ public sealed partial class ContainerDetailPage : Page
     public ContainerDetailPage()
     {
         InitializeComponent();
+        // Ticks only re-render while a restart countdown is showing.
+        _countdown.Tick += (_, _) =>
+        {
+            if (App.Host.Restart.NextPending is not null)
+            {
+                RenderRestartStatus();
+            }
+        };
         Loaded += (_, _) =>
         {
             _ready = true;
             ApplyTerminalFont();
             App.Host.Settings.TerminalChanged += ApplyTerminalFont;
-            App.Host.Telemetry.Updated += OnTelemetryUpdated;
-            App.Host.Monitor.Updated += OnTelemetryUpdated;
-            if (!IsAppSession)
-            {
-                // Other sessions aren't polled by the monitor, so this page keeps its container current.
-                _otherSessionTimer.Tick += async (_, _) =>
-                {
-                    try
-                    {
-                        await App.Host.ContainerCatalog.RefreshAsync();
-                    }
-                    catch
-                    {
-                        return;
-                    }
-
-                    OnTelemetryUpdated();
-                };
-                _otherSessionTimer.Start();
-                _ = App.Host.ContainerCatalog.RefreshAsync().ContinueWith(_ => DispatcherQueue.TryEnqueue(ApplyState));
-            }
-
+            App.Host.Restart.Changed += OnRestartChanged;
+            _countdown.Start();
             _wasRunning = IsRunning;
             LoadPolicy();
             RenderRestartStatus();
             StartLogs();
-            ApplyState();
-            RenderTelemetry();
-            _ = LoadInspectAsync();
+            // The store keeps this container's row and inspection current in every session, so this renders at once.
+            _binding = new StoreBinding(DispatcherQueue, OnStoreChanged, [DataKind.Containers, DataKind.Inspect], DataKind.Stats);
+            // Charts sample just this container, at the chart rate, while the page is open.
+            _charts = App.Host.Store.WatchStats(_session, _name);
+            if (App.Host.Store.InspectJson(_session, _name) is null)
+            {
+                _ = LoadInspectAsync();
+            }
         };
         Unloaded += (_, _) =>
         {
-            App.Host.Telemetry.Updated -= OnTelemetryUpdated;
-            App.Host.Monitor.Updated -= OnTelemetryUpdated;
-            _otherSessionTimer.Stop();
+            _countdown.Stop();
+            App.Host.Restart.Changed -= OnRestartChanged;
+            _binding?.Dispose();
+            _binding = null;
+            _charts?.Dispose();
+            _charts = null;
             App.Host.Settings.TerminalChanged -= ApplyTerminalFont;
             _logCts?.Cancel();
             StopShell();
         };
+    }
+
+    private void OnRestartChanged() => DispatcherQueue.TryEnqueue(RenderRestartStatus);
+
+    private void OnStoreChanged()
+    {
+        ApplyState();
+        RenderTelemetry();
+        RenderInspect();
     }
 
     private bool _wasRunning;
@@ -160,7 +167,8 @@ public sealed partial class ContainerDetailPage : Page
             ShellStoppedNotice.Message = ex.Message;
         }
 
-        await App.Host.Monitor.RefreshAsync();
+        await App.Host.Store.RefreshAsync(DataKind.Containers, _session);
+        OnStoreChanged();
     }
 
     private async void Inspect_Click(object sender, RoutedEventArgs e) => await LoadInspectAsync();
@@ -188,7 +196,8 @@ public sealed partial class ContainerDetailPage : Page
         IReadOnlyList<string> all;
         try
         {
-            all = await App.Host.Operations.Resources.NetworkNamesAsync(App.Host.Handle(_session));
+            all = App.Host.Store.NetworkNamesOf(_session)
+                ?? await App.Host.Operations.Resources.NetworkNamesAsync(App.Host.Handle(_session));
         }
         catch (Exception ex)
         {
@@ -197,7 +206,7 @@ public sealed partial class ContainerDetailPage : Page
             return;
         }
 
-        var connected = (await App.Host.Operations.Containers.InspectAsync(App.Host.Handle(_session), _name)) is { } json
+        var connected = App.Host.Store.InspectJson(_session, _name) is { } json
             ? ContainerDetail.Parse(json).Networks.Select(n => n.Name).ToHashSet()
             : [];
         var choices = all.Where(n => !connected.Contains(n)).ToList();
@@ -238,12 +247,41 @@ public sealed partial class ContainerDetailPage : Page
         await LoadInspectAsync();
     }
 
+    /// <summary>Reads this session's inspection now (Reload, or after a change made here), then renders it.</summary>
     private async Task LoadInspectAsync()
     {
+        await App.Host.Store.RefreshAsync(DataKind.Inspect, _session);
+        _renderedInspect = null;
+        RenderInspect();
+    }
+
+    private string? _renderedInspect;
+
+    // Renders from the store's inspection, and only rebuilds the cards when this container's JSON actually changed.
+    private void RenderInspect()
+    {
+        var raw = App.Host.Store.InspectJson(_session, _name);
+        if (raw is null)
+        {
+            if (App.Host.Store.LastError(DataKind.Inspect, _session) is { } error)
+            {
+                InspectError.Message = error;
+                InspectError.IsOpen = true;
+            }
+
+            return;
+        }
+
+        if (string.Equals(raw, _renderedInspect, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _renderedInspect = raw;
         InspectError.IsOpen = false;
         try
         {
-            var json = await App.Host.Operations.Containers.InspectAsync(App.Host.Handle(_session), _name);
+            var json = SecretService.Default.Redact(raw);
             var d = ContainerDetail.Parse(json);
             InspectPanel.Children.Clear();
 
@@ -424,7 +462,7 @@ public sealed partial class ContainerDetailPage : Page
         ShellInput.Visibility = Visibility.Collapsed;
         try
         {
-            await Terminal.StartAsync(App.Host.SessionId, _name, shell, code => DispatcherQueue.TryEnqueue(() =>
+            var started = await Terminal.StartAsync(App.Host.SessionId, _name, shell, code => DispatcherQueue.TryEnqueue(() =>
             {
                 if (_terminalActive)
                 {
@@ -432,6 +470,11 @@ public sealed partial class ContainerDetailPage : Page
                     StopShell(keepOutput: true);
                 }
             }));
+            if (!started)
+            {
+                // StopShell ran while the terminal was starting (for example, the page was left) and reset the UI.
+                return true;
+            }
         }
         catch (Exception ex)
         {
@@ -500,11 +543,9 @@ public sealed partial class ContainerDetailPage : Page
     {
         _shell?.Dispose();
         _shell = null;
-        if (_terminalActive)
-        {
-            Terminal.Stop();
-            _terminalActive = false;
-        }
+        // Unconditional: a terminal still starting isn't active yet, and Stop() makes that start dispose its session.
+        Terminal.Stop();
+        _terminalActive = false;
 
         ShellToggle.Content = UiStrings.Get("StartShell");
         ShellInput.IsEnabled = false;
@@ -526,21 +567,15 @@ public sealed partial class ContainerDetailPage : Page
 
     // Telemetry
 
-    private void OnTelemetryUpdated() => DispatcherQueue.TryEnqueue(() =>
-    {
-        ApplyState();
-        RenderTelemetry();
-    });
-
     private void Chart_SizeChanged(object sender, SizeChangedEventArgs e) => RenderTelemetry();
 
     private void RenderTelemetry()
     {
-        var history = App.Host.Telemetry.GetHistory(_session, _name);
+        var history = App.Host.Store.Telemetry.GetHistory(_session, _name);
         if (history.Count == 0 || !IsRunning)
         {
             TelemetryNotice.IsOpen = true;
-            TelemetryNotice.Message = App.Host.Telemetry.LastError ?? (IsRunning
+            TelemetryNotice.Message = App.Host.Store.LastError(DataKind.Stats, _session) ?? (IsRunning
                 ? UiStrings.Get("WaitingForTheFirstSample")
                 : UiStrings.Get("ThisContainerIsStoppedTelemetryIsCapturedWhileIt"));
             return;
@@ -593,12 +628,9 @@ public sealed partial class ContainerDetailPage : Page
             return;
         }
 
-        var step = width / (TelemetryService.Capacity - 1);
         var points = new PointCollection();
-        for (var i = 0; i < values.Count; i++)
+        foreach (var (x, y) in Sparkline.Points(values, width, height, max, TelemetryHistory.Capacity))
         {
-            var x = width - (values.Count - 1 - i) * step;
-            var y = height - Math.Clamp(values[i] / max, 0, 1) * (height - 2) - 1;
             points.Add(new Windows.Foundation.Point(x, y));
         }
 

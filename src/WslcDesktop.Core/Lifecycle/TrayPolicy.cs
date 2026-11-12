@@ -34,8 +34,4 @@ public static class TrayPolicy
     public static string StatusLine(int? running, int? total) => running is null
         ? UiStrings.Get("StatusUnavailable")
         : UiStrings.Format("OfContainersRunning", running, total ?? running);
-
-    // Hidden windows poll slowly: the tray only needs a running count.
-    public static TimeSpan PollInterval(bool windowHidden, TimeSpan visible) =>
-        windowHidden ? TimeSpan.FromSeconds(10) : visible;
 }

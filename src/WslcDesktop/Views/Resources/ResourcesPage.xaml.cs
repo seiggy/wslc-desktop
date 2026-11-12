@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using WslcDesktop.Services;
+using WslcDesktop.Data;
 using WslcDesktop.Resources;
 using WslcDesktop.Sessions;
 using WslcDesktop.ViewModels;
@@ -13,10 +14,9 @@ namespace WslcDesktop.Views.Resources;
 /// <summary>Lists volumes or networks; the navigation parameter selects which.</summary>
 public sealed partial class ResourcesPage : Page
 {
-    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(5) };
+    private StoreBinding? _binding;
     private readonly System.Collections.ObjectModel.ObservableCollection<ResourceItem> _items = [];
     private ResourceKind _kind;
-    private bool _busy;
     private readonly SessionFilterController _sessionFilter;
     private SessionSnapshot<ResourceRow>? _snapshot;
 
@@ -27,14 +27,16 @@ public sealed partial class ResourcesPage : Page
         List.ItemsSource = _items;
         _sessionFilter = new SessionFilterController(SessionFilter);
         _sessionFilter.Changed += Apply;
-        Loaded += async (_, _) =>
+        // "Used by" comes from the store's container inspections, so those are watched too.
+        Loaded += (_, _) => _binding = new StoreBinding(DispatcherQueue, Refresh, [KindData, DataKind.Inspect], DataKind.Sessions);
+        Unloaded += (_, _) =>
         {
-            _timer.Start();
-            await RefreshAsync();
+            _binding?.Dispose();
+            _binding = null;
         };
-        Unloaded += (_, _) => _timer.Stop();
-        _timer.Tick += async (_, _) => await RefreshAsync();
     }
+
+    private DataKind KindData => _kind == ResourceKind.Volume ? DataKind.Volumes : DataKind.Networks;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -44,34 +46,17 @@ public sealed partial class ResourcesPage : Page
         Col3Header.Text = _kind == ResourceKind.Volume ? UiStrings.Get("LabelScope") : UiStrings.Get("LabelAccess");
     }
 
-    private async Task RefreshAsync(bool force = false)
+    private void Refresh()
     {
-        if (_busy)
-        {
-            return;
-        }
+        _snapshot = App.Host.Store.Resources(_kind);
+        Apply();
+    }
 
-        _busy = true;
-        try
-        {
-            _snapshot = await App.Host.ResourceCatalog(_kind).RefreshAsync(force);
-            if (ErrorBar.IsOpen)
-            {
-                ErrorBar.IsOpen = false;
-            }
-
-            Apply();
-        }
-        catch (Exception e)
-        {
-            ErrorBar.Title = UiStrings.Get(_kind == ResourceKind.Volume ? "CouldNotListVolumes" : "CouldNotListNetworks");
-            ErrorBar.Message = e.Message;
-            ErrorBar.IsOpen = true;
-        }
-        finally
-        {
-            _busy = false;
-        }
+    // Operations mark the session dirty; reading now shows the result without waiting for the scheduler.
+    private async Task RefreshAsync(string session)
+    {
+        await App.Host.Store.RefreshAsync(KindData, session);
+        Refresh();
     }
 
     // Update rows in place so the list never flickers or loses scroll/focus on a poll.
@@ -250,12 +235,9 @@ public sealed partial class ResourcesPage : Page
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
-            ResourceCatalogInvalidate();
-            await RefreshAsync(true);
+            await RefreshAsync(_creationSession);
         }
     }
-
-    private void ResourceCatalogInvalidate() => App.Host.ResourceCatalog(_kind).Invalidate(_creationSession);
 
     private string _creationSession = string.Empty;
 
@@ -275,7 +257,7 @@ public sealed partial class ResourcesPage : Page
             return;
         }
 
-        await ActAsync(UiStrings.Get(_kind == ResourceKind.Volume ? "CouldNotPruneVolumes" : "CouldNotPruneNetworks"), () => App.Host.Operations.Resources.PruneAsync(App.Host.Handle(PruneSession), _kind));
+        await ActAsync(PruneSession, UiStrings.Get(_kind == ResourceKind.Volume ? "CouldNotPruneVolumes" : "CouldNotPruneNetworks"), () => App.Host.Operations.Resources.PruneAsync(App.Host.Handle(PruneSession), _kind));
     }
 
     private async void Remove_Click(object sender, RoutedEventArgs e)
@@ -300,10 +282,10 @@ public sealed partial class ResourcesPage : Page
             return;
         }
 
-        await ActAsync(UiStrings.Format("CouldnTRemove", name), () => App.Host.Operations.Resources.RemoveAsync(App.Host.Handle(target.Session), _kind, name));
+        await ActAsync(target.Session, UiStrings.Format("CouldnTRemove", name), () => App.Host.Operations.Resources.RemoveAsync(App.Host.Handle(target.Session), _kind, name));
     }
 
-    private async Task ActAsync(string failureTitle, Func<Task> action)
+    private async Task ActAsync(string session, string failureTitle, Func<Task> action)
     {
         try
         {
@@ -314,6 +296,6 @@ public sealed partial class ResourcesPage : Page
             await new ContentDialog { XamlRoot = XamlRoot, Title = failureTitle, Content = ex.Message, CloseButtonText = UiStrings.Get("ActionClose") }.ShowAsync();
         }
 
-        await RefreshAsync(true);
+        await RefreshAsync(session);
     }
 }

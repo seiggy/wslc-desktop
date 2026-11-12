@@ -5,7 +5,7 @@ The **Images** page lists local images from **every visible WSLc session** with 
 ![Images list](/screenshots/images.png)
 
 - The **Session** column shows the owning session; this app's session carries a **This app** badge. Use the filter at the top right to show all sessions or just one.
-- Sessions that can't be read are skipped and reported in a warning bar; their last known images stay on screen. Other sessions refresh every 10 seconds, this app's session every 3.
+- Sessions that can't be read are skipped and reported in a warning bar; their last known images stay on screen. WSLc reports no events for images, so the list is re-read every 15 seconds while the page is open (every 2 minutes in the background), and straight away after a change you make in the app (pulls, deletes, compose stacks, creating or removing containers).
 - **Pull** an image by typing a reference such as `docker.io/library/alpine:latest` in the box at the top. It is pulled into this app's session. Private registries need a [sign-in](/settings#registries).
 - **Run** (the play button on a row) opens the [New container](/features/new-container) dialog with that image already filled in. Untagged images use their image ID. Set the name, ports, mounts and environment (including `${secret:NAME}` tokens), then **Create**. Afterwards you can jump straight to the new container's details. Containers are always created in this app's session, so for an image owned by another session the app asks first and then pulls the same reference into this app's session (the original is left alone). Untagged images and locally built images can't be pulled, so tag or push them first, or run them with `wslc --session <name>`.
 - **Delete** removes the image from the session that owns it.

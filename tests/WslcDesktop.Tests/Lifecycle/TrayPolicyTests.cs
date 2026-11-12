@@ -56,12 +56,4 @@ public class TrayPolicyTests
         Assert.Equal("2 of 3 containers running", TrayPolicy.StatusLine(2, 3));
         Assert.Equal("Status unavailable", TrayPolicy.StatusLine(null, null));
     }
-
-    [Fact]
-    public void HiddenWindowPollsSlower()
-    {
-        var visible = TimeSpan.FromSeconds(2);
-        Assert.Equal(visible, TrayPolicy.PollInterval(false, visible));
-        Assert.True(TrayPolicy.PollInterval(true, visible) > visible);
-    }
 }

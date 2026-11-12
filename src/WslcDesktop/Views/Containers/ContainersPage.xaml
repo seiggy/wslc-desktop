@@ -43,16 +43,20 @@
                 <ColumnDefinition Width="170" />
                 <ColumnDefinition Width="110" />
                 <ColumnDefinition Width="150" />
-                <ColumnDefinition Width="64" />
-                <ColumnDefinition Width="84" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="136" />
             </Grid.ColumnDefinitions>
             <TextBlock Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=LabelName}" />
             <TextBlock Grid.Column="1" Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=LabelSession}" />
             <TextBlock Grid.Column="2" Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=LabelState}" />
             <TextBlock Grid.Column="3" Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=LabelRestart}" />
-            <TextBlock Grid.Column="4" Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=LabelCpu}" />
-            <TextBlock Grid.Column="5" Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=LabelMemory}" />
+            <!-- Usage cells collapse as the list narrows: network and disk first, then the CPU and memory charts, then their values. -->
+            <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="16">
+                <TextBlock Width="56" Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=Network}" TextTrimming="CharacterEllipsis" Visibility="{x:Bind Columns.IoVisibility, Mode=OneWay}" />
+                <TextBlock Width="56" Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=DiskIO}" TextTrimming="CharacterEllipsis" Visibility="{x:Bind Columns.IoVisibility, Mode=OneWay}" />
+                <TextBlock Width="{x:Bind Columns.CpuWidth, Mode=OneWay}" Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=LabelCpu}" Visibility="{x:Bind Columns.ValueVisibility, Mode=OneWay}" />
+                <TextBlock Width="{x:Bind Columns.MemoryWidth, Mode=OneWay}" Style="{StaticResource ColumnHeaderStyle}" Text="{localization:Localized Key=LabelMemory}" Visibility="{x:Bind Columns.ValueVisibility, Mode=OneWay}" />
+            </StackPanel>
         </Grid>
 
         <ListView
@@ -61,7 +65,8 @@
             IsItemClickEnabled="True"
             ItemClick="List_ItemClick"
             ItemContainerStyle="{StaticResource RowItemStyle}"
-            SelectionMode="None">
+            SelectionMode="None"
+            SizeChanged="List_SizeChanged">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="svc:ContainerItem">
                     <StackPanel>
@@ -77,8 +82,7 @@
                             <ColumnDefinition Width="170" />
                             <ColumnDefinition Width="110" />
                             <ColumnDefinition Width="150" />
-                            <ColumnDefinition Width="64" />
-                            <ColumnDefinition Width="84" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="136" />
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
@@ -97,9 +101,51 @@
                             <TextBlock Text="{x:Bind State, Mode=OneWay}" />
                         </StackPanel>
                         <TextBlock Grid.Column="3" Foreground="{x:Bind RestartBrush, Mode=OneWay}" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind Restart, Mode=OneWay}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Restart, Mode=OneWay}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="4" Text="{x:Bind Cpu, Mode=OneWay}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="5" Text="{x:Bind Memory, Mode=OneWay}" VerticalAlignment="Center" />
-                        <StackPanel Grid.Column="6" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                            <Grid
+                                Width="56"
+                                Height="20"
+                                AutomationProperties.Name="{x:Bind NetTip, Mode=OneWay}"
+                                Background="Transparent"
+                                ToolTipService.ToolTip="{x:Bind NetTip, Mode=OneWay}"
+                                Visibility="{x:Bind Columns.IoVisibility, Mode=OneWay}">
+                                <Polyline Points="{x:Bind NetRxPoints, Mode=OneWay}" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="1.5" />
+                                <Polyline Points="{x:Bind NetTxPoints, Mode=OneWay}" Stroke="{ThemeResource SystemFillColorCautionBrush}" StrokeThickness="1.5" />
+                            </Grid>
+                            <Grid
+                                Width="56"
+                                Height="20"
+                                AutomationProperties.Name="{x:Bind DiskTip, Mode=OneWay}"
+                                Background="Transparent"
+                                ToolTipService.ToolTip="{x:Bind DiskTip, Mode=OneWay}"
+                                Visibility="{x:Bind Columns.IoVisibility, Mode=OneWay}">
+                                <Polyline Points="{x:Bind DiskReadPoints, Mode=OneWay}" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="1.5" />
+                                <Polyline Points="{x:Bind DiskWritePoints, Mode=OneWay}" Stroke="{ThemeResource SystemFillColorCautionBrush}" StrokeThickness="1.5" />
+                            </Grid>
+                            <StackPanel Width="{x:Bind Columns.CpuWidth, Mode=OneWay}" Orientation="Horizontal" Spacing="8" Visibility="{x:Bind Columns.ValueVisibility, Mode=OneWay}">
+                                <Polyline
+                                    Width="56"
+                                    Height="20"
+                                    AutomationProperties.AccessibilityView="Raw"
+                                    Points="{x:Bind CpuPoints, Mode=OneWay}"
+                                    Stroke="{ThemeResource AccentFillColorDefaultBrush}"
+                                    StrokeThickness="1.5"
+                                    Visibility="{x:Bind Columns.ChartVisibility, Mode=OneWay}" />
+                                <TextBlock Text="{x:Bind Cpu, Mode=OneWay}" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel Width="{x:Bind Columns.MemoryWidth, Mode=OneWay}" Orientation="Horizontal" Spacing="8" Visibility="{x:Bind Columns.ValueVisibility, Mode=OneWay}">
+                                <Polyline
+                                    Width="56"
+                                    Height="20"
+                                    AutomationProperties.AccessibilityView="Raw"
+                                    Points="{x:Bind MemoryPoints, Mode=OneWay}"
+                                    Stroke="{ThemeResource AccentFillColorDefaultBrush}"
+                                    StrokeThickness="1.5"
+                                    Visibility="{x:Bind Columns.ChartVisibility, Mode=OneWay}" />
+                                <TextBlock Text="{x:Bind Memory, Mode=OneWay}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" VerticalAlignment="Center">
                             <Button
                                 AutomationProperties.Name="{localization:Localized Key=ActionStart}"
                                 Click="Start_Click"

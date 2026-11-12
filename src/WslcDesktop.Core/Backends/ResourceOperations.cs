@@ -8,8 +8,7 @@ public sealed class ResourceOperations(BackendRouter router, IOperationEffects e
 {
     public Task<IReadOnlyList<ResourceRow>> ListAsync(SessionHandle session, ResourceKind kind) => router.For(session).ListResourcesAsync(kind);
 
-    public async Task<IReadOnlyList<string>> NetworkNamesAsync(SessionHandle session) =>
-        (await ListAsync(session, ResourceKind.Network)).Select(r => r.Name).ToList();
+    public Task<IReadOnlyList<string>> NetworkNamesAsync(SessionHandle session) => router.For(session).ListNetworkNamesAsync();
 
     public async Task<string> InspectAsync(SessionHandle session, ResourceKind kind, string name) =>
         redact(await router.For(session).InspectResourceAsync(kind, name));

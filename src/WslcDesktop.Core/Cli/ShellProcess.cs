@@ -59,15 +59,7 @@ public sealed class ShellProcess : IShellProcess
         }
 
         _disposed = true;
-        try
-        {
-            _process.Kill(entireProcessTree: true);
-        }
-        catch (InvalidOperationException)
-        {
-            // Already exited.
-        }
-
+        ChildProcessTracker.Kill(_process);
         _process.Dispose();
     }
 

@@ -110,6 +110,14 @@ public sealed partial class ResourceDetailPage : Page
                 : [];
         }
 
+        // The store derives volume usage from its container inspections; fall back to a read only if it has none yet.
+        var known = App.Host.Store.Resources(ResourceKind.Volume).Items
+            .FirstOrDefault(e => string.Equals(e.Session, _session, StringComparison.OrdinalIgnoreCase) && e.Item.Name == _name);
+        if (known is not null && App.Host.Store.HasLoaded(WslcDesktop.Data.DataKind.Inspect, _session))
+        {
+            return known.Item.UsedBy.ToList();
+        }
+
         try
         {
             var rows = await App.Host.Operations.Resources.ListAsync(new SessionHandle(_session, App.Host.IsAppSession(_session)), ResourceKind.Volume);

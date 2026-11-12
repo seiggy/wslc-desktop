@@ -2166,7 +2166,7 @@
   </data>
   <data xml:space="preserve" name="UnknownError">
     <value>不明なエラー</value>
-    <comment>UI text. Source: src/WslcDesktop.Core/Sessions/SessionCatalog.cs. Do not translate supplied user data or raw diagnostic output.</comment>
+    <comment>UI text. Source: src/WslcDesktop.Core/Data/WslcStore.cs. Do not translate supplied user data or raw diagnostic output.</comment>
   </data>
   <data xml:space="preserve" name="UnlessStopped">
     <value>手動で停止しない限り</value>

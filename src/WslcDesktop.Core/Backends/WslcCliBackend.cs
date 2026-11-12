@@ -14,7 +14,6 @@ namespace WslcDesktop.Backends;
 public sealed class WslcCliBackend(IWslcProcess process, string session, Func<string, string?> lookupSecret) : ISessionBackend
 {
     private readonly Func<string, string?> _lookupSecret = lookupSecret ?? throw new ArgumentNullException(nameof(lookupSecret));
-    private static readonly string[] BuiltInNetworks = ["bridge", "host", "none"];
 
     private static readonly TimeSpan RegistryTimeout = TimeSpan.FromSeconds(60);
 
@@ -62,8 +61,10 @@ public sealed class WslcCliBackend(IWslcProcess process, string session, Func<st
 
     public Task<string> InspectContainerAsync(string name) => RunAsync("inspect", name);
 
+    private readonly ContainerListMemo _containers = new();
+
     public async Task<IReadOnlyList<ContainerRow>> ListContainersAsync() =>
-        WslcCli.ParseContainers(await RunAsync("list", "--all", "--no-trunc", "--format", "json"));
+        _containers.Parse(Session, await RunAsync("list", "--all", "--no-trunc", "--format", "json"));
 
     public async Task CreateContainerAsync(NewContainerSpec spec)
     {
@@ -170,75 +171,85 @@ public sealed class WslcCliBackend(IWslcProcess process, string session, Func<st
     {
         var listing = RunAsync(Noun(kind), "list", "--format", "json");
         var usage = await GetUsageAsync();
+        return Rows(kind, await listing, usage);
+    }
+
+    public async Task<IReadOnlyList<ResourceRow>> ListResourceRowsAsync(ResourceKind kind) =>
+        Rows(kind, await RunAsync(Noun(kind), "list", "--format", "json"), null);
+
+    public async Task<IReadOnlyDictionary<string, string>> InspectContainersAsync(IReadOnlyList<string> names) =>
+        names.Count == 0
+            ? new Dictionary<string, string>()
+            : (await InspectAllAsync(names)).GroupBy(i => i.Name, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.First().Root.GetRawText(), StringComparer.Ordinal);
+
+    private static List<ResourceRow> Rows(ResourceKind kind, string listing, ResourceUsage? usage)
+    {
         var rows = new List<ResourceRow>();
-        foreach (var o in JsonLines(await listing))
+        foreach (var o in JsonLines(listing))
         {
             var name = Str(o, "Name");
+            var usedBy = usage?.For(kind, name) ?? [];
             rows.Add(kind == ResourceKind.Volume
-                ? new ResourceRow(name, Str(o, "Driver"), Str(o, "Mountpoint"), Str(o, "Scope"), true,
-                    usage.Volumes.GetValueOrDefault(name) ?? [])
+                ? new ResourceRow(name, Str(o, "Driver"), Str(o, "Mountpoint"), Str(o, "Scope"), true, usedBy)
                 : new ResourceRow(name, Str(o, "Driver"), Str(o, "Scope"),
                     Str(o, "Internal") == "true" ? UiStrings.Get("Internal") : UiStrings.Get("External"),
-                    !BuiltInNetworks.Contains(name),
-                    usage.Networks.GetValueOrDefault(name) ?? []));
+                    !ResourceUsage.BuiltInNetworks.Contains(name),
+                    usedBy));
         }
 
         return rows;
     }
 
-    private async Task<(Dictionary<string, List<string>> Volumes, Dictionary<string, List<string>> Networks)> GetUsageAsync()
+    /// <summary>Just the network names: no container inspection, unlike <see cref="ListResourcesAsync"/>.</summary>
+    public async Task<IReadOnlyList<string>> ListNetworkNamesAsync() =>
+        JsonLines(await RunAsync("network", "list", "--format", "json")).Select(o => Str(o, "Name")).Where(n => n.Length > 0).ToList();
+
+    private async Task<ResourceUsage> GetUsageAsync()
     {
-        var volumes = new Dictionary<string, List<string>>();
-        var networks = new Dictionary<string, List<string>>();
         var containers = await ListContainersAsync();
-        var inspected = await Task.WhenAll(containers.Select(async c =>
+        return containers.Count == 0
+            ? new ResourceUsage()
+            : ResourceUsage.From(await InspectAllAsync(containers.Select(c => c.Name).ToList()));
+    }
+
+    /// <summary>Inspects every container in one wslc call, falling back to one call each if the batch fails.</summary>
+    private async Task<List<(string Name, JsonElement Root)>> InspectAllAsync(IReadOnlyList<string> names)
+    {
+        string batch;
+        try
         {
-            try
-            {
-                return (c.Name, Json: await InspectContainerAsync(c.Name));
-            }
-            catch
-            {
-                return (c.Name, Json: string.Empty);
-            }
-        }));
-
-        foreach (var (name, json) in inspected)
+            batch = await RunAsync(["inspect", "--type", "container", "--format", "json", .. names]);
+        }
+        catch (InvalidOperationException)
         {
-            if (json.Length == 0)
+            // One container removed between the listing and the inspect fails the whole batch.
+            var single = await Task.WhenAll(names.Select(async n =>
             {
-                continue;
-            }
-
-            try
-            {
-                using var doc = JsonDocument.Parse(json);
-                var root = doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0
-                    ? doc.RootElement[0]
-                    : doc.RootElement;
-                if (root.TryGetProperty("Mounts", out var mounts) && mounts.ValueKind == JsonValueKind.Array)
+                try
                 {
-                    foreach (var m in mounts.EnumerateArray().Where(m => Str(m, "Type") == "volume"))
-                    {
-                        AddUsage(volumes, Str(m, "Name"), name);
-                    }
+                    return (Name: n, Objects: ResourceUsage.Objects(await InspectContainerAsync(n)).Take(1).ToList());
                 }
-
-                if (root.TryGetProperty("NetworkSettings", out var ns) && ns.ValueKind == JsonValueKind.Object
-                    && ns.TryGetProperty("Networks", out var nets) && nets.ValueKind == JsonValueKind.Object)
+                catch
                 {
-                    foreach (var n in nets.EnumerateObject())
-                    {
-                        AddUsage(networks, n.Name, name);
-                    }
+                    return (Name: n, Objects: new List<JsonElement>());
                 }
-            }
-            catch (JsonException)
+            }));
+            return single.SelectMany(s => s.Objects.Select(o => (s.Name, o))).ToList();
+        }
+
+        var objects = ResourceUsage.Objects(batch);
+        var result = new List<(string, JsonElement)>(objects.Count);
+        for (var i = 0; i < objects.Count; i++)
+        {
+            var reported = Str(objects[i], "Name").TrimStart('/');
+            var name = reported.Length > 0 ? reported : i < names.Count ? names[i] : string.Empty;
+            if (name.Length > 0)
             {
+                result.Add((name, objects[i]));
             }
         }
 
-        return (volumes, networks);
+        return result;
     }
 
     // Registry
@@ -266,24 +277,6 @@ public sealed class WslcCliBackend(IWslcProcess process, string session, Func<st
     }
 
     private static string Noun(ResourceKind kind) => kind == ResourceKind.Volume ? "volume" : "network";
-
-    private static void AddUsage(Dictionary<string, List<string>> map, string key, string container)
-    {
-        if (key.Length == 0)
-        {
-            return;
-        }
-
-        if (!map.TryGetValue(key, out var list))
-        {
-            map[key] = list = [];
-        }
-
-        if (!list.Contains(container))
-        {
-            list.Add(container);
-        }
-    }
 
     private static IEnumerable<JsonElement> JsonLines(string output)
     {

@@ -40,6 +40,31 @@ public class WslcCliQueryTests
     }
 
     [Fact]
+    public async Task ListContainers_reuses_rows_while_the_output_is_unchanged()
+    {
+        const string one = "{\"Names\":\"web\",\"State\":\"running\"}\n";
+        var process = new FakeWslcProcess().Returns(one).Returns(one).Returns("{\"Names\":\"web\",\"State\":\"exited\"}\n");
+        var cli = new WslcCli(process);
+
+        var first = await cli.ListContainersAsync("mine");
+        var same = await cli.ListContainersAsync("mine");
+        var changed = await cli.ListContainersAsync("mine");
+
+        Assert.Same(first, same);
+        Assert.Equal("exited", changed.Single().State);
+    }
+
+    [Fact]
+    public async Task GetStats_can_be_limited_to_named_containers()
+    {
+        var process = new FakeWslcProcess();
+
+        await new WslcCli(process).GetStatsAsync("mine", ["web", "db"]);
+
+        Assert.Equal(["--session", "mine", "stats", "--format", "json", "--no-trunc", "web", "db"], process.LastArgs);
+    }
+
+    [Fact]
     public async Task GetStats_parses_usage_per_container()
     {
         var process = new FakeWslcProcess().Returns(
@@ -51,6 +76,18 @@ public class WslcCliQueryTests
         Assert.Equal(12.5, sample.CpuPercent);
         Assert.Equal(1024UL * 1024, sample.MemoryBytes);
         Assert.Equal(1000UL, sample.NetRxBytes);
+    }
+
+    [Fact]
+    public async Task GetVersions_reads_the_info_lines()
+    {
+        var process = new FakeWslcProcess().Returns(
+            "WSL version: 3.0.5.0\r\nKernel version: 6.6.87.2-1\r\nSession manager version: 1.2.3\r\nOther: x\r\n");
+
+        var (wsl, kernel, manager) = await new WslcCli(process).GetVersionsAsync();
+
+        Assert.Equal(("3.0.5.0", "6.6.87.2-1", "1.2.3"), (wsl, kernel, manager));
+        Assert.Equal(["info"], process.LastArgs);
     }
 
     [Fact]

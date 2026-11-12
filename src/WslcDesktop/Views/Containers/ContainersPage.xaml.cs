@@ -8,6 +8,7 @@ using WslcDesktop.Compose.Secrets;
 using WslcDesktop.Compose.Secrets.Injection;
 using WslcDesktop.Containers;
 using WslcDesktop.Containers.Creation;
+using WslcDesktop.Data;
 using WslcDesktop.Restart;
 using WslcDesktop.Sessions;
 using WslcDesktop.ViewModels;
@@ -21,8 +22,9 @@ public sealed partial class ContainersPage : Page
     private readonly System.Collections.ObjectModel.ObservableCollection<ContainerItem> _items = [];
     private readonly SessionFilterController _sessionFilter;
     private SessionSnapshot<ContainerRow>? _snapshot;
-    private bool _refreshing;
-    private bool _again;
+    private StoreBinding? _binding;
+    // Ticks only re-render while a restart countdown is showing.
+    private readonly DispatcherTimer _countdown = new() { Interval = TimeSpan.FromSeconds(1) };
 
     public ContainersPage()
     {
@@ -30,61 +32,63 @@ public sealed partial class ContainersPage : Page
         List.ItemsSource = _items;
         _sessionFilter = new SessionFilterController(SessionFilter);
         _sessionFilter.Changed += Apply;
+        _countdown.Tick += (_, _) =>
+        {
+            if (App.Host.Restart.NextPending is not null)
+            {
+                Apply();
+            }
+        };
         Loaded += (_, _) =>
         {
-            App.Host.Monitor.Updated += OnChanged;
-            App.Host.Telemetry.Updated += OnTelemetry;
-            _ = RefreshAsync();
+            App.Host.Restart.Changed += OnRestartChanged;
+            _binding = new StoreBinding(DispatcherQueue, Refresh, [DataKind.Containers], DataKind.Sessions);
+            // The CPU and memory cells: stats are only read while this list shows them.
+            _stats = new StoreBinding(DispatcherQueue, OnStats, [DataKind.Stats]);
+            _countdown.Start();
         };
         Unloaded += (_, _) =>
         {
-            App.Host.Monitor.Updated -= OnChanged;
-            App.Host.Telemetry.Updated -= OnTelemetry;
+            _countdown.Stop();
+            _binding?.Dispose();
+            _binding = null;
+            _stats?.Dispose();
+            _stats = null;
+            App.Host.Restart.Changed -= OnRestartChanged;
         };
     }
 
-    private void OnChanged() => DispatcherQueue.TryEnqueue(() => _ = RefreshAsync());
+    private StoreBinding? _stats;
 
-    // Telemetry only changes the CPU and memory cells, so it never re-reads the container lists.
-    private void OnTelemetry() => DispatcherQueue.TryEnqueue(() =>
+    /// <summary>Which usage cells fit; shared by the header and every row.</summary>
+    public MetricColumns Columns { get; } = new();
+
+    // Charts for cells that just appeared are built from the history already held.
+    private void List_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (Columns.Fit(e.NewSize.Width))
+        {
+            OnStats();
+        }
+    }
+
+    // Restart state (errors, crash loops, new attempts) changes without the container rows changing.
+    private void OnRestartChanged() => DispatcherQueue.TryEnqueue(Apply);
+
+    // Stats only change the CPU and memory cells, so they never re-read the container lists.
+    private void OnStats()
     {
         foreach (var item in _items)
         {
-            item.UpdateTelemetry(App.Host.Telemetry.GetLatest(item.Session, item.Name));
+            item.UpdateTelemetry(App.Host.Store.Telemetry.GetHistory(item.Session, item.Name));
         }
-    });
+    }
 
-    // The app's session is polled by the monitor; other sessions are merged in (throttled) by the catalog.
-    private async Task RefreshAsync(bool force = false)
+    // Every session's containers are kept current by the store, so this only renders what it already holds.
+    private void Refresh()
     {
-        if (_refreshing)
-        {
-            _again = true;
-            return;
-        }
-
-        _refreshing = true;
-        try
-        {
-            do
-            {
-                _again = false;
-                _snapshot = await App.Host.ContainerCatalog.RefreshAsync(force);
-                force = false;
-                Apply();
-            }
-            while (_again);
-        }
-        catch (Exception e)
-        {
-            ErrorBar.Title = UiStrings.Get("CouldnTListContainers");
-            ErrorBar.Message = e.Message;
-            ErrorBar.IsOpen = true;
-        }
-        finally
-        {
-            _refreshing = false;
-        }
+        _snapshot = App.Host.Store.Containers();
+        Apply();
     }
 
     // Update items in place so rows don't flicker or lose focus on every poll.
@@ -95,7 +99,6 @@ public sealed partial class ContainersPage : Page
             return;
         }
 
-        var monitor = App.Host.Monitor;
         _sessionFilter.Sync(snap.Sessions);
         var entries = ContainerListing.Build(snap, _sessionFilter.Filter);
         var wanted = entries.Select(e => e.Key).ToHashSet();
@@ -114,7 +117,7 @@ public sealed partial class ContainersPage : Page
             var row = entry.Row;
             if (!existing.TryGetValue(entry.Key, out var item))
             {
-                item = new ContainerItem(entry.Session, entry.IsThisApp, row.Name);
+                item = new ContainerItem(entry.Session, entry.IsThisApp, row.Name) { Columns = Columns };
                 existing[entry.Key] = item;
                 _items.Insert(Math.Min(n, _items.Count), item);
             }
@@ -126,7 +129,7 @@ public sealed partial class ContainersPage : Page
             // Restart policies are an app feature for the app's own session only.
             item.Update(
                 row,
-                App.Host.Telemetry.GetLatest(entry.Session, row.Name),
+                App.Host.Store.Telemetry.GetHistory(entry.Session, row.Name),
                 entry.IsThisApp ? App.Host.Restart.GetInfo(row.Name) : null);
             item.SetHeader(entry.Header);
         }
@@ -138,19 +141,21 @@ public sealed partial class ContainersPage : Page
         }
 
         SessionErrorBar.IsOpen = failed.Length > 0;
-        EmptyText.Visibility = monitor.HasLoaded && entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        var app = App.Host.Store.AppContainers;
+        EmptyText.Visibility = app.HasValue && entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         EmptyText.Text = _sessionFilter.Filter is null
             ? UiStrings.Get("NoContainersYetCreateOneFromAnImage")
             : UiStrings.Format("NoContainersInSession", _sessionFilter.Filter);
         ErrorBar.Title = UiStrings.Get("CouldnTListContainers");
-        ErrorBar.Message = monitor.LastError ?? string.Empty;
-        ErrorBar.IsOpen = monitor.LastError is not null;
+        ErrorBar.Message = app.LastError ?? string.Empty;
+        ErrorBar.IsOpen = app.LastError is not null;
     }
 
-    private async Task AfterActionAsync()
+    // Operations mark the session dirty; reading now shows the result without waiting for the scheduler.
+    private async Task AfterActionAsync(string? session = null)
     {
-        await App.Host.Monitor.RefreshAsync();
-        await RefreshAsync(true);
+        await App.Host.Store.RefreshAsync(DataKind.Containers, session ?? App.Host.SessionId);
+        Refresh();
     }
     private async void New_Click(object sender, RoutedEventArgs e)
     {
@@ -164,14 +169,18 @@ public sealed partial class ContainersPage : Page
     internal static async Task<string?> ShowNewContainerDialogAsync(XamlRoot xamlRoot, string? prefillImage, bool prefillInAppSession = true)
     {
         string? created = null;
-        IReadOnlyList<ImageSummary> images = [];
-        try
+        // The store already holds the app session's images, so the dialog opens without a wslc call.
+        IReadOnlyList<ImageSummary> images = App.Host.Store.ImagesOf(App.Host.SessionId) ?? [];
+        if (images.Count == 0)
         {
-            images = await App.Host.Operations.Images.ListAsync(App.Host.AppSession);
-        }
-        catch
-        {
-            // Without a local image list the user can still type an image to pull.
+            try
+            {
+                images = await App.Host.Operations.Images.ListAsync(App.Host.AppSession);
+            }
+            catch
+            {
+                // Without a local image list the user can still type an image to pull.
+            }
         }
 
         var imageNames = images.Where(i => i.IsTagged).Select(i => i.DisplayName).ToList();
@@ -199,7 +208,7 @@ public sealed partial class ContainersPage : Page
         var name = new TextBox { Header = UiStrings.Get("LabelName"), PlaceholderText = UiStrings.Get("MyContainer") };
         if (!string.IsNullOrEmpty(prefillImage))
         {
-            name.Text = RunImage.SuggestName(prefillImage, App.Host.Monitor.Containers.Select(c => c.Name));
+            name.Text = RunImage.SuggestName(prefillImage, (App.Host.Store.AppContainers.Latest ?? []).Select(c => c.Name));
             name.SelectAll();
         }
 
@@ -244,7 +253,9 @@ public sealed partial class ContainersPage : Page
         var networkNames = new List<string> { UiStrings.Get("DefaultBridge") };
         try
         {
-            networkNames.AddRange((await App.Host.Operations.Resources.NetworkNamesAsync(App.Host.AppSession)).Where(n => n != "bridge"));
+            var known = App.Host.Store.NetworkNamesOf(App.Host.SessionId)
+                ?? await App.Host.Operations.Resources.NetworkNamesAsync(App.Host.AppSession);
+            networkNames.AddRange(known.Where(n => n != "bridge"));
         }
         catch
         {
@@ -439,10 +450,10 @@ public sealed partial class ContainersPage : Page
         { var item = (ContainerItem)e.ClickedItem; Frame.Navigate(typeof(ContainerDetailPage), new ContainerRef(item.Session, item.Name)); }
 
     private async void Start_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync(UiStrings.Get("CouldnTStartTheContainer"), () => App.Host.Operations.Containers.StartAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
+        await ActAsync(ItemOf(sender).Session, UiStrings.Get("CouldnTStartTheContainer"), () => App.Host.Operations.Containers.StartAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
 
     private async void Stop_Click(object sender, RoutedEventArgs e) =>
-        await ActAsync(UiStrings.Get("CouldnTStopTheContainer"), () => App.Host.Operations.Containers.StopAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
+        await ActAsync(ItemOf(sender).Session, UiStrings.Get("CouldnTStopTheContainer"), () => App.Host.Operations.Containers.StopAsync(App.Host.Handle(ItemOf(sender).Session), ItemOf(sender).Name));
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
     {
@@ -462,12 +473,12 @@ public sealed partial class ContainersPage : Page
             return;
         }
 
-        await ActAsync(UiStrings.Get("CouldnTDeleteTheContainer"), () => App.Host.Operations.Containers.DeleteAsync(App.Host.Handle(target.Session), name));
+        await ActAsync(target.Session, UiStrings.Get("CouldnTDeleteTheContainer"), () => App.Host.Operations.Containers.DeleteAsync(App.Host.Handle(target.Session), name));
     }
 
     private static ContainerItem ItemOf(object sender) => (ContainerItem)((FrameworkElement)sender).Tag;
 
-    private async Task ActAsync(string failureTitle, Func<Task> action)
+    private async Task ActAsync(string session, string failureTitle, Func<Task> action)
     {
         try
         {
@@ -478,7 +489,7 @@ public sealed partial class ContainersPage : Page
             await ShowAsync(failureTitle, e.Message);
         }
 
-        await AfterActionAsync();
+        await AfterActionAsync(session);
     }
 
     private async Task ShowAsync(string title, string message)

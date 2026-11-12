@@ -73,6 +73,52 @@ public class RestartEngineTests
     }
 
     [Fact]
+    public async Task A_restart_asks_for_a_snapshot_when_its_start_grace_ends()
+    {
+        Policy("always");
+        var e = Engine();
+        await e.ProcessAsync([Exited()]);
+        Assert.Equal(_clock.GetUtcNow() + new RestartOptions().StartGrace, e.NextCheck);
+
+        // It crashes again inside the grace: ignored for now, but the check is still wanted.
+        _clock.Advance(TimeSpan.FromSeconds(1));
+        await e.ProcessAsync([Exited()]);
+        Assert.Single(_actions.Started);
+        Assert.NotNull(e.NextCheck);
+
+        // The check at the end of the grace sees the crash and schedules the next attempt.
+        _clock.Advance(new RestartOptions().StartGrace);
+        await e.ProcessAsync([Exited()]);
+        Assert.NotNull(e.NextPending);
+        Assert.Equal(e.NextPending, e.NextCheck);
+    }
+
+    [Fact]
+    public async Task A_failed_start_asks_for_a_retry_check()
+    {
+        Policy("always");
+        _actions.Fail = new InvalidOperationException("image gone");
+        var e = Engine();
+
+        await e.ProcessAsync([Exited()]);
+
+        Assert.Null(e.NextPending);
+        Assert.Equal(_clock.GetUtcNow() + new RestartOptions().BaseDelay, e.NextCheck);
+    }
+
+    [Fact]
+    public async Task A_running_container_needs_no_check()
+    {
+        Policy("always");
+        var e = Engine();
+        await e.ProcessAsync([Exited()]);
+
+        await e.ProcessAsync([Running()]);
+
+        Assert.Null(e.NextCheck);
+    }
+
+    [Fact]
     public async Task NoPolicyNeverRestarts()
     {
         var e = Engine();

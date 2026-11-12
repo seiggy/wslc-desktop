@@ -49,7 +49,7 @@ public class WslcOperationsTests
         await _ops.Containers.StartAsync(App, "web");
 
         Assert.Equal(["start web"], BackendOf(App).Calls);
-        Assert.Equal(["user-started:web"], _effects.Log);
+        Assert.Equal(["user-started:web", "containers:WslcDesktop"], _effects.Log);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class WslcOperationsTests
     {
         await _ops.Containers.StopAsync(App, "web");
 
-        Assert.Equal(["user-stopped:web"], _effects.Log);
+        Assert.Equal(["user-stopped:web", "containers:WslcDesktop"], _effects.Log);
     }
 
     [Fact]
@@ -66,7 +66,16 @@ public class WslcOperationsTests
         await _ops.Containers.DeleteAsync(App, "web");
 
         Assert.Equal(["rm web"], BackendOf(App).Calls);
-        Assert.Equal(["user-stopped:web", "removed:web"], _effects.Log);
+        Assert.Equal(["user-stopped:web", "removed:web", "containers:WslcDesktop"], _effects.Log);
+    }
+
+    [Fact]
+    public async Task Creating_a_container_invalidates_that_sessions_containers()
+    {
+        await _ops.Containers.CreateAsync(Lab, new WslcDesktop.Containers.Creation.NewContainerSpec("db", "postgres", [], [], [], [], ""));
+        await _ops.Containers.CreateAsync(App, "web", "nginx", [], new Dictionary<string, string>());
+
+        Assert.Equal(["containers:lab", "containers:WslcDesktop"], _effects.Log);
     }
 
     [Fact]

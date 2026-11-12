@@ -15,8 +15,10 @@ Each row shows:
 
 Select a row to open the [container details](/features/container-details). Use **New container** (top right) to [create one](/features/new-container).
 
-**Start**, **Stop**, **Delete**, logs, shell, inspect and network attach/detach always act on the session that owns the container; the Delete confirmation names that session. Some features exist only for this app's session: **New container** creates containers in `WslcDesktop`, and [restart policies](/features/restart-policy) and [stacks](/features/stacks) don't apply to containers in other sessions (their Restart column is empty). [Telemetry](/features/container-details#telemetry) is collected for every session.
+**Start**, **Stop**, **Delete**, logs, shell, inspect and network attach/detach always act on the session that owns the container; the Delete confirmation names that session. Some features exist only for this app's session: **New container** creates containers in `WslcDesktop`, and [restart policies](/features/restart-policy) and [stacks](/features/stacks) don't apply to containers in other sessions (their Restart column is empty). [Telemetry](/features/container-details#telemetry) is collected for every session, but only while it's on screen: the CPU and memory columns update every 5 seconds while this list is open.
+
+Each running container's row shows small charts of the last five minutes: **Network** (receive in the accent color, transmit in amber), **Disk I/O** (read and write the same way), and **CPU** and **Memory** next to their current values. Hover the network or disk chart for the current rates and totals. When the window is too narrow, the network and disk charts are hidden first, then the CPU and memory charts, then the CPU and memory values.
 
 ::: tip
-The list refreshes automatically, so containers started from a terminal in the same session show up without a manual refresh.
+The list updates on its own: the app follows each session's `wslc events` stream, so containers started, stopped or removed from a terminal (in any session) show up within a moment, without a manual refresh. Switching pages never waits for the list; it shows what the app already holds and updates in place.
 :::

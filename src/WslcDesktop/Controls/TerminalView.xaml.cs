@@ -62,7 +62,8 @@ public sealed partial class TerminalView : UserControl
 
     private bool IsDark => ActualTheme != ElementTheme.Light;
 
-    public async Task StartAsync(string session, string container, string shell, Action<int> onExit)
+    /// <summary>Starts a shell; false when <see cref="Stop"/> (or another start) superseded it before it was up.</summary>
+    public async Task<bool> StartAsync(string session, string container, string shell, Action<int> onExit)
     {
         if (!_ready)
         {
@@ -76,21 +77,56 @@ public sealed partial class TerminalView : UserControl
         Surface.Invalidate();
 
         var commandLine = TerminalProtocol.BuildCommandLine("wslc", TerminalProtocol.ExecShellArguments(session, container, shell));
+        var (columns, rows) = ((short)_screen.Columns, (short)_screen.Rows);
+        var token = new object();
+        _starting = token;
         ConPtySession? started = null;
-        started = ConPtySession.Start(commandLine, (short)_screen.Columns, (short)_screen.Rows, QueueOutput, code => _dispatcher.TryEnqueue(() =>
+        int? exitedWhileStarting = null;
+
+        // Exit callbacks are marshalled to the UI thread, the same thread that finishes the start below.
+        void OnExit(int code) => _dispatcher.TryEnqueue(() =>
         {
-            if (ReferenceEquals(_session, started))
+            if (started is null)
+            {
+                exitedWhileStarting = code;
+            }
+            else if (ReferenceEquals(_session, started))
             {
                 _session = null;
-                started?.Dispose();
+                started.Dispose();
                 onExit(code);
             }
-        }));
-        _session = started;
+        });
+
+        // Creating the pseudoconsole and process takes a few hundred milliseconds, so it stays off the UI thread.
+        var created = await Task.Run(() => ConPtySession.Start(commandLine, columns, rows, QueueOutput, OnExit));
+        started = created;
+        if (!ReferenceEquals(_starting, token))
+        {
+            // Stopped, or started again, while this one was being created.
+            created.Dispose();
+            return false;
+        }
+
+        _starting = null;
+        _session = created;
+        if (exitedWhileStarting is { } code)
+        {
+            _session = null;
+            created.Dispose();
+            onExit(code);
+            return true;
+        }
+
+        // A layout pass during the start resized the screen while there was no session to tell.
+        if (_screen.Columns != columns || _screen.Rows != rows)
+        {
+            created.Resize((short)_screen.Columns, (short)_screen.Rows);
+        }
 
         try
         {
-            ChildProcessTracker.Track(Process.GetProcessById(started.ProcessId));
+            ChildProcessTracker.Track(Process.GetProcessById(created.ProcessId));
         }
         catch (ArgumentException)
         {
@@ -98,11 +134,14 @@ public sealed partial class TerminalView : UserControl
         }
 
         FocusTerminal();
-        await Task.CompletedTask;
+        return true;
     }
+
+    private object? _starting;
 
     public void Stop()
     {
+        _starting = null;
         var session = _session;
         _session = null;
         session?.Dispose();
@@ -275,19 +314,22 @@ public sealed partial class TerminalView : UserControl
         return Color.FromArgb(255, Level(i / 36), Level(i / 6 % 6), Level(i % 6));
     }
 
+    // Enum.HasFlag boxes in unoptimized code, and these run for every cell on every frame.
+    private static bool Has(VtAttr attr, VtAttr flag) => (attr & flag) != 0;
+
     private (Color Fg, Color Bg, bool BgDefault) Colors(in VtCell cell)
     {
-        var bold = cell.Attr.HasFlag(VtAttr.Bold);
+        var bold = Has(cell.Attr, VtAttr.Bold);
         var fg = Resolve(cell.Fg, bold, _defaultFg);
         var bg = Resolve(cell.Bg, false, _defaultBg);
         var bgDefault = cell.Bg < 0;
-        if (cell.Attr.HasFlag(VtAttr.Inverse))
+        if (Has(cell.Attr, VtAttr.Inverse))
         {
             (fg, bg) = (bg, fg);
             bgDefault = false;
         }
 
-        if (cell.Attr.HasFlag(VtAttr.Dim))
+        if (Has(cell.Attr, VtAttr.Dim))
         {
             fg = Color.FromArgb(255, (byte)((fg.R + bg.R) / 2), (byte)((fg.G + bg.G) / 2), (byte)((fg.B + bg.B) / 2));
         }
@@ -338,68 +380,73 @@ public sealed partial class TerminalView : UserControl
         }
     }
 
+    // Reused across rows and frames; Surface_Draw only runs on the UI thread.
+    private readonly StringBuilder _run = new();
+
     private void DrawText(CanvasDrawingSession ds, VtCell[] line, int columns, float y)
     {
-        var run = new StringBuilder();
+        var run = _run;
+        run.Clear();
         var runStart = 0;
         VtCell runCell = default;
         var hasVisibleText = false;
 
-        void Flush()
-        {
-            if (run.Length > 0 && hasVisibleText)
-            {
-                var (fg, _, _) = Colors(runCell);
-                var x = runStart * _cellWidth;
-                ds.DrawText(run.ToString(), x, y, fg, runCell.Attr.HasFlag(VtAttr.Bold) ? _boldFormat : _format);
-                if (runCell.Attr.HasFlag(VtAttr.Underline))
-                {
-                    ds.DrawLine(x, y + _cellHeight - 1, x + run.Length * _cellWidth, y + _cellHeight - 1, fg);
-                }
-
-                if (runCell.Attr.HasFlag(VtAttr.Strike))
-                {
-                    ds.DrawLine(x, y + _cellHeight / 2, x + run.Length * _cellWidth, y + _cellHeight / 2, fg);
-                }
-            }
-
-            run.Clear();
-            hasVisibleText = false;
-        }
-
         for (var x = 0; x < columns; x++)
         {
             var cell = line[x];
-            if (cell.Width == 0 || cell.Attr.HasFlag(VtAttr.Hidden))
+            if (cell.Width == 0 || Has(cell.Attr, VtAttr.Hidden))
             {
-                Flush();
+                FlushRun(ds, runStart, runCell, ref hasVisibleText, y);
                 continue;
             }
 
             if (cell.Cp is < 0x20 or > 0x7E)
             {
                 // Glyphs outside ASCII can have fallback-font widths, so each is placed on its own cell.
-                Flush();
+                FlushRun(ds, runStart, runCell, ref hasVisibleText, y);
                 var (fg, _, _) = Colors(cell);
                 var text = char.ConvertFromUtf32(cell.Cp is > 0 and <= 0x10FFFF and not (>= 0xD800 and <= 0xDFFF) ? cell.Cp : '?');
-                ds.DrawText(text, x * _cellWidth, y, fg, cell.Attr.HasFlag(VtAttr.Bold) ? _boldFormat : _format);
+                ds.DrawText(text, x * _cellWidth, y, fg, Has(cell.Attr, VtAttr.Bold) ? _boldFormat : _format);
                 continue;
             }
 
             var sameStyle = run.Length > 0 && cell.Fg == runCell.Fg && cell.Bg == runCell.Bg && cell.Attr == runCell.Attr;
             if (!sameStyle)
             {
-                Flush();
+                FlushRun(ds, runStart, runCell, ref hasVisibleText, y);
                 runStart = x;
                 runCell = cell;
             }
 
             var character = (char)cell.Cp;
             run.Append(character);
-            hasVisibleText |= character != ' ' || runCell.Attr.HasFlag(VtAttr.Underline);
+            hasVisibleText |= character != ' ' || Has(runCell.Attr, VtAttr.Underline);
         }
 
-        Flush();
+        FlushRun(ds, runStart, runCell, ref hasVisibleText, y);
+    }
+
+    private void FlushRun(CanvasDrawingSession ds, int runStart, in VtCell runCell, ref bool hasVisibleText, float y)
+    {
+        var run = _run;
+        if (run.Length > 0 && hasVisibleText)
+        {
+            var (fg, _, _) = Colors(runCell);
+            var x = runStart * _cellWidth;
+            ds.DrawText(run.ToString(), x, y, fg, Has(runCell.Attr, VtAttr.Bold) ? _boldFormat : _format);
+            if (Has(runCell.Attr, VtAttr.Underline))
+            {
+                ds.DrawLine(x, y + _cellHeight - 1, x + run.Length * _cellWidth, y + _cellHeight - 1, fg);
+            }
+
+            if (Has(runCell.Attr, VtAttr.Strike))
+            {
+                ds.DrawLine(x, y + _cellHeight / 2, x + run.Length * _cellWidth, y + _cellHeight / 2, fg);
+            }
+        }
+
+        run.Clear();
+        hasVisibleText = false;
     }
 
     private void DrawCursor(CanvasDrawingSession ds, VtScreen screen, int first)

@@ -9,10 +9,17 @@ public sealed class ContainerOperations(BackendRouter router, IOperationEffects 
 {
     public Task<IReadOnlyList<ContainerRow>> ListAsync(SessionHandle session) => router.For(session).ListContainersAsync();
 
-    public Task CreateAsync(SessionHandle session, NewContainerSpec spec) => router.For(session).CreateContainerAsync(spec);
+    public async Task CreateAsync(SessionHandle session, NewContainerSpec spec)
+    {
+        await router.For(session).CreateContainerAsync(spec);
+        effects.ContainersChanged(session.Name);
+    }
 
-    public Task CreateAsync(SessionHandle session, string name, string image, string[] commandLine, IReadOnlyDictionary<string, string> environment) =>
-        router.For(session).CreateContainerAsync(name, image, commandLine, environment);
+    public async Task CreateAsync(SessionHandle session, string name, string image, string[] commandLine, IReadOnlyDictionary<string, string> environment)
+    {
+        await router.For(session).CreateContainerAsync(name, image, commandLine, environment);
+        effects.ContainersChanged(session.Name);
+    }
 
     public async Task StartAsync(SessionHandle session, string name)
     {
@@ -22,7 +29,7 @@ public sealed class ContainerOperations(BackendRouter router, IOperationEffects 
         }
 
         await router.For(session).StartContainerAsync(name);
-        ChangedInOtherSession(session);
+        effects.ContainersChanged(session.Name);
     }
 
     public async Task StopAsync(SessionHandle session, string name)
@@ -33,7 +40,7 @@ public sealed class ContainerOperations(BackendRouter router, IOperationEffects 
         }
 
         await router.For(session).StopContainerAsync(name);
-        ChangedInOtherSession(session);
+        effects.ContainersChanged(session.Name);
     }
 
     public async Task DeleteAsync(SessionHandle session, string name)
@@ -49,7 +56,7 @@ public sealed class ContainerOperations(BackendRouter router, IOperationEffects 
             effects.Removed(name);
         }
 
-        ChangedInOtherSession(session);
+        effects.ContainersChanged(session.Name);
     }
 
     public async Task<string> InspectAsync(SessionHandle session, string name) =>
@@ -62,13 +69,4 @@ public sealed class ContainerOperations(BackendRouter router, IOperationEffects 
     /// <summary>Starts an interactive (piped, non-TTY) shell in a running container; its output is redacted.</summary>
     public IShellProcess StartShell(SessionHandle session, string name, string shell, Action<string> onOutput, Action<int> onExit) =>
         router.For(session).StartShell(name, shell, text => onOutput(redact(text)), onExit);
-
-    // The app session''s containers come from the monitor, so only other sessions need their cache invalidated.
-    private void ChangedInOtherSession(SessionHandle session)
-    {
-        if (!session.IsThisApp)
-        {
-            effects.ContainersChanged(session.Name);
-        }
-    }
 }
