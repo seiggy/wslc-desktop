@@ -3,6 +3,7 @@ using WslcDesktop.Lifecycle;
 
 namespace WslcDesktop.Tests.Lifecycle;
 
+[Collection(ChildProcessCollection.Name)]
 public class ChildProcessTrackerTests
 {
     private static string PowerShell => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),
