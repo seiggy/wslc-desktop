@@ -1,6 +1,6 @@
 # Containers
 
-The **Containers** page lists every container, running or not, from **every visible WSLc session**: this app's `WslcDesktop` session and sessions created by the `wslc` CLI or other tools (see `wslc system session list`).
+The **Containers** page lists every container, running or not, from **every visible WSLc session**: the `wslc` CLI's default session (`wslc-cli-<user>`), which this app shares with the CLI, and any other sessions created by `wslc` or other tools (see `wslc system session list`).
 
 ![Containers list](/screenshots/containers.png)
 
@@ -15,7 +15,7 @@ Each row shows:
 
 Select a row to open the [container details](/features/container-details). Use **New container** (top right) to [create one](/features/new-container).
 
-**Start**, **Stop**, **Delete**, logs, shell, inspect and network attach/detach always act on the session that owns the container; the Delete confirmation names that session. Some features exist only for this app's session: **New container** creates containers in `WslcDesktop`, and [restart policies](/features/restart-policy) and [stacks](/features/stacks) don't apply to containers in other sessions (their Restart column is empty). [Telemetry](/features/container-details#telemetry) is collected for every session, but only while it's on screen: the CPU and memory columns update every 5 seconds while this list is open.
+**Start**, **Stop**, **Delete**, logs, shell, inspect and network attach/detach always act on the session that owns the container; the Delete confirmation names that session. Some features exist only for this app's session: **New container** creates containers in the app's session (`wslc-cli-<user>`), and [restart policies](/features/restart-policy) and [stacks](/features/stacks) don't apply to containers in other sessions (their Restart column is empty). [Telemetry](/features/container-details#telemetry) is collected for every session, but only while it's on screen: the CPU and memory columns update every 5 seconds while this list is open.
 
 Each running container's row shows small charts of the last five minutes: **Network** (receive in the accent color, transmit in amber), **Disk I/O** (read and write the same way), and **CPU** and **Memory** next to their current values. Hover the network or disk chart for the current rates and totals. When the window is too narrow, the network and disk charts are hidden first, then the CPU and memory charts, then the CPU and memory values.
 

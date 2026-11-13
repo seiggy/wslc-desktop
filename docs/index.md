@@ -25,7 +25,7 @@ features:
     details: Pull and inspect images, browse layers, and manage volumes and networks with usage and prune.
     link: /features/images
   - title: Settings and registries
-    details: Edit wslc's settings.yaml, tune the app's own session and sign in to private registries.
+    details: Edit wslc's settings.yaml for the default session the app shares with the CLI, and sign in to private registries.
     link: /settings
 ---
 

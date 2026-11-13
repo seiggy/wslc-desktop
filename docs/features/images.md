@@ -1,6 +1,6 @@
 # Images
 
-The **Images** page lists local images from **every visible WSLc session** with their owning session, ID, tag status, how many containers use them, size and age. WSLc keeps a separate image store per session, so an image pulled with the `wslc` CLI (default session `wslc-cli-<user>`) is a different image from one in this app's `WslcDesktop` session.
+The **Images** page lists local images from **every visible WSLc session** with their owning session, ID, tag status, how many containers use them, size and age. WSLc keeps a separate image store per session, so an image pulled in one session isn't available in another. The app's session is the `wslc` CLI's default session (`wslc-cli-<user>`), so images you pull with plain `wslc` commands are this app's images.
 
 ![Images list](/screenshots/images.png)
 

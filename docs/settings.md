@@ -38,7 +38,7 @@ If you turn the app off in **Windows Settings > Apps > Startup** or Task Manager
 
 ![WSLc configuration](/screenshots/settings.png)
 
-These values are saved to wslc's `settings.yaml` (`%LOCALAPPDATA%\wslc\settings.yaml`). That file configures the **default session** (the one the `wslc` command line uses) and any new session it creates. WSLc Desktop Manager runs its own session and doesn't read this file. The editor keeps your comments and unknown keys when saving.
+These values are saved to wslc's `settings.yaml` (`%LOCALAPPDATA%\wslc\settings.yaml`). That file configures the **default session** (`wslc-cli-<user>`), which WSLc Desktop Manager shares with the `wslc` command line, and any new session wslc creates. So these settings, including CPU count and memory, apply to the app's containers. Changes take effect the next time the session starts. The editor keeps your comments and unknown keys when saving.
 
 | Setting | Purpose |
 | --- | --- |
@@ -53,13 +53,9 @@ These values are saved to wslc's `settings.yaml` (`%LOCALAPPDATA%\wslc\settings.
 
 Type `default` to return a setting to its built-in value. Invalid values are explained next to the field.
 
-## App session
-
-![App session and registries](/screenshots/settings-registries.png)
-
-Controls the app's own `WslcDesktop` session: **CPU count**, **Memory (MB)** and **GPU access**. Choose **Save**, then restart the app for the change to apply. **Reset to defaults** restores 4 CPUs, 4096 MB and GPU off.
-
 ## Registries {#registries}
+
+![Registries](/screenshots/settings-registries.png)
 
 Sign in to private registries so images can be pulled. Enter the **Server** (blank for the default registry), **Username** and **Password or access token**, then **Sign in**. Credentials are handed to wslc and kept in its credential store; the app never stores or shows them. WSLc can't list saved credentials, so the list shows only registries you signed in to from this app (server names only).
 

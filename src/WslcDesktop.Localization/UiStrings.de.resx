@@ -1761,7 +1761,7 @@
     <comment>UI text. Source: src/WslcDesktop/Views/Settings/SettingsPage.xaml. Do not translate supplied user data or raw diagnostic output.</comment>
   </data>
   <data xml:space="preserve" name="SettingsYamlConfiguresWslcSDefaultSessionTheOne">
-    <value>settings.yaml konfiguriert die Standardsitzung von wslc — die von der wslc-Befehlszeile verwendete Sitzung — und alle neu erstellten Sitzungen. WSLc Desktop Manager führt eine eigene Sitzung (WslcDesktop) aus, die diese Datei nicht liest; siehe die Karte „App-Sitzung“ oben.</value>
+    <value>settings.yaml konfiguriert die Standardsitzung von wslc — die von der wslc-Befehlszeile verwendete Sitzung — und alle neu erstellten Sitzungen. WSLc Desktop Manager verwendet ebenfalls diese Standardsitzung, daher gelten diese Einstellungen auch für die Container der App. Änderungen werden beim nächsten Start der Sitzung wirksam.</value>
     <comment>UI text. Source: src/WslcDesktop/Views/Settings/Tabs/Cards/WslcConfigCard.cs. Preserve product names, commands, paths, protocol identifiers, and syntax examples. Do not translate supplied user data or raw diagnostic output.</comment>
   </data>
   <data xml:space="preserve" name="ShellCommand">

@@ -4,10 +4,10 @@
 
 ![Couldn't start the WSLc session](/screenshots/troubleshooting-session-error.png)
 
-The app couldn't create or attach to its `WslcDesktop` session, for example with *Cannot create a file when that file already exists*.
+The app couldn't attach to or start the `wslc` CLI's default session (`wslc-cli-<user>`), for example with *Cannot create a file when that file already exists*.
 
-1. **Run only one instance of the app at a time.** Two instances compete for the same session. Close every WSLc Desktop Manager window (check Task Manager for stray `WslcDesktop.exe` processes), then choose **Retry** or relaunch.
-2. Check the [Environment](/features/environment) page or run `wslc system session list` to see whether a stale `WslcDesktop` session is still registered.
+1. **Run only one instance of the app at a time.** Close every WSLc Desktop Manager window (check Task Manager for stray `WslcDesktop.exe` processes), then choose **Retry** or relaunch.
+2. Run `wslc list` in a terminal. The app uses the same session, so if the CLI can't start it either, the problem is in WSLc rather than the app. `wslc system session list` shows which sessions are registered.
 3. Make sure WSL is up to date (`wsl --update`) and that `wslc --help` works in a terminal.
 
 ## Install components button
@@ -16,7 +16,7 @@ If the app offers **Install components**, the WSLc runtime isn't installed. Use 
 
 ## My containers aren't listed
 
-The app only shows what's in its session and the other visible sessions. By default it joins the `wslc` CLI's default session (`wslc-cli-<user>`), so CLI containers show up automatically; use `wslc` from a terminal with no `--session`.
+The app shows the `wslc` CLI's default session (`wslc-cli-<user>`), which it shares with the CLI, and every other session WSLc lists as running. A session that isn't running doesn't appear; containers from version 1.0's separate `WslcDesktop` session show up only while that session runs. Use `wslc system session list` to see what's running.
 
 ## A published port doesn't respond
 

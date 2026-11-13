@@ -6,9 +6,11 @@
 
 For each session you see its ID, name, who created it, how many containers are running out of the total and how many images it holds. The session this app uses is marked **This app**; its terminate button is disabled.
 
-Terminate another session from the stop button on its row. Sessions are isolated: the default session used by the `wslc` command line (named like `wslc-cli-<user>`) has its own containers and images. To inspect the app's session from a terminal:
+Terminate another session from the stop button on its row. Sessions are isolated: each has its own containers, images and storage. The app uses the `wslc` CLI's default session (named like `wslc-cli-<user>`), so plain `wslc` commands work with the app's containers:
 
 ```powershell
-wslc --session WslcDesktop list --all
-wslc --session WslcDesktop image list
+wslc list --all
+wslc image list
 ```
+
+If you used version 1.0, its separate `WslcDesktop` session is listed here while it's running. Its containers stay usable from the app; moving them to the default session is recommended but not required.

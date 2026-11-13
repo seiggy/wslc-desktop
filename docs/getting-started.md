@@ -18,14 +18,18 @@ Update packages (`.nupkg`) and feed indexes on the Releases page are used by the
 
 ## First run
 
-1. Launch **WSLc Desktop Manager**. It starts its own WSLc session named `WslcDesktop`, separate from the default session used by the `wslc` command line.
+1. Launch **WSLc Desktop Manager**. It uses the `wslc` CLI's default session (`wslc-cli-<user>`): it reuses the session if it's already running, or has `wslc` start it.
 2. If the WSLc components are missing, the app offers an **Install components** button. Use it, then **Retry**.
 3. The **Containers** page opens. Anything you create here lives in the `wslc-cli-<user>` default session, shared with the `wslc` CLI.
 
 ![Containers page after first run](/screenshots/containers.png)
 
-::: warning Separate sessions
-Containers started with the `wslc` CLI's default session don't appear in the app, and vice versa. Use `wslc --session WslcDesktop ...` to work with the app's containers from a terminal. See [Environment](/features/environment).
+::: tip Shared with the CLI
+The app and the `wslc` command line use the same session, so containers you start with `wslc` appear in the app and vice versa. Plain `wslc` commands (no `--session`) work with the app's containers. Other running sessions appear too, marked by name. See [Environment](/features/environment).
+:::
+
+::: info Upgrading from 1.0
+Earlier versions ran a separate `WslcDesktop` session. While it's running it still appears in the app as another session, so its containers aren't lost. Moving them to the default session (for example by re-creating them or bringing their Compose stacks up again) is recommended but not required.
 :::
 
 ## Navigation
