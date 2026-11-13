@@ -49,18 +49,18 @@ Launch **WSLc Desktop Manager**. If the app reports missing WSLc components, cho
 
 From there, pull an image on **Images**, or choose **New container** on **Containers** and enter an image reference. For a multi-service project, open your Compose file from **Stacks** and review the plan before choosing **Up**.
 
-### Your app containers use a separate session
+### The app shares the `wslc` CLI's default session
 
-WSLc Desktop Manager creates or reconnects to a session named `WslcDesktop`. The `wslc` CLI's default session is separate, so containers created there won't appear in the app.
-
-And you can still use the CLI with the app's containers. Specify the session explicitly:
+WSLc Desktop Manager uses the `wslc` CLI's default session (`wslc-cli-<user>`). It reuses that session when it's already running, or has `wslc` start it, so the app and the CLI always share the same containers, images, volumes and storage. Plain `wslc` commands work with the app's containers:
 
 ```powershell
-wslc --session WslcDesktop list --all
-wslc --session WslcDesktop image list
+wslc list --all
+wslc image list
 ```
 
-Closing the app leaves its session and containers running. Reopening it reconnects to that session.
+The app also shows every other running WSLc session, marked by name. Closing the app leaves the session and its containers running.
+
+**Upgrading from 1.0:** earlier versions ran a separate `WslcDesktop` session. While that session is running it still appears in the app as another session, so nothing is lost. We recommend moving those containers to the default session when convenient, for example by re-creating them or bringing their Compose stacks up again, but it isn't required.
 
 ## Compose support and limits
 

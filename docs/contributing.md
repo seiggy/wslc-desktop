@@ -8,7 +8,7 @@ You need Windows 11 22H2 (build 22621) or later, WSL with container support and 
 dotnet build src\WslcDesktop -p:Platform=x64 -r win-x64
 ```
 
-Run `src\WslcDesktop\bin\x64\Debug\...\win-x64\WslcDesktop.exe`. Close any running instance first: only one instance can use the `WslcDesktop` session.
+Run `src\WslcDesktop\bin\x64\Debug\...\win-x64\WslcDesktop.exe`. Close any running instance first: only one instance runs at a time.
 
 Code layout:
 
