@@ -30,10 +30,10 @@ The **Restart** column on the Containers page shows the policy and live status: 
 
 ## How crashes are detected
 
-The app watches the session's container list (every 2 seconds, 10 seconds while hidden in the tray) and reads the exit code from each container's status. This works the same whichever way the app is connected.
+The app reads the session's container list and the exit code from each container's status. It keeps a `wslc events` stream open for the session, so a container that dies is re-read within a fraction of a second, whether the app owns the session or is attached to one left running by an earlier copy of the app. When the app owns the session, the WSLc API's `ProcessCrashed` and `Terminated` events and init-process exits trigger a re-read too. A backed-off restart is checked again exactly when it is due.
 
-- **App owns the session**: the WSLc API's `ProcessCrashed` and `Terminated` events also trigger an immediate check, so restarts start sooner.
-- **App is attached to an existing `WslcDesktop` session** (for example one left running by an earlier copy of the app): WSLc offers no way to subscribe to events from an attached client, so the app relies on polling alone. Restarts can lag by a few seconds.
+- **Safety net**: the list is also re-read every 30 seconds (2 minutes while hidden in the tray), and the whole session is re-read whenever its event stream reconnects.
+- **Without an event stream** (for example on a WSL version without `wslc events`), the app falls back to polling: every 10 seconds when it owns the session (30 seconds while hidden), every 2 seconds when attached (10 seconds while hidden). Restarts can then lag by a few seconds.
 
 ::: info Known gap
 A container stopped outside the app (for example `wslc stop` in a terminal) looks like an exit to the app, so **Always** and **On failure** (when the stop gives a non-zero code) restart it. Stop containers from the app, or set the policy to **Never** first. If the whole session ends, the app can only restart containers once the session is back.

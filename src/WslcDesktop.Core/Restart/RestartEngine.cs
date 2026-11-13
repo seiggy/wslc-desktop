@@ -18,6 +18,34 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
 
     public event Action? Changed;
 
+    /// <summary>When the earliest pending restart is due, for a countdown.</summary>
+    public DateTimeOffset? NextPending
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _tracks.Values.Select(t => t.Pending).Where(p => p.HasValue).Min();
+            }
+        }
+    }
+
+    /// <summary>
+    /// When the engine next needs a fresh snapshot: a pending restart coming due, the end of a just-restarted
+    /// container's start grace (a crash inside it is ignored until then), or a retry after a failed start. Snapshots
+    /// usually arrive only on changes, so the caller should take one then.
+    /// </summary>
+    public DateTimeOffset? NextCheck
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _tracks.Values.SelectMany(t => new[] { t.Pending, t.CheckAt }).Where(p => p.HasValue).Min();
+            }
+        }
+    }
+
     public RestartPolicy GetPolicy(string name) =>
         store.TryGet(name, out var e) ? RestartPolicy.Parse(e.Policy) : RestartPolicy.None;
 
@@ -114,6 +142,14 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
             var now = clock.GetUtcNow();
             var first = !_initialized;
             _initialized = true;
+            lock (_lock)
+            {
+                // This snapshot is the check those tracks asked for.
+                foreach (var t in _tracks.Values.Where(t => t.CheckAt <= now))
+                {
+                    t.CheckAt = null;
+                }
+            }
             var byName = snapshot.ToDictionary(o => o.Name, StringComparer.Ordinal);
 
             foreach (var (name, entry) in store.Snapshot())
@@ -163,6 +199,7 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
                             t.Pending = null;
                             t.LastError = null;
                             t.LastStart = clock.GetUtcNow();
+                            t.CheckAt = t.LastStart + _o.StartGrace;
                         }
                     }
                 }
@@ -178,6 +215,7 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
                         {
                             t.Pending = null;
                             t.LastError = e.Message;
+                            t.CheckAt = clock.GetUtcNow() + _o.BaseDelay;
                         }
                     }
                 }
@@ -224,6 +262,7 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
             if (IsRunning(obs.State))
             {
                 track.Pending = null;
+                track.CheckAt = null;
                 track.RunningSince ??= now;
                 if (now - track.RunningSince >= _o.StableAfter && (track.Attempts > 0 || track.GaveUp))
                 {
@@ -306,6 +345,7 @@ public sealed class RestartEngine(IRestartStore store, IRestartActions actions, 
         public DateTimeOffset? Pending;
         public DateTimeOffset? RunningSince;
         public DateTimeOffset? LastStart;
+        public DateTimeOffset? CheckAt;
         public string? LastError;
     }
 }

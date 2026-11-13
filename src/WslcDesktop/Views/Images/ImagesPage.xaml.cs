@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.WSL.Containers;
 using WslcDesktop.Services;
+using WslcDesktop.Data;
 using WslcDesktop.Images;
 using WslcDesktop.ViewModels;
 
@@ -13,7 +14,7 @@ namespace WslcDesktop.Views.Images;
 
 public sealed partial class ImagesPage : Page
 {
-    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(3) };
+    private StoreBinding? _binding;
     private readonly System.Collections.ObjectModel.ObservableCollection<ImageItem> _items = [];
 
     public ImagesPage()
@@ -22,43 +23,29 @@ public sealed partial class ImagesPage : Page
         List.ItemsSource = _items;
         _sessionFilter = new SessionFilterController(SessionFilter);
         _sessionFilter.Changed += Apply;
-        Loaded += async (_, _) =>
+        Loaded += (_, _) => _binding = new StoreBinding(DispatcherQueue, Refresh, [DataKind.Images], DataKind.Sessions);
+        Unloaded += (_, _) =>
         {
-            _timer.Start();
-            await RefreshAsync();
+            _binding?.Dispose();
+            _binding = null;
         };
-        Unloaded += (_, _) => _timer.Stop();
-        _timer.Tick += async (_, _) => await RefreshAsync();
     }
 
     private SessionFilterController _sessionFilter = null!;
     private string? _filter => _sessionFilter.Filter;
-    private bool _refreshing;
     private ImageSnapshot? _last;
 
-    private async Task RefreshAsync(bool force = false)
+    private void Refresh()
     {
-        if (_refreshing)
-        {
-            return;
-        }
+        _last = App.Host.Store.Images();
+        Apply();
+    }
 
-        _refreshing = true;
-        try
-        {
-            _last = await App.Host.ImageCatalog.RefreshAsync(force);
-            Apply();
-        }
-        catch (Exception e)
-        {
-            _timer.Stop();
-            await ShowErrorAsync(UiStrings.Get("CouldnTListImages"), e);
-            _timer.Start();
-        }
-        finally
-        {
-            _refreshing = false;
-        }
+    // Operations mark the session dirty; reading now shows the result without waiting for the scheduler.
+    private async Task RefreshAsync(string session)
+    {
+        await App.Host.Store.RefreshAsync(DataKind.Images, session);
+        Refresh();
     }
 
     private void Apply()
@@ -141,7 +128,9 @@ public sealed partial class ImagesPage : Page
         {
             var progress = new Progress<PullProgress>(p =>
             {
-                PullText.Text = $"{p.Status} {p.Id}";
+                PullText.Text = p.TotalBytes > 0
+                    ? $"{p.Status} {WslcHost.FormatSize((ulong)p.CurrentBytes)} / {WslcHost.FormatSize((ulong)p.TotalBytes)}"
+                    : p.Status;
                 if (p.TotalBytes > 0)
                 {
                     PullBar.IsIndeterminate = false;
@@ -150,7 +139,6 @@ public sealed partial class ImagesPage : Page
                 }
             });
             await App.Host.Operations.Images.PullAsync(App.Host.AppSession, uri, progress);
-            App.Host.ImageCatalog.Invalidate(App.Host.SessionId);
             PullBox.Text = string.Empty;
         }
         catch (Exception e)
@@ -163,7 +151,7 @@ public sealed partial class ImagesPage : Page
             PullButton.IsEnabled = true;
         }
 
-        await RefreshAsync();
+        await RefreshAsync(App.Host.SessionId);
     }
 
     private async void Run_Click(object sender, RoutedEventArgs e)
@@ -268,7 +256,7 @@ public sealed partial class ImagesPage : Page
             await ShowErrorAsync(UiStrings.Format("CouldnTDeleteFrom", item.Target, item.Session), ex);
         }
 
-        await RefreshAsync(true);
+        await RefreshAsync(item.Session);
     }
 
     private async Task ShowErrorAsync(string title, Exception e)

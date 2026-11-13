@@ -5,6 +5,7 @@
     <TargetFramework>net11.0</TargetFramework>
     <RootNamespace>WslcDesktop</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

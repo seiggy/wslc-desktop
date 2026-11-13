@@ -14,6 +14,7 @@ public sealed partial class StackDetailPage : Page
     private readonly HashSet<string> _streaming = [];
     private CancellationTokenSource _cts = new();
     private string _project = string.Empty;
+    private Shared.StoreBinding? _binding;
 
     public StackDetailPage()
     {
@@ -22,12 +23,12 @@ public sealed partial class StackDetailPage : Page
         Loaded += (_, _) =>
         {
             _cts = new CancellationTokenSource();
-            App.Host.Monitor.Updated += OnChanged;
-            Sync();
+            _binding = new Shared.StoreBinding(DispatcherQueue, Sync, [Data.DataKind.Containers]);
         };
         Unloaded += (_, _) =>
         {
-            App.Host.Monitor.Updated -= OnChanged;
+            _binding?.Dispose();
+            _binding = null;
             _cts.Cancel();
             _streaming.Clear();
         };
@@ -39,11 +40,9 @@ public sealed partial class StackDetailPage : Page
         TitleText.Text = _project;
     }
 
-    private void OnChanged() => DispatcherQueue.TryEnqueue(Sync);
-
     private void Sync()
     {
-        var rows = StackItem.Group(App.Host.Monitor.Containers).FirstOrDefault(g => g.Project == _project).Rows ?? [];
+        var rows = StackItem.Group(App.Host.Store.AppContainers.Latest ?? []).FirstOrDefault(g => g.Project == _project).Rows ?? [];
         foreach (var gone in _items.Where(i => rows.All(r => r.Name != i.Name)).ToList())
         {
             _items.Remove(gone);
@@ -58,7 +57,7 @@ public sealed partial class StackDetailPage : Page
                 _items.Add(item);
             }
 
-            item.Update(row, null);
+            item.Update(row, []);
             if (ContainerItem.IsRunningState(row.State) && _streaming.Add(row.Name))
             {
                 StreamLogs(row.Name, item.Service.Length > 0 ? item.Service : row.Name);

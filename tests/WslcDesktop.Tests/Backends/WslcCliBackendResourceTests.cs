@@ -94,4 +94,75 @@ public class WslcCliBackendResourceTests
 
         Assert.False(Assert.Single(rows).CanRemove);
     }
+
+    [Fact]
+    public async Task Usage_inspects_every_container_in_one_call()
+    {
+        _process
+            .Returns("""{"Name":"back","Driver":"bridge","Scope":"local","Internal":"false"}""")
+            .Returns("""
+                {"Names":"web","Image":"nginx","ID":"a","State":"running","Command":"","Ports":"","Labels":"","Status":"Up"}
+                {"Names":"db","Image":"postgres","ID":"b","State":"running","Command":"","Ports":"","Labels":"","Status":"Up"}
+                {"Names":"idle","Image":"alpine","ID":"c","State":"exited","Command":"","Ports":"","Labels":"","Status":"Exited"}
+                """)
+            .Returns("""
+                [{"Name":"/web","NetworkSettings":{"Networks":{"back":{}}}},
+                 {"Name":"/db","NetworkSettings":{"Networks":{"back":{},"bridge":{}}}},
+                 {"Name":"/idle","NetworkSettings":{"Networks":{}}}]
+                """);
+
+        var row = Assert.Single(await Backend().ListResourcesAsync(ResourceKind.Network));
+
+        Assert.Equal(["web", "db"], row.UsedBy);
+        var inspects = _process.Calls.Where(c => c.Args.Contains("inspect")).ToList();
+        var inspect = Assert.Single(inspects);
+        Assert.Equal(["--session", "lab", "inspect", "--type", "container", "--format", "json", "web", "db", "idle"], inspect.Args);
+    }
+
+    [Fact]
+    public async Task A_failed_batch_inspect_falls_back_to_one_inspect_per_container()
+    {
+        // The volume listing and the container listing, then a batch that fails because a container was just removed.
+        _process
+            .Returns("""{"Name":"data","Driver":"local","Mountpoint":"/v/data","Scope":"local"}""")
+            .Returns("""
+                {"Names":"web","Image":"nginx","ID":"a","State":"running","Command":"","Ports":"","Labels":"","Status":"Up"}
+                {"Names":"gone","Image":"nginx","ID":"b","State":"exited","Command":"","Ports":"","Labels":"","Status":"Exited"}
+                """)
+            .Throws(new InvalidOperationException("Object not found: gone"))
+            .Returns("""[{"Mounts":[{"Type":"volume","Name":"data"}]}]""")
+            .Throws(new InvalidOperationException("Object not found: gone"));
+
+        var row = Assert.Single(await Backend().ListResourcesAsync(ResourceKind.Volume));
+
+        Assert.Equal(["web"], row.UsedBy);
+        Assert.Equal(3, _process.Calls.Count(c => c.Args.Contains("inspect")));
+    }
+
+    [Fact]
+    public async Task No_inspect_runs_when_the_session_has_no_containers()
+    {
+        _process
+            .Returns("""{"Name":"data","Driver":"local","Mountpoint":"/v/data","Scope":"local"}""")
+            .Returns(string.Empty);
+
+        var row = Assert.Single(await Backend().ListResourcesAsync(ResourceKind.Volume));
+
+        Assert.Empty(row.UsedBy);
+        Assert.DoesNotContain(_process.Calls, c => c.Args.Contains("inspect"));
+    }
+
+    [Fact]
+    public async Task Network_names_do_not_inspect_containers()
+    {
+        _process.Returns("""
+            {"Name":"bridge","Driver":"bridge","Scope":"local","Internal":"false"}
+            {"Name":"back","Driver":"bridge","Scope":"local","Internal":"true"}
+            """);
+
+        var names = await Backend().ListNetworkNamesAsync();
+
+        Assert.Equal(["bridge", "back"], names);
+        Assert.Equal(["--session", "lab", "network", "list", "--format", "json"], Assert.Single(_process.Calls).Args);
+    }
 }

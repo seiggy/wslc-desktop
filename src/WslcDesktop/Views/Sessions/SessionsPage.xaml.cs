@@ -1,4 +1,6 @@
 using WslcDesktop.Localization;
+using WslcDesktop.Data;
+using WslcDesktop.Views.Shared;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using WslcDesktop.ViewModels;
@@ -22,67 +24,58 @@ public sealed partial class SessionsPage : Page
     {
         InitializeComponent();
         List.ItemsSource = _items;
-        var timer = new Microsoft.UI.Xaml.DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
-        timer.Tick += async (_, _) => await RefreshAsync(false);
-        Loaded += async (_, _) =>
+        StoreBinding? binding = null;
+        Loaded += (_, _) => binding = new StoreBinding(
+            DispatcherQueue,
+            Apply,
+            [DataKind.Sessions, DataKind.Versions],
+            DataKind.Containers,
+            DataKind.Images);
+        Unloaded += (_, _) =>
         {
-            await RefreshAsync(true);
-            timer.Start();
+            binding?.Dispose();
+            binding = null;
         };
-        Unloaded += (_, _) => timer.Stop();
     }
 
-    private bool _busy;
+    private bool _errorShown;
 
-    private async Task RefreshAsync(bool showErrors)
+    // Everything here is already in the store: session list, versions, and every session's containers and images.
+    private void Apply()
     {
-        if (_busy)
+        if (App.Host.Store.SessionList is { Latest: null, LastError: { } error } && !_errorShown && XamlRoot is not null)
         {
-            return;
-        }
-
-        _busy = true;
-        try
-        {
-            var env = await App.Host.GetEnvironmentAsync();
-            SetText(WslText, env.Wsl);
-            SetText(KernelText, env.Kernel);
-            SetText(ManagerText, env.SessionManager);
-
-            foreach (var gone in _items.Where(i => env.Sessions.All(s => s.Id != i.Id)).ToList())
-            {
-                _items.Remove(gone);
-            }
-
-            for (var n = 0; n < env.Sessions.Count; n++)
-            {
-                var item = _items.FirstOrDefault(i => i.Id == env.Sessions[n].Id);
-                if (item is null)
-                {
-                    _items.Insert(Math.Min(n, _items.Count), new SessionItem(env.Sessions[n]));
-                }
-                else
-                {
-                    item.Update(env.Sessions[n]);
-                }
-            }
-        }
-        catch (Exception e) when (showErrors)
-        {
-            await new ContentDialog
+            _errorShown = true;
+            _ = new ContentDialog
             {
                 XamlRoot = XamlRoot,
                 Title = UiStrings.Get("CouldnTLoadTheEnvironment"),
-                Content = e.Message,
+                Content = error,
                 CloseButtonText = UiStrings.Get("ActionClose"),
             }.ShowAsync();
         }
-        catch
+
+        var env = App.Host.GetEnvironment();
+        SetText(WslText, env.Wsl);
+        SetText(KernelText, env.Kernel);
+        SetText(ManagerText, env.SessionManager);
+
+        foreach (var gone in _items.Where(i => env.Sessions.All(s => s.Id != i.Id)).ToList())
         {
+            _items.Remove(gone);
         }
-        finally
+
+        for (var n = 0; n < env.Sessions.Count; n++)
         {
-            _busy = false;
+            var item = _items.FirstOrDefault(i => i.Id == env.Sessions[n].Id);
+            if (item is null)
+            {
+                _items.Insert(Math.Min(n, _items.Count), new SessionItem(env.Sessions[n]));
+            }
+            else
+            {
+                item.Update(env.Sessions[n]);
+            }
         }
     }
 
@@ -118,6 +111,6 @@ public sealed partial class SessionsPage : Page
             await new ContentDialog { XamlRoot = XamlRoot, Title = UiStrings.Get("CouldnTTerminateTheSession"), Content = ex.Message, CloseButtonText = UiStrings.Get("ActionClose") }.ShowAsync();
         }
 
-        await RefreshAsync(true);
+        Apply();
     }
 }

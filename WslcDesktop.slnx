@@ -1,14 +1,34 @@
 <Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
   <Folder Name="/src/">
-    <Project Path="src/WslcDesktop/WslcDesktop.csproj" />
-    <Project Path="src/WslcDesktop.Compose/WslcDesktop.Compose.csproj" />
-    <Project Path="src/WslcDesktop.Core/WslcDesktop.Core.csproj" />
-    <Project Path="src/WslcDesktop.Localization/WslcDesktop.Localization.csproj" />
-    <Project Path="src/WslcDesktop.Sdk/WslcDesktop.Sdk.csproj" />
+    <Project Path="src/WslcDesktop/WslcDesktop.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="src/WslcDesktop.Compose/WslcDesktop.Compose.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="src/WslcDesktop.Core/WslcDesktop.Core.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="src/WslcDesktop.Localization/WslcDesktop.Localization.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="src/WslcDesktop.Sdk/WslcDesktop.Sdk.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/WslcDesktop.Compose.Tests/WslcDesktop.Compose.Tests.csproj" />
-    <Project Path="tests/WslcDesktop.Tests/WslcDesktop.Tests.csproj" />
-    <Project Path="tests/WslcDesktop.Sdk.Tests/WslcDesktop.Sdk.Tests.csproj" />
+    <Project Path="tests/WslcDesktop.Compose.Tests/WslcDesktop.Compose.Tests.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="tests/WslcDesktop.Tests/WslcDesktop.Tests.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+    <Project Path="tests/WslcDesktop.Sdk.Tests/WslcDesktop.Sdk.Tests.csproj">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
   </Folder>
 </Solution>

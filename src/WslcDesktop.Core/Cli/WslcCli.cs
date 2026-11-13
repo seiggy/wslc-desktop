@@ -16,9 +16,11 @@ namespace WslcDesktop.Cli;
 /// </summary>
 public sealed class WslcCli(IWslcProcess process, Func<string, string>? redact = null)
 {
+    private readonly ContainerListMemo _containers = new();
+
     public async Task<IReadOnlyList<ContainerRow>> ListContainersAsync(string session, CancellationToken ct = default)
     {
-        return ParseContainers(await RunAsync(ct, "--session", session, "list", "--all", "--no-trunc", "--format", "json"));
+        return _containers.Parse(session, await RunAsync(ct, "--session", session, "list", "--all", "--no-trunc", "--format", "json"));
     }
 
     public static IReadOnlyList<ContainerRow> ParseContainers(string output)
@@ -47,44 +49,19 @@ public sealed class WslcCli(IWslcProcess process, Func<string, string>? redact =
         return rows;
     }
 
-    public async Task<EnvironmentInfo> GetEnvironmentAsync(string appSession)
+    /// <summary>The WSL, kernel and session manager versions from <c>wslc info</c>.</summary>
+    public async Task<(string Wsl, string Kernel, string SessionManager)> GetVersionsAsync() =>
+        ParseVersions(await RunAsync("info"));
+
+    public static (string Wsl, string Kernel, string SessionManager) ParseVersions(string info)
     {
-        var info = await RunAsync("info");
-        string Version(string key) => info.Split('\n')
-            .Select(l => l.Trim())
+        var lines = info.Split('\n', StringSplitOptions.TrimEntries);
+        string Version(string key) => lines
             .Where(l => l.StartsWith(key, StringComparison.OrdinalIgnoreCase))
             .Select(l => l[(l.IndexOf(':') + 1)..].Trim())
             .FirstOrDefault() ?? string.Empty;
 
-        var sessions = await ListSessionsAsync();
-        var items = await Task.WhenAll(sessions.Select(async s =>
-        {
-            string creator;
-            try
-            {
-                creator = System.Diagnostics.Process.GetProcessById(int.Parse(s.CreatorPid, System.Globalization.CultureInfo.InvariantCulture)).ProcessName;
-            }
-            catch
-            {
-                creator = "Exited";
-            }
-
-            string containers = "–", images = "–";
-            try
-            {
-                var c = await ListContainersAsync(s.Name);
-                containers = $"{c.Count(x => x.State.Equals("running", StringComparison.OrdinalIgnoreCase))} / {c.Count}";
-                images = (await ListImagesAsync(s.Name)).Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            }
-            catch
-            {
-            }
-
-            return new SessionInfo(s.Id, s.Name, creator, s.CreatorPid, containers, images,
-                s.Name.Equals(appSession, StringComparison.OrdinalIgnoreCase));
-        }));
-
-        return new EnvironmentInfo(Version("WSL version"), Version("Kernel version"), Version("Session manager version"), items);
+        return (Version("WSL version"), Version("Kernel version"), Version("Session manager version"));
     }
 
     public Task TerminateSessionAsync(string session) =>
@@ -106,10 +83,10 @@ public sealed class WslcCli(IWslcProcess process, Func<string, string>? redact =
         return rows;
     }
 
-    /// <summary>Snapshot of resource usage for every running container in the session.</summary>
-    public async Task<IReadOnlyDictionary<string, StatsSample>> GetStatsAsync(string session, CancellationToken ct = default)
+    /// <summary>Resource usage for the named containers, or for every running container in the session when none are named.</summary>
+    public async Task<IReadOnlyDictionary<string, StatsSample>> GetStatsAsync(string session, IReadOnlyList<string>? containers = null, CancellationToken ct = default)
     {
-        var output = await RunAsync(ct, "--session", session, "stats", "--format", "json", "--no-trunc");
+        var output = await RunAsync(ct, ["--session", session, "stats", "--format", "json", "--no-trunc", .. containers ?? []]);
         var result = new Dictionary<string, StatsSample>();
         var now = DateTimeOffset.Now;
         foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))

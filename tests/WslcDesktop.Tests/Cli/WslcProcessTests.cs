@@ -3,6 +3,7 @@ using WslcDesktop.Cli;
 
 namespace WslcDesktop.Tests.Cli;
 
+[Collection(ChildProcessCollection.Name)]
 public class WslcProcessTests
 {
     [Theory]

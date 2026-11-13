@@ -14,25 +14,24 @@ namespace WslcDesktop.Views.Stacks;
 public sealed partial class StacksPage : Page
 {
     private readonly System.Collections.ObjectModel.ObservableCollection<StackItem> _items = [];
+    private Shared.StoreBinding? _binding;
 
     public StacksPage()
     {
         InitializeComponent();
         List.ItemsSource = _items;
-        Loaded += (_, _) =>
+        Loaded += (_, _) => _binding = new Shared.StoreBinding(DispatcherQueue, Sync, [Data.DataKind.Containers]);
+        Unloaded += (_, _) =>
         {
-            App.Host.Monitor.Updated += OnChanged;
-            Sync();
+            _binding?.Dispose();
+            _binding = null;
         };
-        Unloaded += (_, _) => App.Host.Monitor.Updated -= OnChanged;
     }
-
-    private void OnChanged() => DispatcherQueue.TryEnqueue(Sync);
 
     private void Sync()
     {
-        var monitor = App.Host.Monitor;
-        var groups = StackItem.Group(monitor.Containers);
+        var app = App.Host.Store.AppContainers;
+        var groups = StackItem.Group(app.Latest ?? []);
         foreach (var gone in _items.Where(i => groups.All(g => g.Project != i.Name)).ToList())
         {
             _items.Remove(gone);
@@ -55,7 +54,7 @@ public sealed partial class StacksPage : Page
             item.Update(rows);
         }
 
-        EmptyText.Visibility = monitor.HasLoaded && groups.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyText.Visibility = app.HasValue && groups.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void List_ItemClick(object sender, ItemClickEventArgs e) =>
@@ -112,7 +111,7 @@ public sealed partial class StacksPage : Page
             ErrorBar.IsOpen = true;
         }
 
-        await App.Host.Monitor.RefreshAsync();
+        await App.Host.Store.RefreshAsync(Data.DataKind.Containers, App.Host.SessionId);
     }
 
     private async void Open_Click(object sender, RoutedEventArgs e)
@@ -278,7 +277,7 @@ public sealed partial class StacksPage : Page
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary && running)
         {
-            await App.Host.Monitor.RefreshAsync();
+            await App.Host.Store.RefreshAsync(Data.DataKind.Containers, App.Host.SessionId);
         }
     }
 }

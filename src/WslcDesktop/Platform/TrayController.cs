@@ -25,7 +25,7 @@ internal sealed class TrayController
         _host = host;
         _window.AppWindow.Changed += OnChanged;
         _window.AppWindow.Closing += OnClosing;
-        _host.Monitor.Updated += OnMonitorUpdated;
+        _host.Store.AppContainers.Changed += OnContainersChanged;
         Apply();
     }
 
@@ -85,7 +85,7 @@ internal sealed class TrayController
 
     public void Dispose()
     {
-        _host.Monitor.Updated -= OnMonitorUpdated;
+        _host.Store.AppContainers.Changed -= OnContainersChanged;
         _tray?.Dispose();
         _tray = null;
     }
@@ -127,13 +127,9 @@ internal sealed class TrayController
         SetBackground(true);
     }
 
-    private void SetBackground(bool hidden)
-    {
-        _host.Telemetry.Paused = hidden;
-        _host.Monitor.SetPeriod(TrayPolicy.PollInterval(hidden, ContainerMonitor.Interval));
-    }
+    private void SetBackground(bool hidden) => _host.Store.Hidden = hidden;
 
-    private void OnMonitorUpdated() => _window.DispatcherQueue.TryEnqueue(UpdateTooltip);
+    private void OnContainersChanged() => _window.DispatcherQueue.TryEnqueue(UpdateTooltip);
 
     private void UpdateTooltip()
     {
@@ -142,14 +138,16 @@ internal sealed class TrayController
             return;
         }
 
-        _tray.SetTooltip(TrayPolicy.Tooltip(RunningCount(), _host.Monitor.Containers.Count));
+        _tray.SetTooltip(TrayPolicy.Tooltip(RunningCount(), TotalCount()));
     }
 
-    private int? RunningCount() => _host.Monitor.HasLoaded
-        ? _host.Monitor.Containers.Count(c => ContainerItem.IsRunningState(c.State))
+    private int? RunningCount() => _host.Store.AppContainers.Latest is { } containers
+        ? containers.Count(c => ContainerItem.IsRunningState(c.State))
         : null;
 
-    private string StatusLine() => TrayPolicy.StatusLine(RunningCount(), _host.Monitor.Containers.Count);
+    private int TotalCount() => _host.Store.AppContainers.Latest?.Count ?? 0;
+
+    private string StatusLine() => TrayPolicy.StatusLine(RunningCount(), TotalCount());
 
     private static void Foreground(Window window)
     {
